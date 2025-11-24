@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(gradle wrapper:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Legendary Weapons SMP Plugin\n\nImplemented complete Minecraft plugin with 11 legendary weapons, each featuring\npassive and active abilities, custom 5×5 crafting system, and per-player limits.\n\nFeatures:\n- 11 unique legendary weapons with custom abilities\n- Legendary Altar system with 5×5 crafting GUI\n- 22 active abilities with cooldown system\n- 11 passive abilities with event-based triggers\n- Per-player crafting history (one craft per legendary)\n- Global reset command for admins\n- Persistent data storage (YAML)\n- Complete documentation (README, PRD, LOGS, TODOS)\n\nTechnical Stack:\n- Minecraft 1.21.8 Paper API\n- Java 21+\n- Gradle build system\n- PersistentDataContainer for item tagging\n\nCommands:\n- /givealtar - Give Legendary Altar (OP only)\n- /ability <1|2> - Use legendary abilities\n- /kreset - Reset all crafting progress (OP only)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

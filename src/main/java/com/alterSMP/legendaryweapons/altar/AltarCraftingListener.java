@@ -134,11 +134,13 @@ public class AltarCraftingListener implements Listener {
             return;
         }
 
-        // Check if player has already crafted this legendary
+        // Check if this legendary has already been crafted globally
         String legendaryId = matchedRecipe.getResult().getId();
-        if (plugin.getDataManager().hasCrafted(player.getUniqueId(), legendaryId)) {
+        if (plugin.getDataManager().hasCrafted(legendaryId)) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "You have already forged this legendary weapon!");
+            UUID crafter = plugin.getDataManager().getCrafter(legendaryId);
+            String crafterName = crafter != null ? plugin.getServer().getOfflinePlayer(crafter).getName() : "Unknown";
+            player.sendMessage(ChatColor.RED + "This legendary has already been forged by " + crafterName + "!");
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             return;
         }
@@ -163,9 +165,11 @@ public class AltarCraftingListener implements Listener {
         player.getInventory().addItem(legendary);
         plugin.getDataManager().markCrafted(player.getUniqueId(), legendaryId);
 
-        // Effects
-        player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "You have forged " +
-            matchedRecipe.getResult().getDisplayName() + "!");
+        // Broadcast to entire server
+        org.bukkit.Bukkit.broadcastMessage(ChatColor.GOLD + "" + ChatColor.BOLD + player.getName() +
+            " has forged " + matchedRecipe.getResult().getDisplayName() + ChatColor.GOLD + ChatColor.BOLD + "!");
+
+        // Effects for crafter
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
         player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 0.8f);
 
@@ -180,14 +184,19 @@ public class AltarCraftingListener implements Listener {
         int outputSlot = AltarInteractListener.getOutputSlot();
 
         if (matchedRecipe != null) {
-            // Check if already crafted
+            // Check if already crafted globally
             String legendaryId = matchedRecipe.getResult().getId();
-            if (plugin.getDataManager().hasCrafted(player.getUniqueId(), legendaryId)) {
-                // Show locked item
+            if (plugin.getDataManager().hasCrafted(legendaryId)) {
+                // Show locked item with crafter name
                 ItemStack locked = new ItemStack(org.bukkit.Material.BARRIER);
                 org.bukkit.inventory.meta.ItemMeta meta = locked.getItemMeta();
                 if (meta != null) {
+                    UUID crafter = plugin.getDataManager().getCrafter(legendaryId);
+                    String crafterName = crafter != null ? plugin.getServer().getOfflinePlayer(crafter).getName() : "Unknown";
                     meta.setDisplayName(ChatColor.RED + "Already Crafted");
+                    java.util.List<String> lore = new java.util.ArrayList<>();
+                    lore.add(ChatColor.GRAY + "Forged by: " + ChatColor.YELLOW + crafterName);
+                    meta.setLore(lore);
                     locked.setItemMeta(meta);
                 }
                 inv.setItem(outputSlot, locked);

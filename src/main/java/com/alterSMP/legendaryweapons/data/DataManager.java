@@ -14,12 +14,12 @@ public class DataManager {
     private File craftingDataFile;
     private FileConfiguration craftingData;
 
-    // Map: UUID -> Set of crafted legendary IDs
-    private Map<UUID, Set<String>> playerCraftingHistory;
+    // Global crafting history: Legendary ID -> UUID of crafter
+    private Map<String, UUID> globalCraftingHistory;
 
     public DataManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
-        this.playerCraftingHistory = new HashMap<>();
+        this.globalCraftingHistory = new HashMap<>();
         initializeFiles();
     }
 
@@ -42,34 +42,37 @@ public class DataManager {
 
     public void loadAll() {
         loadCraftingHistory();
-        plugin.getLogger().info("Loaded player crafting history");
+        plugin.getLogger().info("Loaded global crafting history");
     }
 
     public void saveAll() {
         saveCraftingHistory();
-        plugin.getLogger().info("Saved player crafting history");
+        plugin.getLogger().info("Saved global crafting history");
     }
 
     private void loadCraftingHistory() {
-        playerCraftingHistory.clear();
+        globalCraftingHistory.clear();
 
-        if (!craftingData.contains("players")) {
+        if (!craftingData.contains("crafted")) {
             return;
         }
 
-        for (String uuidString : craftingData.getConfigurationSection("players").getKeys(false)) {
-            UUID uuid = UUID.fromString(uuidString);
-            List<String> craftedList = craftingData.getStringList("players." + uuidString + ".crafted");
-            playerCraftingHistory.put(uuid, new HashSet<>(craftedList));
+        for (String legendaryId : craftingData.getConfigurationSection("crafted").getKeys(false)) {
+            String uuidString = craftingData.getString("crafted." + legendaryId + ".crafter");
+            if (uuidString != null) {
+                UUID crafter = UUID.fromString(uuidString);
+                globalCraftingHistory.put(legendaryId, crafter);
+            }
         }
     }
 
     private void saveCraftingHistory() {
-        craftingData.set("players", null); // Clear existing data
+        craftingData.set("crafted", null); // Clear existing data
 
-        for (Map.Entry<UUID, Set<String>> entry : playerCraftingHistory.entrySet()) {
-            String uuidString = entry.getKey().toString();
-            craftingData.set("players." + uuidString + ".crafted", new ArrayList<>(entry.getValue()));
+        for (Map.Entry<String, UUID> entry : globalCraftingHistory.entrySet()) {
+            String legendaryId = entry.getKey();
+            String crafterUUID = entry.getValue().toString();
+            craftingData.set("crafted." + legendaryId + ".crafter", crafterUUID);
         }
 
         try {
@@ -80,26 +83,32 @@ public class DataManager {
         }
     }
 
-    public boolean hasCrafted(UUID playerUUID, String legendaryId) {
-        Set<String> crafted = playerCraftingHistory.get(playerUUID);
-        return crafted != null && crafted.contains(legendaryId);
+    public boolean hasCrafted(String legendaryId) {
+        return globalCraftingHistory.containsKey(legendaryId);
+    }
+
+    public UUID getCrafter(String legendaryId) {
+        return globalCraftingHistory.get(legendaryId);
     }
 
     public void markCrafted(UUID playerUUID, String legendaryId) {
-        playerCraftingHistory.computeIfAbsent(playerUUID, k -> new HashSet<>()).add(legendaryId);
+        globalCraftingHistory.put(legendaryId, playerUUID);
         saveCraftingHistory();
 
-        plugin.getLogger().info("Player " + playerUUID + " crafted " + legendaryId);
+        plugin.getLogger().info("Player " + playerUUID + " crafted " + legendaryId + " (GLOBALLY)");
     }
 
     public void resetAllCrafting() {
-        playerCraftingHistory.clear();
+        globalCraftingHistory.clear();
         saveCraftingHistory();
-        plugin.getLogger().info("All crafting history has been reset!");
+        plugin.getLogger().info("All global crafting history has been reset!");
     }
 
-    public int getTotalCrafted(UUID playerUUID) {
-        Set<String> crafted = playerCraftingHistory.get(playerUUID);
-        return crafted != null ? crafted.size() : 0;
+    public int getTotalCraftedGlobally() {
+        return globalCraftingHistory.size();
+    }
+
+    public Set<String> getAllCraftedLegendaries() {
+        return new HashSet<>(globalCraftingHistory.keySet());
     }
 }

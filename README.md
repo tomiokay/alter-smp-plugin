@@ -1,15 +1,15 @@
 # Legendary Weapons SMP Plugin
 
-A comprehensive Minecraft plugin featuring 11 unique legendary weapons with passive and active abilities, a custom 5×5 crafting system, and per-player crafting limits.
+A comprehensive Minecraft plugin featuring 11 unique legendary weapons with passive and active abilities, a custom 5×5 crafting system, and global crafting limits (one per world).
 
 ## Features
 
 - **11 Unique Legendary Weapons** - Each with distinct passive and active abilities
 - **Custom 5×5 Crafting System** - Separate from vanilla crafting via Legendary Altars
-- **Per-Player Crafting Limits** - Each legendary can only be crafted once per player
+- **Global Crafting Limits** - Each legendary can only be crafted once per world (by any player)
 - **Ability System** - 22 unique active abilities activated via `/ability 1` and `/ability 2`
 - **Global Reset Command** - OPs can reset all crafting progress with `/kreset`
-- **Persistent Data** - Player crafting history and altar locations are saved
+- **Persistent Data** - Global crafting history and altar locations are saved
 
 ## Requirements
 
@@ -54,7 +54,7 @@ A comprehensive Minecraft plugin featuring 11 unique legendary weapons with pass
 3. **Craft Legendary Weapons:**
    - Arrange ingredients in the 5×5 grid according to recipes
    - The output will appear in the result slot
-   - Each legendary can only be crafted once per player
+   - Each legendary can only be crafted once per world (first player to craft it claims it)
 
 ### For Players
 
@@ -62,7 +62,8 @@ A comprehensive Minecraft plugin featuring 11 unique legendary weapons with pass
    - Right-click a placed Legendary Altar to open the 5×5 crafting menu
    - Place ingredients according to legendary recipes
    - If the pattern matches, the legendary item appears in the output slot
-   - Take the item to complete crafting (only works once per legendary)
+   - Take the item to complete crafting (only works once per legendary per world)
+   - If someone else already crafted it, you'll see who forged it
 
 2. **Using Abilities:**
    - Equip your legendary weapon (main hand, boots, or offhand depending on type)
@@ -80,7 +81,7 @@ A comprehensive Minecraft plugin featuring 11 unique legendary weapons with pass
 |---------|-----------|-------------|
 | `/givealtar [player]` | `legendaryweapons.givealtar` (OP) | Gives a Legendary Altar item |
 | `/ability <1\|2>` | None | Uses the active ability of your equipped legendary |
-| `/kreset` | `legendaryweapons.kreset` (OP) | Resets all legendary crafting progress for all players |
+| `/kreset` | `legendaryweapons.kreset` (OP) | Resets all legendary crafting progress globally (allows all legendaries to be crafted again) |
 
 ## Legendary Weapons Overview
 
@@ -152,15 +153,17 @@ A comprehensive Minecraft plugin featuring 11 unique legendary weapons with pass
 - True damage is limited to 3 hearts per Soul Mark activation
 
 ### Crafting Limits
-- Each player can craft each legendary weapon only once
-- OPs can use `/kreset` to reset this limit for all players
+- Each legendary weapon can be crafted only once per world (by any player)
+- Once a legendary is crafted, no other player can craft it until reset
+- OPs can use `/kreset` to reset this limit, allowing all legendaries to be crafted again
 - The `/kreset` command does NOT delete existing legendary items
+- When viewing a crafted legendary in the altar, you'll see who originally forged it
 
 ## Configuration
 
 The plugin stores data in the `plugins/LegendaryWeaponsSMP/` folder:
 
-- `crafting.yml` - Player crafting history
+- `crafting.yml` - Global crafting history (which legendaries have been crafted and by whom)
 - `altars.yml` - Legendary Altar locations
 
 ## Support & Issues

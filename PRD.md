@@ -8,10 +8,10 @@
 The Legendary Weapons SMP plugin introduces 11 unique, powerful legendary items to a Minecraft 1.21.8 Paper/Spigot server. Each legendary weapon features:
 - One passive ability (always active when equipped)
 - Two active abilities (triggered via commands)
-- Per-player crafting limits (one craft per player per legendary)
+- Global crafting limits (one craft per world per legendary - only one player can craft each legendary)
 - A custom 5×5 crafting system using Legendary Altars
 
-The plugin enhances gameplay by adding powerful endgame items that require rare resources and strategic use of abilities with cooldowns.
+The plugin enhances gameplay by adding powerful endgame items that require rare resources, create competition for unique legendaries, and require strategic use of abilities with cooldowns.
 
 ---
 
@@ -38,32 +38,35 @@ The plugin enhances gameplay by adding powerful endgame items that require rare 
 
 ### 2.2 Crafting System
 
-**Purpose:** Allow players to craft legendary weapons using complex 5×5 recipes.
+**Purpose:** Allow players to craft legendary weapons using complex 5×5 recipes with global exclusivity.
 
 **Requirements:**
 - Each legendary has a unique 5×5 recipe requiring rare materials
 - Recipes must match exactly (all 25 slots with correct items)
-- Players can only craft each legendary once
-- Attempting to craft an already-crafted legendary shows a "locked" indicator
-- Taking the result consumes all ingredients and marks the legendary as crafted
+- Each legendary can only be crafted once per world (by any player)
+- Attempting to craft an already-crafted legendary shows a "locked" indicator with the crafter's name
+- Taking the result consumes all ingredients and marks the legendary as crafted globally
+- Successful crafting broadcasts to the entire server
 
 **Recipe Validation:**
 - Pattern matching checks all 25 slots against defined recipes
 - Air slots must be empty; material slots must match exactly
 - Result updates dynamically as items are placed/removed
 
-### 2.3 Per-Player Crafting History
+### 2.3 Global Crafting History
 
-**Purpose:** Ensure each legendary can only be obtained once per player through crafting.
+**Purpose:** Ensure each legendary can only be obtained once per world through crafting, creating competition and exclusivity.
 
 **Requirements:**
-- Each player has a persistent record of crafted legendaries
-- Data is stored in `crafting.yml` indexed by UUID
-- Crafting attempt checks history before allowing completion
-- `/kreset` command clears all crafting history for all players
+- Global record tracks which legendaries have been crafted and by whom
+- Data is stored in `crafting.yml` indexed by legendary ID
+- Crafting attempt checks global history before allowing completion
+- Players can see who crafted an already-claimed legendary
+- `/kreset` command clears all crafting history globally
+- Successful crafts broadcast player name and legendary to entire server
 
 **Technical Details:**
-- Map structure: `UUID -> Set<String>` (legendary IDs)
+- Map structure: `String -> UUID` (legendary ID -> crafter UUID)
 - History is loaded on plugin enable
 - History is saved on plugin disable and after each craft
 
@@ -359,22 +362,23 @@ The plugin enhances gameplay by adding powerful endgame items that require rare 
 
 ## 4. Data Persistence
 
-### 4.1 Crafting History
+### 4.1 Global Crafting History
 **File:** `plugins/LegendaryWeaponsSMP/crafting.yml`
 
 **Structure:**
 ```yaml
-players:
-  <UUID>:
-    crafted:
-      - blade_of_the_fractured_stars
-      - umbra_veil_dagger
+crafted:
+  blade_of_the_fractured_stars:
+    crafter: 12345678-90ab-cdef-1234-567890abcdef
+  umbra_veil_dagger:
+    crafter: abcdef12-3456-7890-abcd-ef1234567890
 ```
 
 **Operations:**
 - Load on plugin enable
 - Save on plugin disable
 - Save immediately after each craft
+- Maps legendary ID to the UUID of the player who crafted it
 
 ### 4.2 Altar Locations
 **File:** `plugins/LegendaryWeaponsSMP/altars.yml`
