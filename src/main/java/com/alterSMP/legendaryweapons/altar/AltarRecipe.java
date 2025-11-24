@@ -1,5 +1,6 @@
 package com.alterSMP.legendaryweapons.altar;
 
+import com.alterSMP.legendaryweapons.LegendaryWeaponsPlugin;
 import com.alterSMP.legendaryweapons.items.LegendaryType;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -54,11 +55,27 @@ public class AltarRecipe {
         return true;
     }
 
-    // Factory method to create all recipes
+    // Factory method to create all recipes from config
     public static Map<String, AltarRecipe> createAllRecipes() {
         Map<String, AltarRecipe> recipes = new HashMap<>();
+        LegendaryWeaponsPlugin plugin = LegendaryWeaponsPlugin.getInstance();
 
-        // Recipe 1: Blade of the Fractured Stars
+        // Load all recipes from config
+        for (LegendaryType type : LegendaryType.values()) {
+            Material[][] pattern = plugin.getConfigManager().getRecipe(type.getId());
+            recipes.put(type.getId(), new AltarRecipe(type, pattern));
+        }
+
+        return recipes;
+    }
+
+    // OLD HARDCODED RECIPES - KEPT FOR REFERENCE BUT NOT USED
+    // (Recipes are now loaded from config.yml)
+    @Deprecated
+    private static Map<String, AltarRecipe> createHardcodedRecipes() {
+        Map<String, AltarRecipe> recipes = new HashMap<>();
+
+        // Recipe 1: Blade of the Fractured Stars (EXAMPLE)
         Material[][] bladePattern = {
             {Material.NETHER_STAR, Material.DIAMOND_BLOCK, Material.DIAMOND_BLOCK, Material.DIAMOND_BLOCK, Material.NETHER_STAR},
             {Material.DIAMOND_BLOCK, Material.CRYING_OBSIDIAN, Material.AMETHYST_BLOCK, Material.CRYING_OBSIDIAN, Material.DIAMOND_BLOCK},

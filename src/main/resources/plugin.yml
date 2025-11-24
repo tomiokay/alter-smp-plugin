@@ -22,6 +22,12 @@ commands:
     permission: legendaryweapons.kreset
     permission-message: 'You do not have permission to use this command'
 
+  lreload:
+    description: 'Reload the plugin configuration'
+    usage: '/lreload'
+    permission: legendaryweapons.reload
+    permission-message: 'You do not have permission to use this command'
+
 permissions:
   legendaryweapons.givealtar:
     description: 'Allows giving legendary altars'
@@ -29,4 +35,8 @@ permissions:
 
   legendaryweapons.kreset:
     description: 'Allows resetting legendary crafting progress'
+    default: op
+
+  legendaryweapons.reload:
+    description: 'Allows reloading the plugin configuration'
     default: op

@@ -7,6 +7,8 @@ import com.alterSMP.legendaryweapons.altar.AltarCraftingListener;
 import com.alterSMP.legendaryweapons.commands.GiveAltarCommand;
 import com.alterSMP.legendaryweapons.commands.AbilityCommand;
 import com.alterSMP.legendaryweapons.commands.KResetCommand;
+import com.alterSMP.legendaryweapons.commands.LReloadCommand;
+import com.alterSMP.legendaryweapons.config.ConfigManager;
 import com.alterSMP.legendaryweapons.data.DataManager;
 import com.alterSMP.legendaryweapons.data.CooldownManager;
 import com.alterSMP.legendaryweapons.items.LegendaryItemFactory;
@@ -18,6 +20,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
 
     private static LegendaryWeaponsPlugin instance;
 
+    private ConfigManager configManager;
     private DataManager dataManager;
     private CooldownManager cooldownManager;
     private AltarManager altarManager;
@@ -28,6 +31,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+
+        // Initialize config first
+        this.configManager = new ConfigManager(this);
 
         // Initialize managers
         this.dataManager = new DataManager(this);
@@ -45,13 +51,14 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         getCommand("givealtar").setExecutor(new GiveAltarCommand(this));
         getCommand("ability").setExecutor(new AbilityCommand(this));
         getCommand("kreset").setExecutor(new KResetCommand(this));
+        getCommand("lreload").setExecutor(new LReloadCommand(this));
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new AltarPlaceListener(this), this);
         getServer().getPluginManager().registerEvents(new AltarInteractListener(this), this);
         getServer().getPluginManager().registerEvents(new AltarCraftingListener(this), this);
 
-        // Start passive effect task (runs every 10 ticks = 0.5 seconds)
+        // Start passive effect task (uses config interval)
         passiveManager.startPassiveTask();
 
         getLogger().info("Legendary Weapons SMP plugin enabled!");
@@ -72,6 +79,10 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
 
     public static LegendaryWeaponsPlugin getInstance() {
         return instance;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 
     public DataManager getDataManager() {

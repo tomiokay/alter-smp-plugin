@@ -1,0 +1,520 @@
+# ========================================
+# Legendary Weapons SMP - Configuration
+# ========================================
+#
+# This file allows you to customize recipes, cooldowns, damage values,
+# and other settings without recompiling the plugin.
+#
+# After making changes, use /reload or restart the server.
+#
+
+# ========================================
+# GLOBAL SETTINGS
+# ========================================
+
+global:
+  # Whether to broadcast to the whole server when a legendary is crafted
+  broadcast-crafting: true
+
+  # Whether to show particle effects for abilities
+  enable-particles: true
+
+  # Particle density multiplier (0.5 = half particles, 2.0 = double particles)
+  particle-density: 1.0
+
+  # Whether passive effects are enabled
+  enable-passives: true
+
+  # Whether active abilities are enabled
+  enable-abilities: true
+
+# ========================================
+# ABILITY COOLDOWNS (in seconds)
+# ========================================
+
+cooldowns:
+  blade_of_the_fractured_stars:
+    ability1: 25  # Star Rift Slash
+    ability2: 45  # Stargate Blink
+
+  emberheart_scythe:
+    ability1: 30   # Flame Harvest
+    ability2: 180  # Fire Rebirth
+
+  tempestbreaker_spear:
+    ability1: 25  # Gale Throw
+    ability2: 50  # Stormcall
+
+  umbra_veil_dagger:
+    ability1: 20  # Shadowstep
+    ability2: 60  # Soul Mark
+
+  heartroot_guardian_axe:
+    ability1: 35  # Nature Grasp
+    ability2: 70  # Forest Shield
+
+  chains_of_eternity:
+    ability1: 35  # Soul Bind
+    ability2: 65  # Prison of the Damned
+
+  glacierbound_halberd:
+    ability1: 28  # Frostbite Sweep
+    ability2: 75  # Winter's Embrace
+
+  celestial_aegis_shield:
+    ability1: 40  # Radiant Block
+    ability2: 90  # Heaven's Wall
+
+  chrono_edge:
+    ability1: 40   # Echo Strike
+    ability2: 120  # Time Rewind
+
+  oblivion_harvester:
+    ability1: 30  # Void Slice
+    ability2: 85  # Void Rift
+
+  eclipse_devourer:
+    ability1: 35  # Void Rupture
+    ability2: 95  # Cataclysm Pulse
+
+# ========================================
+# ABILITY DAMAGE VALUES (in half-hearts)
+# ========================================
+
+damage:
+  # Blade of Fractured Stars
+  star_rift_slash: 12.0
+
+  # Emberheart Scythe
+  flame_harvest_percent: 0.2  # 20% of target's current HP
+  fire_rebirth_restore: 12.0  # Hearts restored on death
+  fire_rebirth_explosion: 10.0
+
+  # Tempestbreaker Spear
+  stormcall_damage: 4.0
+
+  # Umbra Veil Dagger
+  soul_mark_true_damage: 6.0  # TRUE DAMAGE - ignores armor
+
+  # Chains of Eternity (Prison duration in seconds)
+  prison_duration: 5
+
+  # Oblivion Harvester
+  void_slice_damage: 5.0
+  void_rift_damage: 3.0  # Per tick
+  oblivion_max_souls: 20
+  oblivion_damage_per_soul: 0.2
+
+  # Eclipse Devourer
+  void_rupture_damage: 7.0
+  cataclysm_pulse_damage: 8.0
+
+# ========================================
+# ABILITY RANGES & DURATIONS
+# ========================================
+
+ranges:
+  # Blade of Fractured Stars
+  star_rift_range: 30
+  stargate_blink_range: 45
+  flashburst_radius: 5
+  flashburst_hits_required: 20
+
+  # Emberheart Scythe
+  flame_harvest_radius: 6
+  fire_rebirth_duration: 10  # seconds
+
+  # Tempestbreaker Spear
+  stormcall_range: 15
+  stormcall_stun_duration: 3  # seconds
+
+  # Umbra Veil Dagger
+  shadowstep_distance: 8
+  shadowstep_invisibility: 4  # seconds
+  soul_mark_delay: 15  # seconds before damage
+  shadow_presence_sneak_speed: 3  # Speed level (1-255)
+
+  # Heartroot Guardian Axe
+  nature_grasp_radius: 6
+  nature_grasp_duration: 2  # seconds
+  forest_shield_duration: 10  # seconds
+
+  # Chains of Eternity
+  soul_bind_range: 20
+  soul_links_hits_required: 5
+  prison_cage_duration: 5  # seconds
+
+  # Glacierbound Halberd
+  frostbite_sweep_range: 8
+  frostbite_freeze_duration: 3  # seconds
+  winters_embrace_radius: 7
+  winters_embrace_duration: 5  # seconds
+
+  # Celestial Aegis Shield
+  aura_radius: 5
+  radiant_block_duration: 5  # seconds
+  radiant_block_reflect_percent: 0.75  # 75% reflection
+  heavens_wall_radius: 5
+  heavens_wall_duration: 6  # seconds
+
+  # Chrono Edge
+  echo_strike_duration: 6  # seconds
+  echo_strike_delay: 1  # seconds
+  time_rewind_delay: 5  # seconds
+  last_second_hp_threshold: 3.0  # hearts
+
+  # Eclipse Devourer
+  void_rupture_range: 35
+  dragons_gaze_radius: 8
+  cataclysm_pulse_radius: 7
+  cataclysm_explosion_delay: 2  # seconds
+
+# ========================================
+# LEGENDARY CRAFTING RECIPES
+# ========================================
+#
+# Each recipe is a 5x5 grid (25 items total)
+# Use Minecraft material names (e.g., DIAMOND_BLOCK, NETHERITE_INGOT)
+# Use AIR for empty slots
+#
+# Format: Row by row, left to right
+# Recipe index: [0-4] = row 1, [5-9] = row 2, etc.
+#
+
+recipes:
+  blade_of_the_fractured_stars:
+    - NETHER_STAR
+    - DIAMOND_BLOCK
+    - DIAMOND_BLOCK
+    - DIAMOND_BLOCK
+    - NETHER_STAR
+    - DIAMOND_BLOCK
+    - CRYING_OBSIDIAN
+    - AMETHYST_BLOCK
+    - CRYING_OBSIDIAN
+    - DIAMOND_BLOCK
+    - DIAMOND_BLOCK
+    - AMETHYST_BLOCK
+    - NETHERITE_SWORD
+    - AMETHYST_BLOCK
+    - DIAMOND_BLOCK
+    - DIAMOND_BLOCK
+    - CRYING_OBSIDIAN
+    - AMETHYST_BLOCK
+    - CRYING_OBSIDIAN
+    - DIAMOND_BLOCK
+    - NETHER_STAR
+    - DIAMOND_BLOCK
+    - DIAMOND_BLOCK
+    - DIAMOND_BLOCK
+    - NETHER_STAR
+
+  emberheart_scythe:
+    - BLAZE_ROD
+    - FIRE_CHARGE
+    - MAGMA_BLOCK
+    - FIRE_CHARGE
+    - BLAZE_ROD
+    - FIRE_CHARGE
+    - NETHERITE_INGOT
+    - NETHERITE_INGOT
+    - NETHERITE_INGOT
+    - FIRE_CHARGE
+    - MAGMA_BLOCK
+    - NETHERITE_INGOT
+    - NETHERITE_SWORD
+    - NETHERITE_INGOT
+    - MAGMA_BLOCK
+    - FIRE_CHARGE
+    - NETHERITE_INGOT
+    - NETHERITE_INGOT
+    - NETHERITE_INGOT
+    - FIRE_CHARGE
+    - BLAZE_ROD
+    - FIRE_CHARGE
+    - MAGMA_BLOCK
+    - FIRE_CHARGE
+    - BLAZE_ROD
+
+  tempestbreaker_spear:
+    - FEATHER
+    - PHANTOM_MEMBRANE
+    - PHANTOM_MEMBRANE
+    - PHANTOM_MEMBRANE
+    - FEATHER
+    - PHANTOM_MEMBRANE
+    - DIAMOND
+    - PRISMARINE_CRYSTALS
+    - DIAMOND
+    - PHANTOM_MEMBRANE
+    - PHANTOM_MEMBRANE
+    - PRISMARINE_CRYSTALS
+    - TRIDENT
+    - PRISMARINE_CRYSTALS
+    - PHANTOM_MEMBRANE
+    - PHANTOM_MEMBRANE
+    - DIAMOND
+    - PRISMARINE_CRYSTALS
+    - DIAMOND
+    - PHANTOM_MEMBRANE
+    - FEATHER
+    - PHANTOM_MEMBRANE
+    - PHANTOM_MEMBRANE
+    - PHANTOM_MEMBRANE
+    - FEATHER
+
+  umbra_veil_dagger:
+    - ENDER_PEARL
+    - OBSIDIAN
+    - OBSIDIAN
+    - OBSIDIAN
+    - ENDER_PEARL
+    - OBSIDIAN
+    - SCULK
+    - ECHO_SHARD
+    - SCULK
+    - OBSIDIAN
+    - OBSIDIAN
+    - ECHO_SHARD
+    - NETHERITE_SWORD
+    - ECHO_SHARD
+    - OBSIDIAN
+    - OBSIDIAN
+    - SCULK
+    - ECHO_SHARD
+    - SCULK
+    - OBSIDIAN
+    - ENDER_PEARL
+    - OBSIDIAN
+    - OBSIDIAN
+    - OBSIDIAN
+    - ENDER_PEARL
+
+  heartroot_guardian_axe:
+    - OAK_LOG
+    - MOSS_BLOCK
+    - MOSS_BLOCK
+    - MOSS_BLOCK
+    - OAK_LOG
+    - MOSS_BLOCK
+    - EMERALD_BLOCK
+    - GLOW_BERRIES
+    - EMERALD_BLOCK
+    - MOSS_BLOCK
+    - MOSS_BLOCK
+    - GLOW_BERRIES
+    - NETHERITE_AXE
+    - GLOW_BERRIES
+    - MOSS_BLOCK
+    - MOSS_BLOCK
+    - EMERALD_BLOCK
+    - GLOW_BERRIES
+    - EMERALD_BLOCK
+    - MOSS_BLOCK
+    - OAK_LOG
+    - MOSS_BLOCK
+    - MOSS_BLOCK
+    - MOSS_BLOCK
+    - OAK_LOG
+
+  chains_of_eternity:
+    - CHAIN
+    - SOUL_SAND
+    - WITHER_SKELETON_SKULL
+    - SOUL_SAND
+    - CHAIN
+    - SOUL_SAND
+    - NETHERITE_SCRAP
+    - NETHERITE_SCRAP
+    - NETHERITE_SCRAP
+    - SOUL_SAND
+    - WITHER_SKELETON_SKULL
+    - NETHERITE_SCRAP
+    - WOODEN_SHOVEL
+    - NETHERITE_SCRAP
+    - WITHER_SKELETON_SKULL
+    - SOUL_SAND
+    - NETHERITE_SCRAP
+    - NETHERITE_SCRAP
+    - NETHERITE_SCRAP
+    - SOUL_SAND
+    - CHAIN
+    - SOUL_SAND
+    - WITHER_SKELETON_SKULL
+    - SOUL_SAND
+    - CHAIN
+
+  glacierbound_halberd:
+    - ICE
+    - PACKED_ICE
+    - BLUE_ICE
+    - PACKED_ICE
+    - ICE
+    - PACKED_ICE
+    - DIAMOND
+    - DIAMOND
+    - DIAMOND
+    - PACKED_ICE
+    - BLUE_ICE
+    - DIAMOND
+    - NETHERITE_BOOTS
+    - DIAMOND
+    - BLUE_ICE
+    - PACKED_ICE
+    - DIAMOND
+    - DIAMOND
+    - DIAMOND
+    - PACKED_ICE
+    - ICE
+    - PACKED_ICE
+    - BLUE_ICE
+    - PACKED_ICE
+    - ICE
+
+  celestial_aegis_shield:
+    - END_STONE
+    - GLOWSTONE
+    - GLOWSTONE
+    - GLOWSTONE
+    - END_STONE
+    - GLOWSTONE
+    - GOLD_BLOCK
+    - TOTEM_OF_UNDYING
+    - GOLD_BLOCK
+    - GLOWSTONE
+    - GLOWSTONE
+    - TOTEM_OF_UNDYING
+    - SHIELD
+    - TOTEM_OF_UNDYING
+    - GLOWSTONE
+    - GLOWSTONE
+    - GOLD_BLOCK
+    - TOTEM_OF_UNDYING
+    - GOLD_BLOCK
+    - GLOWSTONE
+    - END_STONE
+    - GLOWSTONE
+    - GLOWSTONE
+    - GLOWSTONE
+    - END_STONE
+
+  chrono_edge:
+    - CLOCK
+    - REDSTONE_BLOCK
+    - REDSTONE_BLOCK
+    - REDSTONE_BLOCK
+    - CLOCK
+    - REDSTONE_BLOCK
+    - AMETHYST_SHARD
+    - RECOVERY_COMPASS
+    - AMETHYST_SHARD
+    - REDSTONE_BLOCK
+    - REDSTONE_BLOCK
+    - RECOVERY_COMPASS
+    - NETHERITE_SWORD
+    - RECOVERY_COMPASS
+    - REDSTONE_BLOCK
+    - REDSTONE_BLOCK
+    - AMETHYST_SHARD
+    - RECOVERY_COMPASS
+    - AMETHYST_SHARD
+    - REDSTONE_BLOCK
+    - CLOCK
+    - REDSTONE_BLOCK
+    - REDSTONE_BLOCK
+    - REDSTONE_BLOCK
+    - CLOCK
+
+  oblivion_harvester:
+    - NETHERITE_BLOCK
+    - WITHER_ROSE
+    - WITHER_ROSE
+    - WITHER_ROSE
+    - NETHERITE_BLOCK
+    - WITHER_ROSE
+    - OBSIDIAN
+    - NETHER_STAR
+    - OBSIDIAN
+    - WITHER_ROSE
+    - WITHER_ROSE
+    - NETHER_STAR
+    - NETHERITE_SWORD
+    - NETHER_STAR
+    - WITHER_ROSE
+    - WITHER_ROSE
+    - OBSIDIAN
+    - NETHER_STAR
+    - OBSIDIAN
+    - WITHER_ROSE
+    - NETHERITE_BLOCK
+    - WITHER_ROSE
+    - WITHER_ROSE
+    - WITHER_ROSE
+    - NETHERITE_BLOCK
+
+  eclipse_devourer:
+    - DRAGON_HEAD
+    - DRAGON_BREATH
+    - DRAGON_EGG
+    - DRAGON_BREATH
+    - DRAGON_HEAD
+    - DRAGON_BREATH
+    - END_CRYSTAL
+    - ELYTRA
+    - END_CRYSTAL
+    - DRAGON_BREATH
+    - DRAGON_EGG
+    - ELYTRA
+    - NETHERITE_SWORD
+    - ELYTRA
+    - DRAGON_EGG
+    - DRAGON_BREATH
+    - END_CRYSTAL
+    - ELYTRA
+    - END_CRYSTAL
+    - DRAGON_BREATH
+    - DRAGON_HEAD
+    - DRAGON_BREATH
+    - DRAGON_EGG
+    - DRAGON_BREATH
+    - DRAGON_HEAD
+
+# ========================================
+# MESSAGES
+# ========================================
+
+messages:
+  # Crafting messages
+  already-crafted: "&cThis legendary has already been forged by {crafter}!"
+  craft-broadcast: "&6&l{player} has forged {legendary}&6&l!"
+
+  # Ability messages
+  ability-on-cooldown: "&eAbility on cooldown: &c{seconds}s"
+  no-legendary-equipped: "&cYou must be holding or wearing a legendary weapon!"
+  ability-failed: "&cFailed to execute ability!"
+
+  # Command messages
+  altar-given: "&5You have received a &lLegendary Altar&5!"
+  altar-placed: "&5You have placed a &lLegendary Altar&5!"
+  altar-broken: "&eYou have broken a Legendary Altar."
+  reset-broadcast: "&c&lLEGENDARY CRAFTING RESET"
+  reset-message: "&eAll players can now craft legendary weapons again!"
+
+  # Permission messages
+  no-permission: "&cYou do not have permission to use this command."
+  player-not-found: "&cPlayer not found: {player}"
+  console-specify-player: "&cConsole must specify a player: /givealtar <player>"
+
+# ========================================
+# PERFORMANCE SETTINGS
+# ========================================
+
+performance:
+  # How often to check for passive effects (in ticks, 20 ticks = 1 second)
+  passive-check-interval: 10
+
+  # Cooldown between ice creation for Glacierbound (milliseconds)
+  ice-creation-cooldown: 500
+
+  # How often Void Rift damages entities (ticks)
+  void-rift-damage-interval: 10
