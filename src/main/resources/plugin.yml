@@ -1,0 +1,32 @@
+name: LegendaryWeaponsSMP
+version: '1.0.0'
+main: com.alterSMP.legendaryweapons.LegendaryWeaponsPlugin
+api-version: '1.21'
+description: 'Legendary Weapons SMP with unique items and abilities'
+author: AlterSMP
+
+commands:
+  givealtar:
+    description: 'Gives a Legendary Altar to a player'
+    usage: '/givealtar [player]'
+    permission: legendaryweapons.givealtar
+    permission-message: 'You do not have permission to use this command'
+
+  ability:
+    description: 'Use legendary weapon abilities'
+    usage: '/ability <1|2>'
+
+  kreset:
+    description: 'Reset all legendary crafting progress for all players'
+    usage: '/kreset'
+    permission: legendaryweapons.kreset
+    permission-message: 'You do not have permission to use this command'
+
+permissions:
+  legendaryweapons.givealtar:
+    description: 'Allows giving legendary altars'
+    default: op
+
+  legendaryweapons.kreset:
+    description: 'Allows resetting legendary crafting progress'
+    default: op
