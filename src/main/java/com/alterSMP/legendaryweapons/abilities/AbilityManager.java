@@ -148,7 +148,7 @@ public class AbilityManager implements Listener {
             // Enhanced particles - much more visible
             player.getWorld().spawnParticle(Particle.END_ROD, point, 15, 0.3, 0.3, 0.3, 0.05);
             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, point, 8, 0.2, 0.2, 0.2, 0.1);
-            player.getWorld().spawnParticle(Particle.CRIT_MAGIC, point, 5, 0.2, 0.2, 0.2, 0);
+            player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, point, 5, 0.2, 0.2, 0.2, 0);
 
             // Damage entities - increased for Prot 4
             for (Entity entity : point.getWorld().getNearbyEntities(point, 1, 1, 1)) {
@@ -689,7 +689,7 @@ public class AbilityManager implements Listener {
         echoStrikeTargets.put(player.getUniqueId(), new HashSet<>());
 
         // Enhanced particles
-        player.getWorld().spawnParticle(Particle.CRIT_MAGIC, player.getLocation(), 200, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, player.getLocation(), 200, 1, 1, 1, 0.1);
         player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 150, 1, 1, 1, 0.1);
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 100, 1, 1, 1, 0.05);
 
@@ -717,7 +717,7 @@ public class AbilityManager implements Listener {
         // Enhanced particles
         player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 300, 1, 1, 1, 1);
         player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 150, 1, 1, 1, 0.1);
-        player.getWorld().spawnParticle(Particle.CRIT_MAGIC, player.getLocation(), 100, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, player.getLocation(), 100, 1, 1, 1, 0.1);
 
         player.sendMessage(ChatColor.YELLOW + "Time state saved! Rewinding in 5 seconds...");
 
