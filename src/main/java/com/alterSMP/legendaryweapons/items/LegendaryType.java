@@ -9,11 +9,15 @@ public enum LegendaryType {
     UMBRA_VEIL_DAGGER("umbra_veil_dagger", "Umbra Veil Dagger", Material.NETHERITE_SWORD),
     HEARTROOT_GUARDIAN_AXE("heartroot_guardian_axe", "Heartroot Guardian Axe", Material.NETHERITE_AXE),
     CHAINS_OF_ETERNITY("chains_of_eternity", "Chains of Eternity", Material.WOODEN_SHOVEL),
-    GLACIERBOUND_HALBERD("glacierbound_halberd", "Glacierbound Halberd", Material.NETHERITE_BOOTS),
+    SKYBREAKER_BOOTS("skybreaker_boots", "Skybreaker Boots", Material.DIAMOND_BOOTS),
     CELESTIAL_AEGIS_SHIELD("celestial_aegis_shield", "Celestial Aegis Shield", Material.SHIELD),
     CHRONO_EDGE("chrono_edge", "Chrono Edge", Material.NETHERITE_SWORD),
     OBLIVION_HARVESTER("oblivion_harvester", "Oblivion Harvester", Material.NETHERITE_SWORD),
-    ECLIPSE_DEVOURER("eclipse_devourer", "Eclipse Devourer", Material.NETHERITE_SWORD);
+    ECLIPSE_DEVOURER("eclipse_devourer", "Eclipse Devourer", Material.NETHERITE_SWORD),
+    COPPER_PICKAXE("copper_pickaxe", "Copper Pickaxe", Material.NETHERITE_PICKAXE),
+    THUNDERFORGE_CHESTPLATE("thunderforge_chestplate", "Thunderforge Chestplate", Material.DIAMOND_CHESTPLATE),
+    IONFLARE_LEGGINGS("ionflare_leggings", "Ionflare Leggings", Material.DIAMOND_LEGGINGS),
+    BLOODREAPER_HOOD("bloodreaper_hood", "Bloodreaper Hood", Material.DIAMOND_HELMET);
 
     private final String id;
     private final String displayName;

@@ -142,15 +142,15 @@ public class AltarRecipe {
             new AltarRecipe(LegendaryType.CHAINS_OF_ETERNITY, chainsPattern));
 
         // Recipe 7: Glacierbound Halberd
-        Material[][] glacierPattern = {
-            {Material.ICE, Material.PACKED_ICE, Material.BLUE_ICE, Material.PACKED_ICE, Material.ICE},
-            {Material.PACKED_ICE, Material.DIAMOND, Material.DIAMOND, Material.DIAMOND, Material.PACKED_ICE},
-            {Material.BLUE_ICE, Material.DIAMOND, Material.NETHERITE_BOOTS, Material.DIAMOND, Material.BLUE_ICE},
-            {Material.PACKED_ICE, Material.DIAMOND, Material.DIAMOND, Material.DIAMOND, Material.PACKED_ICE},
-            {Material.ICE, Material.PACKED_ICE, Material.BLUE_ICE, Material.PACKED_ICE, Material.ICE}
+        Material[][] skybreakerPattern = {
+            {Material.FEATHER, Material.PHANTOM_MEMBRANE, Material.DIAMOND_BLOCK, Material.PHANTOM_MEMBRANE, Material.FEATHER},
+            {Material.PHANTOM_MEMBRANE, Material.DIAMOND, Material.DIAMOND, Material.DIAMOND, Material.PHANTOM_MEMBRANE},
+            {Material.DIAMOND_BLOCK, Material.DIAMOND, Material.DIAMOND_BOOTS, Material.DIAMOND, Material.DIAMOND_BLOCK},
+            {Material.PHANTOM_MEMBRANE, Material.DIAMOND, Material.DIAMOND, Material.DIAMOND, Material.PHANTOM_MEMBRANE},
+            {Material.FEATHER, Material.PHANTOM_MEMBRANE, Material.DIAMOND_BLOCK, Material.PHANTOM_MEMBRANE, Material.FEATHER}
         };
-        recipes.put(LegendaryType.GLACIERBOUND_HALBERD.getId(),
-            new AltarRecipe(LegendaryType.GLACIERBOUND_HALBERD, glacierPattern));
+        recipes.put(LegendaryType.SKYBREAKER_BOOTS.getId(),
+            new AltarRecipe(LegendaryType.SKYBREAKER_BOOTS, skybreakerPattern));
 
         // Recipe 8: Celestial Aegis Shield
         Material[][] celestialPattern = {

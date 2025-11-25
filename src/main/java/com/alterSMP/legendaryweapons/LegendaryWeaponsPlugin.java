@@ -19,7 +19,9 @@ import com.alterSMP.legendaryweapons.data.CooldownManager;
 import com.alterSMP.legendaryweapons.data.TrustManager;
 import com.alterSMP.legendaryweapons.items.LegendaryItemFactory;
 import com.alterSMP.legendaryweapons.passives.PassiveEffectManager;
+import com.alterSMP.legendaryweapons.passives.ArmorPassivesListener;
 import com.alterSMP.legendaryweapons.abilities.AbilityManager;
+import com.alterSMP.legendaryweapons.abilities.CopperPickaxeListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class LegendaryWeaponsPlugin extends JavaPlugin {
@@ -78,6 +80,8 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AltarPlaceListener(this), this);
         getServer().getPluginManager().registerEvents(new AltarInteractListener(this), this);
         getServer().getPluginManager().registerEvents(new AltarCraftingListener(this), this);
+        getServer().getPluginManager().registerEvents(new CopperPickaxeListener(this), this);
+        getServer().getPluginManager().registerEvents(new ArmorPassivesListener(this), this);
 
         // Start passive effect task (uses config interval)
         passiveManager.startPassiveTask();

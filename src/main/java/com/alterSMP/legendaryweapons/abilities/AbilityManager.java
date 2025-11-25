@@ -39,6 +39,8 @@ public class AbilityManager implements Listener {
     private Set<UUID> nextGaleThrow; // Next trident throw is Gale
     private Map<UUID, Set<UUID>> echoStrikeTargets; // Targets hit during Echo Strike
     private Map<UUID, Set<Location>> voidRiftBlocks; // Void Rift black hole blocks
+    private Set<UUID> mining3x3Active; // Players with 3x3 mining enabled
+    private Set<UUID> fortuneModeActive; // Players with Fortune mode (vs Silk Touch)
 
     public AbilityManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
@@ -52,6 +54,8 @@ public class AbilityManager implements Listener {
         this.nextGaleThrow = new HashSet<>();
         this.echoStrikeTargets = new HashMap<>();
         this.voidRiftBlocks = new HashMap<>();
+        this.mining3x3Active = new HashSet<>();
+        this.fortuneModeActive = new HashSet<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -94,8 +98,6 @@ public class AbilityManager implements Listener {
                 return natureGrasp(player);
             case CHAINS_OF_ETERNITY:
                 return soulBind(player);
-            case GLACIERBOUND_HALBERD:
-                return frostbiteSweep(player);
             case CELESTIAL_AEGIS_SHIELD:
                 return radiantBlock(player);
             case CHRONO_EDGE:
@@ -104,6 +106,8 @@ public class AbilityManager implements Listener {
                 return voidSlice(player);
             case ECLIPSE_DEVOURER:
                 return voidRupture(player);
+            case COPPER_PICKAXE:
+                return toggle3x3Mining(player);
         }
         return false;
     }
@@ -122,8 +126,6 @@ public class AbilityManager implements Listener {
                 return forestShield(player);
             case CHAINS_OF_ETERNITY:
                 return prisonOfDamned(player);
-            case GLACIERBOUND_HALBERD:
-                return wintersEmbrace(player);
             case CELESTIAL_AEGIS_SHIELD:
                 return heavensWall(player);
             case CHRONO_EDGE:
@@ -132,6 +134,8 @@ public class AbilityManager implements Listener {
                 return voidRift(player);
             case ECLIPSE_DEVOURER:
                 return cataclysmPulse(player);
+            case COPPER_PICKAXE:
+                return toggleEnchantMode(player);
         }
         return false;
     }
@@ -959,11 +963,11 @@ public class AbilityManager implements Listener {
         cooldowns.put("umbra_veil_dagger", new int[]{20, 60});
         cooldowns.put("heartroot_guardian_axe", new int[]{35, 70});
         cooldowns.put("chains_of_eternity", new int[]{35, 65});
-        cooldowns.put("glacierbound_halberd", new int[]{28, 75});
         cooldowns.put("celestial_aegis_shield", new int[]{40, 90});
         cooldowns.put("chrono_edge", new int[]{40, 120});
         cooldowns.put("oblivion_harvester", new int[]{30, 85});
         cooldowns.put("eclipse_devourer", new int[]{35, 95});
+        cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
 
         int[] cd = cooldowns.get(type.getId());
         return cd != null ? cd[abilityNum - 1] : 30;
@@ -1083,9 +1087,9 @@ public class AbilityManager implements Listener {
                             if (markedEntity instanceof LivingEntity && markedEntity.isValid() && !markedEntity.isDead()) {
                                 LivingEntity markedLiving = (LivingEntity) markedEntity;
 
-                                // True damage (ignore armor) - directly reduce health (increased from 6.0)
+                                // True damage (ignore armor) - directly reduce health
                                 double currentHealth = markedLiving.getHealth();
-                                markedLiving.setHealth(Math.max(0, currentHealth - 9.0)); // Increased from 6.0 (50% increase)
+                                markedLiving.setHealth(Math.max(0, currentHealth - 6.0)); // 6 hearts = 3 hearts true damage
 
                                 // Enhanced particles
                                 markedLiving.getWorld().spawnParticle(Particle.SOUL, markedLiving.getLocation(), 200, 0.5, 1, 0.5, 0.1);
@@ -1098,7 +1102,7 @@ public class AbilityManager implements Listener {
                                     ((Player) markedLiving).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Soul Mark True Damage" + ChatColor.RED + " from " + player.getName() + "!");
                                 }
 
-                                player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark triggered! 4.5 hearts of true damage dealt!");
+                                player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark triggered! 3 hearts of true damage dealt!");
                             }
                         }
                     }, 300L); // 15 seconds
@@ -1144,6 +1148,40 @@ public class AbilityManager implements Listener {
                 player.sendMessage(ChatColor.DARK_PURPLE + "Dragon's power absorbed! +2 Absorption hearts");
             }
         }
+    }
+
+    // ========== COPPER EXCAVATOR ==========
+
+    private boolean toggle3x3Mining(Player player) {
+        if (mining3x3Active.contains(player.getUniqueId())) {
+            mining3x3Active.remove(player.getUniqueId());
+            player.sendMessage(ChatColor.GOLD + "3x3 Mining: " + ChatColor.RED + "Disabled");
+        } else {
+            mining3x3Active.add(player.getUniqueId());
+            player.sendMessage(ChatColor.GOLD + "3x3 Mining: " + ChatColor.GREEN + "Enabled");
+        }
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
+        return true;
+    }
+
+    private boolean toggleEnchantMode(Player player) {
+        if (fortuneModeActive.contains(player.getUniqueId())) {
+            fortuneModeActive.remove(player.getUniqueId());
+            player.sendMessage(ChatColor.GOLD + "Enchantment Mode: " + ChatColor.AQUA + "Silk Touch");
+        } else {
+            fortuneModeActive.add(player.getUniqueId());
+            player.sendMessage(ChatColor.GOLD + "Enchantment Mode: " + ChatColor.GREEN + "Fortune III");
+        }
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
+        return true;
+    }
+
+    public boolean is3x3MiningActive(UUID playerId) {
+        return mining3x3Active.contains(playerId);
+    }
+
+    public boolean isFortuneModeActive(UUID playerId) {
+        return fortuneModeActive.contains(playerId);
     }
 
     // Helper class for Time Rewind

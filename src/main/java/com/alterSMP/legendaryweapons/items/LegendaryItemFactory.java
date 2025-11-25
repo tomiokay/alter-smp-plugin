@@ -33,9 +33,8 @@ public class LegendaryItemFactory {
             NamespacedKey key = new NamespacedKey("legendaryweapons", LEGENDARY_KEY);
             meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, type.getId());
 
-            // Add enchant glint
-            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            // Add max enchantments based on type
+            addMaxEnchantments(meta, type);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
             // Make unbreakable
@@ -149,6 +148,80 @@ public class LegendaryItemFactory {
         item.setItemMeta(meta);
     }
 
+    private void addMaxEnchantments(ItemMeta meta, LegendaryType type) {
+        switch (type) {
+            // Swords
+            case BLADE_OF_FRACTURED_STARS:
+            case EMBERHEART_SCYTHE:
+            case UMBRA_VEIL_DAGGER:
+            case CHRONO_EDGE:
+            case OBLIVION_HARVESTER:
+            case ECLIPSE_DEVOURER:
+                meta.addEnchant(Enchantment.SHARPNESS, 5, true);
+                meta.addEnchant(Enchantment.LOOTING, 3, true);
+                meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
+                meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
+                break;
+
+            // Axe
+            case HEARTROOT_GUARDIAN_AXE:
+                meta.addEnchant(Enchantment.SHARPNESS, 5, true);
+                meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
+                meta.addEnchant(Enchantment.SILK_TOUCH, 1, true);
+                break;
+
+            // Trident
+            case TEMPESTBREAKER_SPEAR:
+                meta.addEnchant(Enchantment.LOYALTY, 3, true);
+                meta.addEnchant(Enchantment.IMPALING, 5, true);
+                break;
+
+            // Shovel
+            case CHAINS_OF_ETERNITY:
+                meta.addEnchant(Enchantment.SHARPNESS, 5, true);
+                meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
+                meta.addEnchant(Enchantment.FORTUNE, 3, true);
+                break;
+
+            // Boots
+            case SKYBREAKER_BOOTS:
+                meta.addEnchant(Enchantment.PROTECTION, 4, true);
+                meta.addEnchant(Enchantment.FEATHER_FALLING, 4, true);
+                meta.addEnchant(Enchantment.DEPTH_STRIDER, 3, true);
+                meta.addEnchant(Enchantment.SOUL_SPEED, 3, true);
+                break;
+
+            // Leggings
+            case IONFLARE_LEGGINGS:
+                meta.addEnchant(Enchantment.PROTECTION, 4, true);
+                meta.addEnchant(Enchantment.SWIFT_SNEAK, 3, true);
+                break;
+
+            // Chestplate
+            case THUNDERFORGE_CHESTPLATE:
+                meta.addEnchant(Enchantment.PROTECTION, 4, true);
+                break;
+
+            // Helmet
+            case BLOODREAPER_HOOD:
+                meta.addEnchant(Enchantment.PROTECTION, 4, true);
+                meta.addEnchant(Enchantment.RESPIRATION, 4, true);
+                meta.addEnchant(Enchantment.AQUA_AFFINITY, 1, true);
+                break;
+
+            // Pickaxe
+            case COPPER_PICKAXE:
+                meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
+                // Silk Touch/Fortune toggle handled by ability
+                break;
+
+            // Shield
+            case CELESTIAL_AEGIS_SHIELD:
+                meta.addEnchant(Enchantment.MENDING, 1, true);
+                break;
+        }
+    }
+
     private List<String> getLoreForLegendary(LegendaryType type) {
         List<String> lore = new ArrayList<>();
         lore.add("");
@@ -214,24 +287,23 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Cage target in iron bars");
                 break;
 
-            case GLACIERBOUND_HALBERD:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Frozen Path");
-                lore.add(ChatColor.GRAY + "  Water freezes beneath you");
+            case SKYBREAKER_BOOTS:
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Featherfall");
+                lore.add(ChatColor.GRAY + "  No fall damage");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Frostbite Sweep (28s)");
-                lore.add(ChatColor.GRAY + "  Cone that freezes enemies");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Winter's Embrace (75s)");
-                lore.add(ChatColor.GRAY + "  Frost dome for protection");
+                lore.add(ChatColor.GREEN + "Ability: " + ChatColor.WHITE + "Meteor Slam");
+                lore.add(ChatColor.GRAY + "  Shift mid-air to slam down");
+                lore.add(ChatColor.GRAY + "  Damage based on fall distance");
                 break;
 
             case CELESTIAL_AEGIS_SHIELD:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Aura of Protection");
                 lore.add(ChatColor.GRAY + "  Allies gain Resistance I");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Radiant Block (40s)");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Radiant Block (35s)");
                 lore.add(ChatColor.GRAY + "  Reflect 75% damage for 5s");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Heaven's Wall (90s)");
-                lore.add(ChatColor.GRAY + "  Summon protective barrier");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Heaven's Wall (60s)");
+                lore.add(ChatColor.GRAY + "  Create protective barrier");
                 break;
 
             case CHRONO_EDGE:
@@ -263,6 +335,34 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Void arc with blindness");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Cataclysm Pulse (95s)");
                 lore.add(ChatColor.GRAY + "  Dark explosion with pull");
+                break;
+
+            case COPPER_PICKAXE:
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "None");
+                lore.add("");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "3x3 Mining Toggle");
+                lore.add(ChatColor.GRAY + "  Toggle 3x3 area mining");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Enchant Switch");
+                lore.add(ChatColor.GRAY + "  Toggle Silk Touch/Fortune III");
+                break;
+
+            case THUNDERFORGE_CHESTPLATE:
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Shockwave Counter");
+                lore.add(ChatColor.GRAY + "  Every 7 hits: electric shockwave");
+                lore.add(ChatColor.GRAY + "  Deals damage and knockback");
+                break;
+
+            case IONFLARE_LEGGINGS:
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Ion Charges");
+                lore.add(ChatColor.GRAY + "  Hits build charges (max 5)");
+                lore.add(ChatColor.GRAY + "  At 5: chain lightning attack");
+                break;
+
+            case BLOODREAPER_HOOD:
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Blood Harvest");
+                lore.add(ChatColor.GRAY + "  Kills grant +5 hearts (5min)");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Critical Rush");
+                lore.add(ChatColor.GRAY + "  Crits grant +10% speed (3s)");
                 break;
         }
 

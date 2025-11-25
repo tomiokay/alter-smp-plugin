@@ -51,6 +51,14 @@ public class AbilityCommand implements CommandExecutor {
             return true;
         }
 
+        // Check if this legendary has active abilities (some armor pieces don't use /ability)
+        LegendaryType type = LegendaryType.fromId(legendaryId);
+        if (type == LegendaryType.SKYBREAKER_BOOTS || type == LegendaryType.THUNDERFORGE_CHESTPLATE
+                || type == LegendaryType.IONFLARE_LEGGINGS || type == LegendaryType.BLOODREAPER_HOOD) {
+            player.sendMessage(ChatColor.RED + "This legendary only has passive abilities!");
+            return true;
+        }
+
         // Check cooldown
         if (plugin.getCooldownManager().isOnCooldown(player.getUniqueId(), legendaryId, abilityNum)) {
             int remaining = plugin.getCooldownManager().getRemainingCooldown(
@@ -85,7 +93,25 @@ public class AbilityCommand implements CommandExecutor {
             return legendaryId;
         }
 
-        // Check boots (for Glacierbound)
+        // Check armor slots
+        ItemStack helmet = player.getInventory().getHelmet();
+        legendaryId = LegendaryItemFactory.getLegendaryId(helmet);
+        if (legendaryId != null) {
+            return legendaryId;
+        }
+
+        ItemStack chestplate = player.getInventory().getChestplate();
+        legendaryId = LegendaryItemFactory.getLegendaryId(chestplate);
+        if (legendaryId != null) {
+            return legendaryId;
+        }
+
+        ItemStack leggings = player.getInventory().getLeggings();
+        legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
+        if (legendaryId != null) {
+            return legendaryId;
+        }
+
         ItemStack boots = player.getInventory().getBoots();
         legendaryId = LegendaryItemFactory.getLegendaryId(boots);
         if (legendaryId != null) {

@@ -134,19 +134,9 @@ public class PassiveEffectManager implements Listener {
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
 
-        if (type == LegendaryType.GLACIERBOUND_HALBERD) {
-            // Frozen Path - Water turns to ice
-            Block below = player.getLocation().subtract(0, 1, 0).getBlock();
-            if (below.getType() == Material.WATER) {
-                long now = System.currentTimeMillis();
-                long lastTime = lastIceCreateTime.getOrDefault(player.getUniqueId(), 0L);
-
-                // Only create ice every 500ms to avoid lag
-                if (now - lastTime > 500) {
-                    below.setType(Material.ICE);
-                    lastIceCreateTime.put(player.getUniqueId(), now);
-                }
-            }
+        if (type == LegendaryType.SKYBREAKER_BOOTS) {
+            // Featherfall - No fall damage (handled in event listener)
+            // No tick-based passive needed
         }
     }
 

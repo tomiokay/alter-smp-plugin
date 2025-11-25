@@ -13,7 +13,18 @@
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar build)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar build --rerun-tasks)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar shadowJar)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar --stop)",
+      "Bash(dir:*)",
+      "Bash(nul)",
+      "Bash(cmd.exe /c \"cd /d C:\\Users\\AWANG\\OneDrive - Bayview Glen Private School\\Desktop\\Cursor\\alter-smp-plugin && gradlew.bat build --no-daemon\":*)",
+      "Bash(gradlew.bat build:*)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar build --no-daemon)",
+      "Bash(powershell.exe:*)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar clean shadowJar --no-daemon)",
+      "Bash(echo:*)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar \"C:\\Users\\AWANG\\OneDrive - Bayview Glen Private School\\Desktop\\Cursor\\alter-smp-plugin\\gradle\\wrapper\\gradle-wrapper.jar\" --stop 2)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar clean build --no-daemon)"
     ],
     "deny": [],
     "ask": []
