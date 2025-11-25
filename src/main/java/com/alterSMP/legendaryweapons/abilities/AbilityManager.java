@@ -14,6 +14,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -1147,6 +1148,60 @@ public class AbilityManager implements Listener {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 200, 1));
                 player.sendMessage(ChatColor.DARK_PURPLE + "Dragon's power absorbed! +2 Absorption hearts");
             }
+        }
+    }
+
+    @EventHandler
+    public void onTridentHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof org.bukkit.entity.Trident)) return;
+        if (!(event.getEntity().getShooter() instanceof Player)) return;
+
+        org.bukkit.entity.Trident trident = (org.bukkit.entity.Trident) event.getEntity();
+        Player player = (Player) event.getEntity().getShooter();
+
+        // Check if this is a Gale Throw
+        if (nextGaleThrow.contains(player.getUniqueId())) {
+            nextGaleThrow.remove(player.getUniqueId());
+
+            Location hitLoc = trident.getLocation();
+
+            // Wind vortex effect
+            hitLoc.getWorld().spawnParticle(Particle.CLOUD, hitLoc, 300, 3, 3, 3, 0.3);
+            hitLoc.getWorld().spawnParticle(Particle.SWEEP_ATTACK, hitLoc, 100, 3, 3, 3, 0.1);
+            hitLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, hitLoc, 150, 3, 3, 3, 0.2);
+
+            hitLoc.getWorld().playSound(hitLoc, Sound.ENTITY_ENDER_DRAGON_FLAP, 2.0f, 1.5f);
+            hitLoc.getWorld().playSound(hitLoc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 2.0f);
+
+            // Damage and pull entities in 5 block radius
+            for (Entity entity : hitLoc.getWorld().getNearbyEntities(hitLoc, 5, 5, 5)) {
+                if (entity instanceof LivingEntity && entity != player) {
+                    // Trust check
+                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
+
+                    LivingEntity living = (LivingEntity) entity;
+
+                    // Pull toward vortex center
+                    Vector direction = hitLoc.toVector().subtract(living.getLocation().toVector()).normalize();
+                    living.setVelocity(direction.multiply(1.5).setY(0.8));
+
+                    // Damage
+                    living.damage(8.0, player);
+
+                    // Levitation effect
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 20, 5));
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
+
+                    // Notify victim
+                    if (living instanceof Player) {
+                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.AQUA + "Gale Throw" + ChatColor.RED + " from " + player.getName() + "!");
+                    }
+                }
+            }
+
+            player.sendMessage(ChatColor.AQUA + "Wind Vortex!");
         }
     }
 
