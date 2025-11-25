@@ -119,7 +119,7 @@ public class ConfigManager {
         return config.getInt("ranges.star_rift_range", 30);
     }
 
-    public int getStargateBlink Range() {
+    public int getStargateBlinkRange() {
         return config.getInt("ranges.stargate_blink_range", 45);
     }
 

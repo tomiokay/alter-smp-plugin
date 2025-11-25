@@ -280,9 +280,9 @@ public class AbilityManager implements Listener {
             destination = result.getHitBlock().getLocation();
         }
 
-        player.getWorld().spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 30, 0.5, 1, 0.5, 0);
+        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 30, 0.5, 1, 0.5, 0);
         player.teleport(destination);
-        player.getWorld().spawnParticle(Particle.SMOKE_LARGE, destination, 30, 0.5, 1, 0.5, 0);
+        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, destination, 30, 0.5, 1, 0.5, 0);
 
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 80, 0));
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.6f);
@@ -315,11 +315,11 @@ public class AbilityManager implements Listener {
                 living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 255));
                 living.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 40, 128));
 
-                living.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, living.getLocation(), 30, 0.5, 1, 0.5, 0);
+                living.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, living.getLocation(), 30, 0.5, 1, 0.5, 0);
             }
         }
 
-        player.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, player.getLocation(), 100, 6, 1, 6, 0);
+        player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 100, 6, 1, 6, 0);
         player.playSound(player.getLocation(), Sound.BLOCK_GRASS_BREAK, 1.0f, 0.5f);
         player.sendMessage(ChatColor.GREEN + "Nature Grasp!");
         return true;
@@ -582,7 +582,7 @@ public class AbilityManager implements Listener {
                 Vector perpendicular = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(offset);
                 Location sweepPoint = point.clone().add(perpendicular);
 
-                sweepPoint.getWorld().spawnParticle(Particle.SMOKE_LARGE, sweepPoint, 3, 0.1, 0.1, 0.1, 0);
+                sweepPoint.getWorld().spawnParticle(Particle.LARGE_SMOKE, sweepPoint, 3, 0.1, 0.1, 0.1, 0);
 
                 for (Entity entity : sweepPoint.getWorld().getNearbyEntities(sweepPoint, 1, 1, 1)) {
                     if (entity instanceof LivingEntity && entity != player) {
@@ -619,7 +619,7 @@ public class AbilityManager implements Listener {
                 }
 
                 // Black hole particles
-                riftLocation.getWorld().spawnParticle(Particle.SMOKE_LARGE, riftLocation, 30, 0.5, 0.5, 0.5, 0.1);
+                riftLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, riftLocation, 30, 0.5, 0.5, 0.5, 0.1);
                 riftLocation.getWorld().spawnParticle(Particle.PORTAL, riftLocation, 20, 0.5, 0.5, 0.5, 1);
 
                 // Pull entities
@@ -684,11 +684,11 @@ public class AbilityManager implements Listener {
             }
         }
 
-        center.getWorld().spawnParticle(Particle.SMOKE_LARGE, center, 200, 7, 3, 7, 0.1);
+        center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 200, 7, 3, 7, 0.1);
 
         // Final explosion after 2 seconds
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            center.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, center, 5, 1, 1, 1, 0);
+            center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 5, 1, 1, 1, 0);
             center.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.5f);
 
             for (Entity entity : center.getWorld().getNearbyEntities(center, 7, 7, 7)) {
