@@ -33,10 +33,23 @@ public class AltarPlaceListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         // Check if the broken block is an altar
         if (plugin.getAltarManager().isAltar(event.getBlock().getLocation())) {
-            // Cancel the break event - altars are unbreakable
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(ChatColor.RED + "Legendary Altars cannot be broken!");
-            event.getPlayer().sendMessage(ChatColor.GRAY + "Contact an administrator if you need to remove this altar.");
+            // Allow breaking in Creative mode only (like bedrock)
+            if (event.getPlayer().getGameMode() != org.bukkit.GameMode.CREATIVE) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(ChatColor.RED + "Legendary Altars can only be broken in Creative mode!");
+                return;
+            }
+
+            // In Creative mode: unregister the altar and drop the item
+            plugin.getAltarManager().unregisterAltar(event.getBlock().getLocation());
+            event.getPlayer().sendMessage(ChatColor.YELLOW + "You have broken a Legendary Altar.");
+
+            // Drop the altar item
+            event.setDropItems(false);
+            event.getBlock().getWorld().dropItemNaturally(
+                event.getBlock().getLocation(),
+                plugin.getItemFactory().createAltarItem()
+            );
         }
     }
 }
