@@ -1,0 +1,235 @@
+================================================================================
+    ✅ YOUR PLUGIN IS READY FOR PEBBLEHOST!
+================================================================================
+
+Everything has been prepared for deployment to your PebbleHost server.
+
+📦 WHAT'S BEEN DONE
+────────────────────────────────────────────────────────────────────────────
+
+✅ Enhanced all abilities with 3-5x more particle effects
+✅ Added chat notifications when players get hit
+✅ Increased damage by 50% to counter Protection IV armor
+✅ Fixed Flame Harvest to give 6 absorption hearts
+✅ Created comprehensive deployment guides
+✅ Committed and pushed all changes to GitHub
+
+🎨 VISUAL IMPROVEMENTS
+────────────────────────────────────────────────────────────────────────────
+
+Every ability now has spectacular particle effects:
+• Star Rift Slash: END_ROD + ELECTRIC_SPARK + CRIT_MAGIC
+• Flame Harvest: FLAME + LAVA + SOUL_FIRE_FLAME
+• Void Rupture: REVERSE_PORTAL + LARGE_SMOKE + SQUID_INK
+• Cataclysm Pulse: Massive explosion with 800+ particles
+• And many more...
+
+⚔️ DAMAGE INCREASES (Perfect for Protection IV PvP)
+────────────────────────────────────────────────────────────────────────────
+
+• Star Rift Slash: 12 → 18 damage (50% increase)
+• Stormcall: 4 → 6 per lightning
+• Void Slice: 5 → 7.5 damage
+• Void Rupture: 7 → 10.5 damage
+• Cataclysm Pulse: 8 → 12 explosion damage
+• Soul Mark: 6 → 9 hearts true damage
+• Fire Rebirth: 10 → 15 explosion damage
+• Void Rift: 3 → 4.5 per tick
+• Flame Harvest: 30% HP damage + flat 6 absorption hearts
+
+💬 CHAT NOTIFICATIONS
+────────────────────────────────────────────────────────────────────────────
+
+Players now get notified when hit:
+"⚔ Hit by Star Rift Slash from PlayerName!"
+"⚔ Hit by Cataclysm Pulse from PlayerName!"
+
+📚 DEPLOYMENT GUIDES CREATED
+────────────────────────────────────────────────────────────────────────────
+
+1. PEBBLEHOST_QUICK_START.txt
+   → Quick reference card for deployment steps
+   → All commands and weapon IDs
+   → Troubleshooting guide
+
+2. DEPLOYMENT.md
+   → Comprehensive 2000+ word deployment guide
+   → Step-by-step instructions with screenshots descriptions
+   → Configuration guide
+   → Performance optimization tips
+   → Full troubleshooting section
+
+3. BUILD_FOR_PEBBLEHOST.bat
+   → Double-click to build the plugin
+   → Automatically stops daemons and builds
+   → Shows exact file location when done
+
+4. WEAPONS_GUIDE.md (existing)
+   → Complete weapon details
+   → All crafting recipes
+   → All abilities and cooldowns
+
+🚀 NEXT STEPS TO DEPLOY
+────────────────────────────────────────────────────────────────────────────
+
+STEP 1: Build the Plugin
+   ┌─────────────────────────────────────────────────┐
+   │ Double-click: BUILD_FOR_PEBBLEHOST.bat          │
+   │                                                  │
+   │ OR manually run: gradlew.bat build              │
+   └─────────────────────────────────────────────────┘
+
+   ⚠️ IMPORTANT: If build fails due to file locks:
+      1. Close all terminals/IDEs
+      2. Manually delete the 'build' folder
+      3. Run the build script again
+
+STEP 2: Find Your Plugin JAR
+   Location: build\libs\LegendaryWeaponsSMP-1.0.0.jar
+
+   This is the file you'll upload to PebbleHost!
+
+STEP 3: Upload to PebbleHost
+   1. Go to: https://client.pebblehost.com
+   2. Login and select your server
+   3. Click "File Manager" (left sidebar)
+   4. Navigate to "plugins" folder
+   5. Click "Upload"
+   6. Select: LegendaryWeaponsSMP-1.0.0.jar
+   7. Wait for upload to complete
+
+STEP 4: Restart Server
+   1. Click "Console" in PebbleHost panel
+   2. Click "Restart" button (or type: stop)
+   3. Wait 30-60 seconds
+   4. Look for success message in console:
+      "[LegendaryWeaponsSMP] Legendary Weapons SMP plugin enabled!"
+
+STEP 5: Test In-Game
+   1. Join server as OP
+   2. Run: /givealtar
+   3. Place the altar (looks like bedrock)
+   4. Right-click to open 5×5 crafting
+   5. Test weapon: /givelegendary blade_of_the_fractured_stars
+   6. Test abilities: /ability 1 and /ability 2
+   7. Enjoy the spectacular particles!
+
+📋 QUICK REFERENCE - ADMIN COMMANDS
+────────────────────────────────────────────────────────────────────────────
+
+/givealtar                    Give a Legendary Altar
+/giveweapon <weapon>          Give legendary (marks as crafted)
+/givelegendary <id>           Give legendary for testing
+/kreset                       Reset all crafting progress
+/kresetplayer <player>        Reset specific player
+/cooldown [player]            Clear ability cooldowns
+/trust <player>               Toggle trust (prevent friendly fire)
+/ability 1                    Use first ability
+/ability 2                    Use second ability
+
+📋 LEGENDARY WEAPON IDS
+────────────────────────────────────────────────────────────────────────────
+
+blade_of_the_fractured_stars    umbra_veil_dagger
+emberheart_scythe               heartroot_guardian_axe
+tempestbreaker_spear            chains_of_eternity
+glacierbound_halberd            celestial_aegis_shield
+chrono_edge                     oblivion_harvester
+eclipse_devourer
+
+🔍 TROUBLESHOOTING
+────────────────────────────────────────────────────────────────────────────
+
+❌ Build fails with file locks:
+   → Close all terminals/IDEs
+   → Delete 'build' folder manually
+   → Run build script again
+
+❌ Plugin won't load on server:
+   → Check server is Paper/Spigot 1.21.8
+   → Contact PebbleHost to ensure Java 21+ installed
+   → Check console for specific error messages
+
+❌ Abilities not working:
+   → Make sure weapon is in correct hand/slot
+   → Use /cooldown to clear cooldowns
+   → Check console for errors
+
+❌ Particles not showing:
+   → Check client particle settings (Options → Video Settings)
+   → Lower particle settings if needed (Decreased/Minimal)
+   → Some particles may be limited by server
+
+❌ Server lagging:
+   → Edit config.yml: passive_tick_interval: 20 (increase from 10)
+   → Have players lower particle settings
+   → Use /timings to identify performance issues
+
+📖 FULL DOCUMENTATION
+────────────────────────────────────────────────────────────────────────────
+
+Open these files for detailed information:
+
+• PEBBLEHOST_QUICK_START.txt  → Quick reference
+• DEPLOYMENT.md               → Full deployment guide
+• WEAPONS_GUIDE.md           → All weapons and abilities
+• README.md                   → General plugin information
+
+🌐 ONLINE RESOURCES
+────────────────────────────────────────────────────────────────────────────
+
+• GitHub Repository:
+  https://github.com/tomiokay/alter-smp-plugin
+
+• PebbleHost Support (24/7 live chat):
+  https://pebblehost.com/support
+
+• Report Issues:
+  https://github.com/tomiokay/alter-smp-plugin/issues
+
+✅ DEPLOYMENT CHECKLIST
+────────────────────────────────────────────────────────────────────────────
+
+Before going live, make sure you:
+
+[ ] Built plugin JAR (BUILD_FOR_PEBBLEHOST.bat)
+[ ] Found JAR in build\libs\LegendaryWeaponsSMP-1.0.0.jar
+[ ] Logged into PebbleHost control panel
+[ ] Uploaded JAR to plugins folder
+[ ] Restarted server
+[ ] Checked console - no errors
+[ ] Tested /givealtar command
+[ ] Tested placing altar
+[ ] Tested opening altar (right-click)
+[ ] Tested crafting a legendary
+[ ] Tested /givelegendary command
+[ ] Tested both abilities (/ability 1 and /ability 2)
+[ ] Verified particle effects are showing
+[ ] Tested trust system (/trust)
+[ ] Verified damage notifications appear
+[ ] Checked server performance
+
+🎉 CONGRATULATIONS!
+────────────────────────────────────────────────────────────────────────────
+
+Your Legendary Weapons SMP plugin is ready for epic PvP battles!
+
+Features you've added:
+✨ Spectacular particle effects (3-5x more than before)
+💬 Chat notifications for all hits
+⚔️ 50% damage boost for Protection IV balance
+🔥 Flame Harvest gives 6 absorption hearts
+🎮 Complete trust system
+📖 Comprehensive guides for deployment
+
+Share the plugin with your players and watch the legendary battles unfold!
+
+For questions or issues:
+→ Open DEPLOYMENT.md for troubleshooting
+→ Check PEBBLEHOST_QUICK_START.txt for quick commands
+→ Contact PebbleHost support if server issues
+→ Report plugin bugs on GitHub
+
+Good luck with your SMP! 🎮⚔️✨
+
+================================================================================
