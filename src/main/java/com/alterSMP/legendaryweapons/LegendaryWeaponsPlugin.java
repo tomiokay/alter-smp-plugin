@@ -9,6 +9,7 @@ import com.alterSMP.legendaryweapons.commands.AbilityCommand;
 import com.alterSMP.legendaryweapons.commands.KResetCommand;
 import com.alterSMP.legendaryweapons.commands.LReloadCommand;
 import com.alterSMP.legendaryweapons.commands.CooldownCommand;
+import com.alterSMP.legendaryweapons.commands.GiveWeaponCommand;
 import com.alterSMP.legendaryweapons.config.ConfigManager;
 import com.alterSMP.legendaryweapons.data.DataManager;
 import com.alterSMP.legendaryweapons.data.CooldownManager;
@@ -54,6 +55,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         getCommand("kreset").setExecutor(new KResetCommand(this));
         getCommand("lreload").setExecutor(new LReloadCommand(this));
         getCommand("cooldown").setExecutor(new CooldownCommand(this));
+        GiveWeaponCommand giveWeaponCmd = new GiveWeaponCommand(this);
+        getCommand("giveweapon").setExecutor(giveWeaponCmd);
+        getCommand("giveweapon").setTabCompleter(giveWeaponCmd);
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new AltarPlaceListener(this), this);
