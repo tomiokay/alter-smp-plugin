@@ -455,7 +455,7 @@ recipes:
   eclipse_devourer:
     - DRAGON_HEAD
     - DRAGON_BREATH
-    - DRAGON_EGG
+    - END_STONE
     - DRAGON_BREATH
     - DRAGON_HEAD
     - DRAGON_BREATH
@@ -463,7 +463,7 @@ recipes:
     - ELYTRA
     - END_CRYSTAL
     - DRAGON_BREATH
-    - DRAGON_EGG
+    - END_STONE
     - ELYTRA
     - NETHERITE_SWORD
     - ELYTRA
@@ -475,7 +475,7 @@ recipes:
     - DRAGON_BREATH
     - DRAGON_HEAD
     - DRAGON_BREATH
-    - DRAGON_EGG
+    - END_STONE
     - DRAGON_BREATH
     - DRAGON_HEAD
 

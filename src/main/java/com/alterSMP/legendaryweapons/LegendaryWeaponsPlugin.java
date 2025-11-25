@@ -10,9 +10,12 @@ import com.alterSMP.legendaryweapons.commands.KResetCommand;
 import com.alterSMP.legendaryweapons.commands.LReloadCommand;
 import com.alterSMP.legendaryweapons.commands.CooldownCommand;
 import com.alterSMP.legendaryweapons.commands.GiveWeaponCommand;
+import com.alterSMP.legendaryweapons.commands.TrustCommand;
+import com.alterSMP.legendaryweapons.commands.GiveLegendaryCommand;
 import com.alterSMP.legendaryweapons.config.ConfigManager;
 import com.alterSMP.legendaryweapons.data.DataManager;
 import com.alterSMP.legendaryweapons.data.CooldownManager;
+import com.alterSMP.legendaryweapons.data.TrustManager;
 import com.alterSMP.legendaryweapons.items.LegendaryItemFactory;
 import com.alterSMP.legendaryweapons.passives.PassiveEffectManager;
 import com.alterSMP.legendaryweapons.abilities.AbilityManager;
@@ -25,6 +28,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
     private ConfigManager configManager;
     private DataManager dataManager;
     private CooldownManager cooldownManager;
+    private TrustManager trustManager;
     private AltarManager altarManager;
     private LegendaryItemFactory itemFactory;
     private PassiveEffectManager passiveManager;
@@ -40,6 +44,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         // Initialize managers
         this.dataManager = new DataManager(this);
         this.cooldownManager = new CooldownManager(this);
+        this.trustManager = new TrustManager(this);
         this.altarManager = new AltarManager(this);
         this.itemFactory = new LegendaryItemFactory();
         this.abilityManager = new AbilityManager(this);
@@ -58,6 +63,12 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         GiveWeaponCommand giveWeaponCmd = new GiveWeaponCommand(this);
         getCommand("giveweapon").setExecutor(giveWeaponCmd);
         getCommand("giveweapon").setTabCompleter(giveWeaponCmd);
+        TrustCommand trustCmd = new TrustCommand(this);
+        getCommand("trust").setExecutor(trustCmd);
+        getCommand("trust").setTabCompleter(trustCmd);
+        GiveLegendaryCommand giveLegendaryCmd = new GiveLegendaryCommand(this);
+        getCommand("givelegendary").setExecutor(giveLegendaryCmd);
+        getCommand("givelegendary").setTabCompleter(giveLegendaryCmd);
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new AltarPlaceListener(this), this);
@@ -78,6 +89,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         }
         if (altarManager != null) {
             altarManager.saveAltars();
+        }
+        if (trustManager != null) {
+            trustManager.saveTrustData();
         }
 
         getLogger().info("Legendary Weapons SMP plugin disabled!");
@@ -113,5 +127,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
 
     public AbilityManager getAbilityManager() {
         return abilityManager;
+    }
+
+    public TrustManager getTrustManager() {
+        return trustManager;
     }
 }

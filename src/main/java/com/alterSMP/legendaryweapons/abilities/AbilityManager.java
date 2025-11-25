@@ -151,6 +151,10 @@ public class AbilityManager implements Listener {
             // Damage entities
             for (Entity entity : point.getWorld().getNearbyEntities(point, 1, 1, 1)) {
                 if (entity instanceof LivingEntity && entity != player) {
+                    // Trust check
+                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
                     ((LivingEntity) entity).damage(12.0, player);
                 }
             }
@@ -196,7 +200,14 @@ public class AbilityManager implements Listener {
         double totalAbsorption = 0;
 
         for (Entity entity : player.getNearbyEntities(6, 6, 6)) {
-            if (entity instanceof LivingEntity && !(entity instanceof Player)) {
+            if (entity instanceof LivingEntity) {
+                // Trust check
+                if (entity instanceof Player) {
+                    if (plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
+                }
+
                 LivingEntity living = (LivingEntity) entity;
 
                 // Calculate 20% of current HP
@@ -250,6 +261,10 @@ public class AbilityManager implements Listener {
 
                 for (Entity entity : point.getWorld().getNearbyEntities(point, 2, 2, 2)) {
                     if (entity instanceof LivingEntity && entity != player) {
+                        // Trust check
+                        if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                            continue;
+                        }
                         LivingEntity living = (LivingEntity) entity;
                         living.damage(4.0, player);
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
@@ -292,16 +307,9 @@ public class AbilityManager implements Listener {
     }
 
     private boolean soulMark(Player player) {
+        // Mark is activated, next hit will mark the target
+        // Actual marking happens in the event handler below
         player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark ready! Hit an entity to mark them.");
-
-        // Next hit will mark the target
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                // Wait for hit event via listener
-            }
-        }.runTaskLater(plugin, 200L); // 10 second window
-
         return true;
     }
 
@@ -309,7 +317,14 @@ public class AbilityManager implements Listener {
 
     private boolean natureGrasp(Player player) {
         for (Entity entity : player.getNearbyEntities(6, 6, 6)) {
-            if (entity instanceof LivingEntity && !(entity instanceof Player)) {
+            if (entity instanceof LivingEntity) {
+                // Trust check
+                if (entity instanceof Player) {
+                    if (plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
+                }
+
                 LivingEntity living = (LivingEntity) entity;
 
                 living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 255));
@@ -345,6 +360,12 @@ public class AbilityManager implements Listener {
         if (result != null && result.getHitEntity() instanceof LivingEntity) {
             LivingEntity target = (LivingEntity) result.getHitEntity();
 
+            // Trust check
+            if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                player.sendMessage(ChatColor.RED + "Cannot target trusted players!");
+                return false;
+            }
+
             // Pull toward player
             Vector direction = player.getLocation().toVector().subtract(target.getLocation().toVector()).normalize();
             target.setVelocity(direction.multiply(2));
@@ -370,6 +391,13 @@ public class AbilityManager implements Listener {
 
         if (result != null && result.getHitEntity() instanceof LivingEntity) {
             LivingEntity target = (LivingEntity) result.getHitEntity();
+
+            // Trust check
+            if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                player.sendMessage(ChatColor.RED + "Cannot target trusted players!");
+                return false;
+            }
+
             Location center = target.getLocation();
 
             Set<Location> bars = new HashSet<>();
@@ -422,6 +450,10 @@ public class AbilityManager implements Listener {
 
                 for (Entity entity : conePoint.getWorld().getNearbyEntities(conePoint, 1.5, 1.5, 1.5)) {
                     if (entity instanceof LivingEntity && entity != player) {
+                        // Trust check
+                        if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                            continue;
+                        }
                         LivingEntity living = (LivingEntity) entity;
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
                         living.setFreezeTicks(140);
@@ -467,6 +499,10 @@ public class AbilityManager implements Listener {
                         if (entity == player) {
                             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 1));
                         } else {
+                            // Trust check
+                            if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                                continue;
+                            }
                             ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 2));
                         }
                     }
@@ -586,6 +622,10 @@ public class AbilityManager implements Listener {
 
                 for (Entity entity : sweepPoint.getWorld().getNearbyEntities(sweepPoint, 1, 1, 1)) {
                     if (entity instanceof LivingEntity && entity != player) {
+                        // Trust check
+                        if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                            continue;
+                        }
                         ((LivingEntity) entity).damage(5.0, player);
                     }
                 }
@@ -625,6 +665,11 @@ public class AbilityManager implements Listener {
                 // Pull entities
                 for (Entity entity : riftLocation.getWorld().getNearbyEntities(riftLocation, 8, 8, 8)) {
                     if (entity instanceof LivingEntity) {
+                        // Trust check
+                        if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                            continue;
+                        }
+
                         Vector direction = riftLocation.toVector().subtract(entity.getLocation().toVector()).normalize();
                         entity.setVelocity(direction.multiply(0.5));
 
@@ -656,6 +701,10 @@ public class AbilityManager implements Listener {
 
             for (Entity entity : point.getWorld().getNearbyEntities(point, 1.5, 1.5, 1.5)) {
                 if (entity instanceof LivingEntity && entity != player) {
+                    // Trust check
+                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
                     LivingEntity living = (LivingEntity) entity;
                     living.damage(7.0, player);
                     living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 0));
@@ -674,6 +723,11 @@ public class AbilityManager implements Listener {
         // Initial pull
         for (Entity entity : center.getWorld().getNearbyEntities(center, 7, 7, 7)) {
             if (entity instanceof LivingEntity && entity != player) {
+                // Trust check
+                if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                    continue;
+                }
+
                 LivingEntity living = (LivingEntity) entity;
 
                 Vector direction = center.toVector().subtract(entity.getLocation().toVector()).normalize();
@@ -693,6 +747,10 @@ public class AbilityManager implements Listener {
 
             for (Entity entity : center.getWorld().getNearbyEntities(center, 7, 7, 7)) {
                 if (entity instanceof LivingEntity && entity != player) {
+                    // Trust check
+                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
                     ((LivingEntity) entity).damage(8.0, player);
                 }
             }
@@ -755,7 +813,13 @@ public class AbilityManager implements Listener {
 
                 // Damage nearby enemies
                 for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
-                    if (entity instanceof LivingEntity && !(entity instanceof Player)) {
+                    if (entity instanceof LivingEntity) {
+                        // Trust check
+                        if (entity instanceof Player) {
+                            if (plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                                continue;
+                            }
+                        }
                         LivingEntity living = (LivingEntity) entity;
                         living.damage(10.0);
                         Vector knockback = entity.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(2);
@@ -779,6 +843,12 @@ public class AbilityManager implements Listener {
                 long endTime = echoStrikeActive.get(player.getUniqueId());
                 if (System.currentTimeMillis() < endTime && event.getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) event.getEntity();
+
+                    // Trust check
+                    if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                        return;
+                    }
+
                     double damage = event.getFinalDamage();
 
                     // Schedule echo hit
@@ -792,40 +862,41 @@ public class AbilityManager implements Listener {
                 }
             }
 
-            // Soul Mark
+            // Soul Mark - only mark target if not already marked
             String legendaryId = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInMainHand());
             if (legendaryId != null && legendaryId.equals(LegendaryType.UMBRA_VEIL_DAGGER.getId())) {
-                // Check if Soul Mark was just activated
-                if (event.getEntity() instanceof LivingEntity) {
+                if (event.getEntity() instanceof LivingEntity && !soulMarkTargets.containsKey(player.getUniqueId())) {
                     LivingEntity target = (LivingEntity) event.getEntity();
 
-                    if (soulMarkTargets.containsKey(player.getUniqueId())) {
-                        // Already marked someone else
-                    } else {
-                        // Mark this target
-                        soulMarkTargets.put(player.getUniqueId(), target.getUniqueId());
-
-                        player.sendMessage(ChatColor.DARK_PURPLE + "Target marked! They will take true damage in 15 seconds.");
-
-                        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                            UUID markedUUID = soulMarkTargets.remove(player.getUniqueId());
-                            if (markedUUID != null) {
-                                Entity markedEntity = Bukkit.getEntity(markedUUID);
-                                if (markedEntity instanceof LivingEntity && markedEntity.isValid()) {
-                                    LivingEntity markedLiving = (LivingEntity) markedEntity;
-
-                                    // True damage (ignore armor)
-                                    double currentHealth = markedLiving.getHealth();
-                                    markedLiving.setHealth(Math.max(0, currentHealth - 6.0));
-
-                                    markedLiving.getWorld().spawnParticle(Particle.SOUL, markedLiving.getLocation(), 50, 0.5, 1, 0.5, 0.1);
-                                    markedLiving.getWorld().playSound(markedLiving.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 0.7f);
-
-                                    player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark triggered! 3 hearts of true damage dealt!");
-                                }
-                            }
-                        }, 300L); // 15 seconds
+                    // Trust check
+                    if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                        return;
                     }
+
+                    // Mark this target
+                    soulMarkTargets.put(player.getUniqueId(), target.getUniqueId());
+
+                    player.sendMessage(ChatColor.DARK_PURPLE + "Target marked! They will take true damage in 15 seconds.");
+
+                    // Schedule true damage after 15 seconds
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        UUID markedUUID = soulMarkTargets.remove(player.getUniqueId());
+                        if (markedUUID != null) {
+                            Entity markedEntity = Bukkit.getEntity(markedUUID);
+                            if (markedEntity instanceof LivingEntity && markedEntity.isValid() && !markedEntity.isDead()) {
+                                LivingEntity markedLiving = (LivingEntity) markedEntity;
+
+                                // True damage (ignore armor) - directly reduce health
+                                double currentHealth = markedLiving.getHealth();
+                                markedLiving.setHealth(Math.max(0, currentHealth - 6.0));
+
+                                markedLiving.getWorld().spawnParticle(Particle.SOUL, markedLiving.getLocation(), 50, 0.5, 1, 0.5, 0.1);
+                                markedLiving.getWorld().playSound(markedLiving.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 0.7f);
+
+                                player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark triggered! 3 hearts of true damage dealt!");
+                            }
+                        }
+                    }, 300L); // 15 seconds
                 }
             }
         }
@@ -842,6 +913,10 @@ public class AbilityManager implements Listener {
 
                     if (event.getDamager() instanceof LivingEntity) {
                         LivingEntity attacker = (LivingEntity) event.getDamager();
+                        // Trust check - don't reflect damage to trusted players
+                        if (attacker instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) attacker)) {
+                            return;
+                        }
                         attacker.damage(reflectedDamage);
                         player.sendMessage(ChatColor.GOLD + "Reflected " + String.format("%.1f", reflectedDamage) + " damage!");
                     }

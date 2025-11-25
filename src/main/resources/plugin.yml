@@ -40,6 +40,16 @@ commands:
     permission: legendaryweapons.giveweapon
     permission-message: 'You do not have permission to use this command'
 
+  trust:
+    description: 'Toggle trust for another player (legendary abilities will not affect them)'
+    usage: '/trust <player>'
+
+  givelegendary:
+    description: 'Give a legendary weapon for testing (does not mark as crafted)'
+    usage: '/givelegendary <legendary_id> [player]'
+    permission: legendaryweapons.givelegendary
+    permission-message: 'You do not have permission to use this command'
+
 permissions:
   legendaryweapons.givealtar:
     description: 'Allows giving legendary altars'
@@ -59,4 +69,8 @@ permissions:
 
   legendaryweapons.giveweapon:
     description: 'Allows giving legendary weapons'
+    default: op
+
+  legendaryweapons.givelegendary:
+    description: 'Allows giving legendary weapons for testing (does not mark as crafted)'
     default: op

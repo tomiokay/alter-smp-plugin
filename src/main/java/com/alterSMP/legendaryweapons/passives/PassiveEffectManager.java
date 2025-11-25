@@ -118,7 +118,12 @@ public class PassiveEffectManager implements Listener {
                 // Dragon's Gaze - Nearby players glow
                 for (Entity entity : player.getNearbyEntities(8, 8, 8)) {
                     if (entity instanceof Player) {
-                        ((Player) entity).addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 20, 0, true, false));
+                        Player target = (Player) entity;
+                        // Trust check
+                        if (plugin.getTrustManager().isTrusted(player, target)) {
+                            continue;
+                        }
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 20, 0, true, false));
                     }
                 }
                 break;
@@ -150,10 +155,15 @@ public class PassiveEffectManager implements Listener {
         if (type == null) return;
 
         if (type == LegendaryType.CELESTIAL_AEGIS_SHIELD) {
-            // Aura of Protection - Allies gain Resistance
+            // Aura of Protection - Allies gain Resistance (only trusted players)
             for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
                 if (entity instanceof Player) {
                     Player ally = (Player) entity;
+                    // Only grant resistance to trusted players (or grant to all? Based on task, apply trust check)
+                    // Trust check - only help trusted allies
+                    if (!plugin.getTrustManager().isTrusted(player, ally)) {
+                        continue;
+                    }
                     ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20, 0, true, false));
                 }
             }
@@ -215,9 +225,16 @@ public class PassiveEffectManager implements Listener {
                 bladeHitCounter.put(player.getUniqueId(), 0);
 
                 for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
-                    if (entity instanceof LivingEntity && !(entity instanceof Player)) {
+                    if (entity instanceof LivingEntity) {
+                        // Trust check
+                        if (entity instanceof Player) {
+                            if (plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                                continue;
+                            }
+                        }
                         LivingEntity living = (LivingEntity) entity;
-                        living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 10, 0));
+                        // Use DARKNESS with max amplifier instead of BLINDNESS
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 50, 255));
                         living.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 20, 0));
                     }
                 }
@@ -237,6 +254,11 @@ public class PassiveEffectManager implements Listener {
 
                 if (event.getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) event.getEntity();
+
+                    // Trust check
+                    if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                        return;
+                    }
 
                     // Immobilize
                     target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 255));
