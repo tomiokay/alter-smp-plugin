@@ -1,17 +1,19 @@
 # Legendary Weapons SMP Plugin
 
-**Epic Minecraft plugin with 11 legendary weapons, each featuring devastating abilities, spectacular particle effects, and a unique 5×5 crafting system. Balanced for PvP with Protection IV armor in mind.**
+**Epic Minecraft plugin with 15 legendary items, each featuring devastating abilities, spectacular particle effects, and a unique 5×5 crafting system. Balanced for PvP with Protection IV armor in mind.**
 
-Transform your SMP with powerful legendary items that players will fight to obtain. Each weapon has 1 passive effect and 2 active abilities, with enhanced visuals that make every battle epic.
+Transform your SMP with powerful legendary items that players will fight to obtain. Each legendary has unique passive and/or active abilities, with enhanced visuals that make every battle epic.
 
 ## Features
 
-- **11 Unique Legendary Weapons** - Each with distinct passive and active abilities
+- **15 Unique Legendary Items** - 6 swords, 2 shields, 1 pickaxe, 1 axe, 1 trident, 4 armor pieces
 - **Custom 5×5 Crafting System** - Separate from vanilla crafting via Legendary Altars
-- **Global Crafting Limits** - Each legendary can only be crafted once per world (by any player)
-- **Ability System** - 22 unique active abilities activated via `/ability 1` and `/ability 2`
-- **Global Reset Command** - OPs can reset all crafting progress with `/kreset`
-- **Persistent Data** - Global crafting history and altar locations are saved
+- **One Craft Per Player** - Each legendary can only be crafted once per player
+- **Ability System** - Active abilities via `/ability 1` and `/ability 2` with cooldowns
+- **Passive Armor Abilities** - Unique passive effects for legendary armor pieces
+- **Trust System** - Prevent friendly fire with `/trust` command
+- **Global Reset Command** - OPs can reset all crafting progress
+- **Persistent Data** - Crafting history, cooldowns, and altar locations are saved
 
 ## Requirements
 
@@ -83,7 +85,13 @@ Transform your SMP with powerful legendary items that players will fight to obta
 |---------|-----------|-------------|
 | `/givealtar [player]` | `legendaryweapons.givealtar` (OP) | Gives a Legendary Altar item |
 | `/ability <1\|2>` | None | Uses the active ability of your equipped legendary |
-| `/kreset` | `legendaryweapons.kreset` (OP) | Resets all legendary crafting progress globally (allows all legendaries to be crafted again) |
+| `/kreset` | `legendaryweapons.kreset` (OP) | Resets all legendary crafting progress globally |
+| `/kresetplayer <player>` | `legendaryweapons.kreset` (OP) | Resets crafting progress for a specific player |
+| `/giveweapon <type> [player]` | `legendaryweapons.giveweapon` (OP) | Gives a specific legendary weapon |
+| `/givelegendary <type> [player]` | `legendaryweapons.givelegendary` (OP) | Gives a specific legendary item |
+| `/trust <player>` | None | Toggle trust with a player (prevents friendly fire) |
+| `/lreload` | `legendaryweapons.reload` (OP) | Reloads plugin configuration |
+| `/cooldown` | None | Check your current ability cooldowns |
 
 ## Legendary Weapons Overview
 
@@ -117,10 +125,22 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - **Ability 1:** Soul Bind (35s) - Pull and slow target
 - **Ability 2:** Prison of the Damned (65s) - Cage target in iron bars
 
-### ❄️ Glacierbound Halberd (Boots)
-- **Passive:** Frozen Path - Water freezes beneath you
-- **Ability 1:** Frostbite Sweep (28s) - Cone that freezes enemies
-- **Ability 2:** Winter's Embrace (75s) - Frost dome for protection
+### ⚡ Skybreaker Boots (Diamond Boots)
+- **Passive:** No fall damage + Meteor Slam - Shift mid-air to slam down dealing area damage based on fall distance (no knockback)
+
+### ⛏️ Copper Pickaxe (Netherite Pickaxe)
+- **Ability 1:** Toggle 3x3 Mining - Mine in a 3x3 area
+- **Ability 2:** Toggle Silk Touch/Fortune III - Switch between enchantments
+
+### 🌩️ Thunderforge Chestplate (Diamond Chestplate)
+- **Passive:** Electric Shockwave - Every 7 hits taken, releases a 5-block radius shockwave (4 damage + knockback)
+
+### ⚡ Ionflare Leggings (Diamond Leggings)
+- **Passive:** Ion Charge - Every 5 hits dealt releases chain lightning hitting 3 targets (6 damage each)
+
+### 💀 Bloodreaper Hood (Diamond Helmet)
+- **Passive:** Blood Harvest - Kills grant +5 hearts for 5 minutes
+- **Passive:** Critical Rush - Crits grant +10% speed for 3 seconds
 
 ### 💎 Celestial Aegis Shield (Shield)
 - **Passive:** Aura of Protection - Allies gain Resistance I
@@ -142,6 +162,145 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - **Ability 1:** Void Rupture (35s) - Void arc with blindness
 - **Ability 2:** Cataclysm Pulse (95s) - Dark explosion with pull
 
+## Crafting Recipes
+
+All legendary items are crafted in a 5×5 Legendary Altar. Below are the crafting patterns (X = empty slot):
+
+### 🌠 Blade of the Fractured Stars
+```
+Nether Star | Diamond Block | Diamond Block | Diamond Block | Nether Star
+Diamond Block | Crying Obsidian | Amethyst Block | Crying Obsidian | Diamond Block
+Diamond Block | Amethyst Block | Netherite Sword | Amethyst Block | Diamond Block
+Diamond Block | Crying Obsidian | Amethyst Block | Crying Obsidian | Diamond Block
+Nether Star | Diamond Block | Diamond Block | Diamond Block | Nether Star
+```
+
+### 🔥 Emberheart Scythe
+```
+Blaze Rod | Fire Charge | Magma Block | Fire Charge | Blaze Rod
+Fire Charge | Netherite Ingot | Netherite Ingot | Netherite Ingot | Fire Charge
+Magma Block | Netherite Ingot | Netherite Sword | Netherite Ingot | Magma Block
+Fire Charge | Netherite Ingot | Netherite Ingot | Netherite Ingot | Fire Charge
+Blaze Rod | Fire Charge | Magma Block | Fire Charge | Blaze Rod
+```
+
+### 💨 Tempestbreaker Spear
+```
+Feather | Phantom Membrane | Phantom Membrane | Phantom Membrane | Feather
+Phantom Membrane | Diamond | Prismarine Crystals | Diamond | Phantom Membrane
+Phantom Membrane | Prismarine Crystals | Trident | Prismarine Crystals | Phantom Membrane
+Phantom Membrane | Diamond | Prismarine Crystals | Diamond | Phantom Membrane
+Feather | Phantom Membrane | Phantom Membrane | Phantom Membrane | Feather
+```
+
+### 🌑 Umbra Veil Dagger
+```
+Ender Pearl | Obsidian | Obsidian | Obsidian | Ender Pearl
+Obsidian | Sculk | Echo Shard | Sculk | Obsidian
+Obsidian | Echo Shard | Netherite Sword | Echo Shard | Obsidian
+Obsidian | Sculk | Echo Shard | Sculk | Obsidian
+Ender Pearl | Obsidian | Obsidian | Obsidian | Ender Pearl
+```
+
+### 🌿 Heartroot Guardian Axe
+```
+Oak Log | Moss Block | Moss Block | Moss Block | Oak Log
+Moss Block | Emerald Block | Glow Berries | Emerald Block | Moss Block
+Moss Block | Glow Berries | Netherite Axe | Glow Berries | Moss Block
+Moss Block | Emerald Block | Glow Berries | Emerald Block | Moss Block
+Oak Log | Moss Block | Moss Block | Moss Block | Oak Log
+```
+
+### ⛓️ Chains of Eternity
+```
+Chain | Soul Sand | Wither Skeleton Skull | Soul Sand | Chain
+Soul Sand | Netherite Scrap | Netherite Scrap | Netherite Scrap | Soul Sand
+Wither Skeleton Skull | Netherite Scrap | Wooden Shovel | Netherite Scrap | Wither Skeleton Skull
+Soul Sand | Netherite Scrap | Netherite Scrap | Netherite Scrap | Soul Sand
+Chain | Soul Sand | Wither Skeleton Skull | Soul Sand | Chain
+```
+
+### ⚡ Skybreaker Boots
+```
+Feather | Phantom Membrane | Diamond Block | Phantom Membrane | Feather
+Phantom Membrane | Diamond | Diamond | Diamond | Phantom Membrane
+Diamond Block | Diamond | Diamond Boots | Diamond | Diamond Block
+Phantom Membrane | Diamond | Diamond | Diamond | Phantom Membrane
+Feather | Phantom Membrane | Diamond Block | Phantom Membrane | Feather
+```
+
+### ⛏️ Copper Pickaxe
+```
+Copper Block | Copper Block | Copper Block | Copper Block | Copper Block
+Copper Block | Netherite Ingot | Netherite Ingot | Netherite Ingot | Copper Block
+Copper Block | Netherite Ingot | Netherite Pickaxe | Netherite Ingot | Copper Block
+Copper Block | Netherite Ingot | Netherite Ingot | Netherite Ingot | Copper Block
+Copper Block | Copper Block | Copper Block | Copper Block | Copper Block
+```
+
+### 🌩️ Thunderforge Chestplate
+```
+Lightning Rod | Copper Block | Copper Block | Copper Block | Lightning Rod
+Copper Block | Diamond | Diamond | Diamond | Copper Block
+Copper Block | Diamond | Diamond Chestplate | Diamond | Copper Block
+Copper Block | Diamond | Diamond | Diamond | Copper Block
+Lightning Rod | Copper Block | Copper Block | Copper Block | Lightning Rod
+```
+
+### ⚡ Ionflare Leggings
+```
+Prismarine Crystals | Diamond | Diamond | Diamond | Prismarine Crystals
+Diamond | Amethyst Block | Amethyst Block | Amethyst Block | Diamond
+Diamond | Amethyst Block | Diamond Leggings | Amethyst Block | Diamond
+Diamond | Amethyst Block | Amethyst Block | Amethyst Block | Diamond
+Prismarine Crystals | Diamond | Diamond | Diamond | Prismarine Crystals
+```
+
+### 💀 Bloodreaper Hood
+```
+Wither Rose | Redstone Block | Redstone Block | Redstone Block | Wither Rose
+Redstone Block | Diamond | Fermented Spider Eye | Diamond | Redstone Block
+Redstone Block | Fermented Spider Eye | Diamond Helmet | Fermented Spider Eye | Redstone Block
+Redstone Block | Diamond | Fermented Spider Eye | Diamond | Redstone Block
+Wither Rose | Redstone Block | Redstone Block | Redstone Block | Wither Rose
+```
+
+### 💎 Celestial Aegis Shield
+```
+End Stone | Glowstone | Glowstone | Glowstone | End Stone
+Glowstone | Gold Block | Totem of Undying | Gold Block | Glowstone
+Glowstone | Totem of Undying | Shield | Totem of Undying | Glowstone
+Glowstone | Gold Block | Totem of Undying | Gold Block | Glowstone
+End Stone | Glowstone | Glowstone | Glowstone | End Stone
+```
+
+### 🧭 Chrono Edge
+```
+Clock | Redstone Block | Redstone Block | Redstone Block | Clock
+Redstone Block | Amethyst Shard | Recovery Compass | Amethyst Shard | Redstone Block
+Redstone Block | Recovery Compass | Netherite Sword | Recovery Compass | Redstone Block
+Redstone Block | Amethyst Shard | Recovery Compass | Amethyst Shard | Redstone Block
+Clock | Redstone Block | Redstone Block | Redstone Block | Clock
+```
+
+### 💀 Oblivion Harvester
+```
+Netherite Block | Wither Rose | Wither Rose | Wither Rose | Netherite Block
+Wither Rose | Obsidian | Nether Star | Obsidian | Wither Rose
+Wither Rose | Nether Star | Netherite Sword | Nether Star | Wither Rose
+Wither Rose | Obsidian | Nether Star | Obsidian | Wither Rose
+Netherite Block | Wither Rose | Wither Rose | Wither Rose | Netherite Block
+```
+
+### 🐉 Eclipse Devourer
+```
+Dragon Head | Dragon Breath | End Stone | Dragon Breath | Dragon Head
+Dragon Breath | End Crystal | Elytra | End Crystal | Dragon Breath
+End Stone | Elytra | Netherite Sword | Elytra | Dragon Egg
+Dragon Breath | End Crystal | Elytra | End Crystal | Dragon Breath
+Dragon Head | Dragon Breath | End Stone | Dragon Breath | Dragon Head
+```
+
 ## Important Notes
 
 ### Normal Crafting Table
@@ -155,10 +314,11 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - True damage is limited to 3 hearts per Soul Mark activation
 
 ### Crafting Limits
-- Each legendary weapon can be crafted only once per world (by any player)
-- Once a legendary is crafted, no other player can craft it until reset
-- OPs can use `/kreset` to reset this limit, allowing all legendaries to be crafted again
-- The `/kreset` command does NOT delete existing legendary items
+- Each legendary can be crafted once per player
+- Each player can craft all legendaries, but only once each
+- OPs can use `/kreset` to reset all crafting progress globally
+- OPs can use `/kresetplayer <player>` to reset a specific player's crafting progress
+- Reset commands do NOT delete existing legendary items
 - When viewing a crafted legendary in the altar, you'll see who originally forged it
 
 ## Configuration
