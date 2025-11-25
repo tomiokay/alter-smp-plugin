@@ -145,17 +145,25 @@ public class AbilityManager implements Listener {
         for (int i = 1; i <= 30; i++) {
             Location point = start.clone().add(direction.clone().multiply(i));
 
-            // Particles
-            player.getWorld().spawnParticle(Particle.END_ROD, point, 3, 0.1, 0.1, 0.1, 0);
+            // Enhanced particles - much more visible
+            player.getWorld().spawnParticle(Particle.END_ROD, point, 15, 0.3, 0.3, 0.3, 0.05);
+            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, point, 8, 0.2, 0.2, 0.2, 0.1);
+            player.getWorld().spawnParticle(Particle.CRIT_MAGIC, point, 5, 0.2, 0.2, 0.2, 0);
 
-            // Damage entities
+            // Damage entities - increased for Prot 4
             for (Entity entity : point.getWorld().getNearbyEntities(point, 1, 1, 1)) {
                 if (entity instanceof LivingEntity && entity != player) {
                     // Trust check
                     if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                         continue;
                     }
-                    ((LivingEntity) entity).damage(12.0, player);
+                    LivingEntity victim = (LivingEntity) entity;
+                    victim.damage(18.0, player);
+
+                    // Notify victim
+                    if (victim instanceof Player) {
+                        ((Player) victim).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.AQUA + "Star Rift Slash" + ChatColor.RED + " from " + player.getName() + "!");
+                    }
                 }
             }
         }
@@ -184,10 +192,16 @@ public class AbilityManager implements Listener {
             destination.add(0, 1, 0);
         }
 
-        // Particles at origin and destination
-        player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 100, 0.5, 1, 0.5, 1);
+        // Enhanced particles at origin and destination
+        player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 400, 0.5, 1, 0.5, 1);
+        player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 60, 0.5, 1, 0.5, 0.1);
+        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 40, 0.5, 1, 0.5, 0.1);
+
         player.teleport(destination);
-        player.getWorld().spawnParticle(Particle.PORTAL, destination, 100, 0.5, 1, 0.5, 1);
+
+        player.getWorld().spawnParticle(Particle.PORTAL, destination, 400, 0.5, 1, 0.5, 1);
+        player.getWorld().spawnParticle(Particle.END_ROD, destination, 60, 0.5, 1, 0.5, 0.1);
+        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, destination, 40, 0.5, 1, 0.5, 0.1);
 
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
         player.sendMessage(ChatColor.AQUA + "Stargate Blink!");
@@ -197,7 +211,7 @@ public class AbilityManager implements Listener {
     // ========== EMBERHEART SCYTHE ==========
 
     private boolean flameHarvest(Player player) {
-        double totalAbsorption = 0;
+        int entitiesHit = 0;
 
         for (Entity entity : player.getNearbyEntities(6, 6, 6)) {
             if (entity instanceof LivingEntity) {
@@ -210,28 +224,48 @@ public class AbilityManager implements Listener {
 
                 LivingEntity living = (LivingEntity) entity;
 
-                // Calculate 20% of current HP
-                double damage = living.getHealth() * 0.2;
-                totalAbsorption += damage;
+                // Calculate 30% of current HP (increased from 20%)
+                double damage = living.getHealth() * 0.3;
 
                 living.damage(damage, player);
                 living.setFireTicks(60);
+                entitiesHit++;
 
-                living.getWorld().spawnParticle(Particle.FLAME, living.getLocation(), 20, 0.5, 0.5, 0.5, 0.1);
+                // Enhanced particles
+                living.getWorld().spawnParticle(Particle.FLAME, living.getLocation(), 80, 0.5, 0.5, 0.5, 0.1);
+                living.getWorld().spawnParticle(Particle.LAVA, living.getLocation(), 15, 0.5, 0.5, 0.5, 0);
+                living.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, living.getLocation(), 30, 0.5, 0.5, 0.5, 0.05);
+
+                // Notify victim
+                if (living instanceof Player) {
+                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.GOLD + "Flame Harvest" + ChatColor.RED + " from " + player.getName() + "!");
+                }
             }
         }
 
-        // Grant absorption
-        player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 600, (int) (totalAbsorption / 4)));
+        // Grant 6 absorption hearts (12 HP) if at least one entity was hit
+        if (entitiesHit > 0) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 600, 2)); // Level 3 = 6 hearts
+        }
 
-        player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 100, 3, 1, 3, 0.1);
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 400, 3, 1, 3, 0.1);
+        player.getWorld().spawnParticle(Particle.LAVA, player.getLocation(), 60, 3, 1, 3, 0);
+        player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation(), 100, 3, 1, 3, 0.05);
+
         player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.8f);
-        player.sendMessage(ChatColor.RED + "Flame Harvest! +" + String.format("%.1f", totalAbsorption) + " absorption");
+        player.sendMessage(ChatColor.RED + "Flame Harvest! +6 absorption hearts (" + entitiesHit + " enemies hit)");
         return true;
     }
 
     private boolean fireRebirth(Player player) {
         fireRebirthActive.put(player.getUniqueId(), System.currentTimeMillis() + 10000);
+
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 300, 1, 1, 1, 0.2);
+        player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation(), 150, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.LAVA, player.getLocation(), 50, 1, 1, 1, 0);
+
         player.sendMessage(ChatColor.GOLD + "Fire Rebirth activated for 10 seconds!");
         player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1.0f, 0.8f);
         return true;
@@ -241,6 +275,12 @@ public class AbilityManager implements Listener {
 
     private boolean galeThrow(Player player) {
         nextGaleThrow.add(player.getUniqueId());
+
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 200, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, player.getLocation(), 50, 1, 1, 1, 0);
+        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 40, 1, 1, 1, 0.1);
+
         player.sendMessage(ChatColor.AQUA + "Next trident throw will create a wind vortex!");
         return true;
     }
@@ -252,8 +292,9 @@ public class AbilityManager implements Listener {
         for (int i = 1; i <= 15; i++) {
             Location point = start.clone().add(direction.clone().multiply(i));
 
-            // Spawn lightning effect (weak lightning)
-            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, point, 10, 0.5, 0.5, 0.5, 0.1);
+            // Enhanced particles
+            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, point, 40, 0.5, 0.5, 0.5, 0.1);
+            player.getWorld().spawnParticle(Particle.CLOUD, point, 15, 0.5, 0.5, 0.5, 0);
 
             final int delay = i * 2;
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -266,9 +307,14 @@ public class AbilityManager implements Listener {
                             continue;
                         }
                         LivingEntity living = (LivingEntity) entity;
-                        living.damage(4.0, player);
+                        living.damage(6.0, player); // Increased from 4.0 (50% increase)
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
                         living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 0));
+
+                        // Notify victim
+                        if (living instanceof Player) {
+                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.YELLOW + "Stormcall" + ChatColor.RED + " from " + player.getName() + "!");
+                        }
                     }
                 }
             }, delay);
@@ -295,9 +341,16 @@ public class AbilityManager implements Listener {
             destination = result.getHitBlock().getLocation();
         }
 
-        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 30, 0.5, 1, 0.5, 0);
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 120, 0.5, 1, 0.5, 0);
+        player.getWorld().spawnParticle(Particle.SQUID_INK, player.getLocation(), 60, 0.5, 1, 0.5, 0.1);
+        player.getWorld().spawnParticle(Particle.SMOKE, player.getLocation(), 80, 0.5, 1, 0.5, 0.05);
+
         player.teleport(destination);
-        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, destination, 30, 0.5, 1, 0.5, 0);
+
+        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, destination, 120, 0.5, 1, 0.5, 0);
+        player.getWorld().spawnParticle(Particle.SQUID_INK, destination, 60, 0.5, 1, 0.5, 0.1);
+        player.getWorld().spawnParticle(Particle.SMOKE, destination, 80, 0.5, 1, 0.5, 0.05);
 
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 80, 0));
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.6f);
@@ -309,6 +362,12 @@ public class AbilityManager implements Listener {
     private boolean soulMark(Player player) {
         // Mark is activated, next hit will mark the target
         // Actual marking happens in the event handler below
+
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.SOUL, player.getLocation(), 150, 1, 1, 1, 0.05);
+        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 100, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 50, 1, 1, 1, 0);
+
         player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark ready! Hit an entity to mark them.");
         return true;
     }
@@ -330,11 +389,23 @@ public class AbilityManager implements Listener {
                 living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 255));
                 living.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 40, 128));
 
-                living.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, living.getLocation(), 30, 0.5, 1, 0.5, 0);
+                // Enhanced particles
+                living.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, living.getLocation(), 120, 0.5, 1, 0.5, 0);
+                living.getWorld().spawnParticle(Particle.COMPOSTER, living.getLocation(), 80, 0.5, 1, 0.5, 0);
+                living.getWorld().spawnParticle(Particle.FALLING_SPORE_BLOSSOM, living.getLocation(), 40, 0.5, 1, 0.5, 0);
+
+                // Notify victim
+                if (living instanceof Player) {
+                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.GREEN + "Nature Grasp" + ChatColor.RED + " from " + player.getName() + "!");
+                }
             }
         }
 
-        player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 100, 6, 1, 6, 0);
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 400, 6, 1, 6, 0);
+        player.getWorld().spawnParticle(Particle.COMPOSTER, player.getLocation(), 200, 6, 1, 6, 0);
+        player.getWorld().spawnParticle(Particle.FALLING_SPORE_BLOSSOM, player.getLocation(), 100, 6, 1, 6, 0);
+
         player.playSound(player.getLocation(), Sound.BLOCK_GRASS_BREAK, 1.0f, 0.5f);
         player.sendMessage(ChatColor.GREEN + "Nature Grasp!");
         return true;
@@ -342,6 +413,12 @@ public class AbilityManager implements Listener {
 
     private boolean forestShield(Player player) {
         forestShieldActive.put(player.getUniqueId(), System.currentTimeMillis() + 10000);
+
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 300, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.COMPOSTER, player.getLocation(), 150, 1, 1, 1, 0);
+        player.getWorld().spawnParticle(Particle.CHERRY_LEAVES, player.getLocation(), 100, 1, 1, 1, 0.05);
+
         player.sendMessage(ChatColor.GREEN + "Forest Shield active! Your axe has Breach III for 10 seconds!");
         player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 0.8f);
         return true;
@@ -372,7 +449,16 @@ public class AbilityManager implements Listener {
 
             target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
 
-            target.getWorld().spawnParticle(Particle.SOUL, target.getLocation(), 30, 0.5, 1, 0.5, 0);
+            // Enhanced particles
+            target.getWorld().spawnParticle(Particle.SOUL, target.getLocation(), 120, 0.5, 1, 0.5, 0);
+            target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation(), 80, 0.5, 1, 0.5, 0.1);
+            target.getWorld().spawnParticle(Particle.SMOKE, target.getLocation(), 60, 0.5, 1, 0.5, 0.05);
+
+            // Notify victim
+            if (target instanceof Player) {
+                ((Player) target).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_GRAY + "Soul Bind" + ChatColor.RED + " from " + player.getName() + "!");
+            }
+
             player.sendMessage(ChatColor.DARK_GRAY + "Soul Bind!");
             return true;
         }
@@ -417,6 +503,16 @@ public class AbilityManager implements Listener {
                 }
             }
 
+            // Enhanced particles
+            center.getWorld().spawnParticle(Particle.SOUL, center, 200, 1.5, 2, 1.5, 0.05);
+            center.getWorld().spawnParticle(Particle.SMOKE, center, 150, 1.5, 2, 1.5, 0.05);
+            center.getWorld().spawnParticle(Particle.ENCHANT, center, 100, 1.5, 2, 1.5, 0.1);
+
+            // Notify victim
+            if (target instanceof Player) {
+                ((Player) target).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_GRAY + "Prison of the Damned" + ChatColor.RED + " from " + player.getName() + "!");
+            }
+
             // Remove bars after 5 seconds
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 for (Location loc : bars) {
@@ -438,6 +534,8 @@ public class AbilityManager implements Listener {
         Vector direction = player.getLocation().getDirection();
         Location start = player.getLocation();
 
+        Set<UUID> hitEntities = new HashSet<>();
+
         for (int i = 1; i <= 8; i++) {
             Location point = start.clone().add(direction.clone().multiply(i));
 
@@ -446,10 +544,13 @@ public class AbilityManager implements Listener {
                 Vector rotated = rotateVector(direction.clone(), angle);
                 Location conePoint = start.clone().add(rotated.multiply(i));
 
-                conePoint.getWorld().spawnParticle(Particle.SNOWFLAKE, conePoint, 5, 0.2, 0.2, 0.2, 0);
+                // Enhanced particles
+                conePoint.getWorld().spawnParticle(Particle.SNOWFLAKE, conePoint, 20, 0.2, 0.2, 0.2, 0);
+                conePoint.getWorld().spawnParticle(Particle.CLOUD, conePoint, 10, 0.2, 0.2, 0.2, 0);
+                conePoint.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, conePoint, 8, 0.2, 0.2, 0.2, 0.05);
 
                 for (Entity entity : conePoint.getWorld().getNearbyEntities(conePoint, 1.5, 1.5, 1.5)) {
-                    if (entity instanceof LivingEntity && entity != player) {
+                    if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
                         // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                             continue;
@@ -457,6 +558,12 @@ public class AbilityManager implements Listener {
                         LivingEntity living = (LivingEntity) entity;
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
                         living.setFreezeTicks(140);
+                        hitEntities.add(entity.getUniqueId());
+
+                        // Notify victim
+                        if (living instanceof Player) {
+                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.AQUA + "Frostbite Sweep" + ChatColor.RED + " from " + player.getName() + "!");
+                        }
                     }
                 }
             }
@@ -481,7 +588,7 @@ public class AbilityManager implements Listener {
                     return;
                 }
 
-                // Spawn dome particles
+                // Spawn dome particles with enhanced variety
                 for (double theta = 0; theta < 2 * Math.PI; theta += Math.PI / 16) {
                     for (double phi = 0; phi < Math.PI; phi += Math.PI / 16) {
                         double x = 7 * Math.sin(phi) * Math.cos(theta);
@@ -489,7 +596,8 @@ public class AbilityManager implements Listener {
                         double z = 7 * Math.cos(phi);
 
                         Location particleLoc = center.clone().add(x, z, y);
-                        center.getWorld().spawnParticle(Particle.SNOWFLAKE, particleLoc, 1, 0, 0, 0, 0);
+                        center.getWorld().spawnParticle(Particle.SNOWFLAKE, particleLoc, 3, 0, 0, 0, 0);
+                        center.getWorld().spawnParticle(Particle.CLOUD, particleLoc, 1, 0, 0, 0, 0);
                     }
                 }
 
@@ -503,7 +611,13 @@ public class AbilityManager implements Listener {
                             if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                                 continue;
                             }
-                            ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 2));
+                            LivingEntity living = (LivingEntity) entity;
+                            living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 2));
+
+                            // Notify victim once every second (every 20 ticks)
+                            if (ticks % 20 == 0 && living instanceof Player) {
+                                ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.AQUA + "Winter's Embrace" + ChatColor.RED + " from " + player.getName() + "!");
+                            }
                         }
                     }
                 }
@@ -520,6 +634,12 @@ public class AbilityManager implements Listener {
 
     private boolean radiantBlock(Player player) {
         radiantBlockActive.put(player.getUniqueId(), System.currentTimeMillis() + 5000);
+
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 200, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 100, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 150, 1, 1, 1, 0.1);
+
         player.sendMessage(ChatColor.GOLD + "Radiant Block active! Reflect 75% damage for 5 seconds!");
         player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);
         return true;
@@ -541,14 +661,16 @@ public class AbilityManager implements Listener {
                     return;
                 }
 
-                // Spawn barrier particles
+                // Spawn barrier particles with enhanced variety
                 for (double theta = 0; theta < 2 * Math.PI; theta += Math.PI / 16) {
                     for (double y = 0; y < 4; y += 0.5) {
                         double x = 5 * Math.cos(theta);
                         double z = 5 * Math.sin(theta);
 
                         Location particleLoc = center.clone().add(x, y, z);
-                        center.getWorld().spawnParticle(Particle.END_ROD, particleLoc, 1, 0, 0, 0, 0);
+                        center.getWorld().spawnParticle(Particle.END_ROD, particleLoc, 3, 0, 0, 0, 0);
+                        center.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0, 0, 0, 0);
+                        center.getWorld().spawnParticle(Particle.ENCHANT, particleLoc, 2, 0, 0, 0, 0);
                     }
                 }
 
@@ -565,6 +687,11 @@ public class AbilityManager implements Listener {
     private boolean echoStrike(Player player) {
         echoStrikeActive.put(player.getUniqueId(), System.currentTimeMillis() + 6000);
         echoStrikeTargets.put(player.getUniqueId(), new HashSet<>());
+
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.CRIT_MAGIC, player.getLocation(), 200, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 150, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 100, 1, 1, 1, 0.05);
 
         player.sendMessage(ChatColor.YELLOW + "Echo Strike active! Hits will repeat after 1 second!");
         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.5f);
@@ -586,6 +713,12 @@ public class AbilityManager implements Listener {
         );
 
         timeRewindStates.put(player.getUniqueId(), state);
+
+        // Enhanced particles
+        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 300, 1, 1, 1, 1);
+        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 150, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.CRIT_MAGIC, player.getLocation(), 100, 1, 1, 1, 0.1);
+
         player.sendMessage(ChatColor.YELLOW + "Time state saved! Rewinding in 5 seconds...");
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -595,7 +728,11 @@ public class AbilityManager implements Listener {
                 player.setHealth(saved.health);
                 player.setFoodLevel(saved.hunger);
 
-                player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 100, 1, 1, 1, 1);
+                // Enhanced particles
+                player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 400, 1, 1, 1, 1);
+                player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 200, 1, 1, 1, 0.1);
+                player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 150, 1, 1, 1, 0.5);
+
                 player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
                 player.sendMessage(ChatColor.YELLOW + "Time Rewound!");
             }
@@ -610,6 +747,8 @@ public class AbilityManager implements Listener {
         Vector direction = player.getLocation().getDirection();
         Location start = player.getLocation();
 
+        Set<UUID> hitEntities = new HashSet<>();
+
         for (int i = 1; i <= 6; i++) {
             Location point = start.clone().add(direction.clone().multiply(i));
 
@@ -618,15 +757,25 @@ public class AbilityManager implements Listener {
                 Vector perpendicular = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(offset);
                 Location sweepPoint = point.clone().add(perpendicular);
 
-                sweepPoint.getWorld().spawnParticle(Particle.LARGE_SMOKE, sweepPoint, 3, 0.1, 0.1, 0.1, 0);
+                // Enhanced particles
+                sweepPoint.getWorld().spawnParticle(Particle.LARGE_SMOKE, sweepPoint, 12, 0.1, 0.1, 0.1, 0);
+                sweepPoint.getWorld().spawnParticle(Particle.SQUID_INK, sweepPoint, 8, 0.1, 0.1, 0.1, 0.05);
+                sweepPoint.getWorld().spawnParticle(Particle.REVERSE_PORTAL, sweepPoint, 5, 0.1, 0.1, 0.1, 0);
 
                 for (Entity entity : sweepPoint.getWorld().getNearbyEntities(sweepPoint, 1, 1, 1)) {
-                    if (entity instanceof LivingEntity && entity != player) {
+                    if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
                         // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                             continue;
                         }
-                        ((LivingEntity) entity).damage(5.0, player);
+                        LivingEntity living = (LivingEntity) entity;
+                        living.damage(7.5, player); // Increased from 5.0 (50% increase)
+                        hitEntities.add(entity.getUniqueId());
+
+                        // Notify victim
+                        if (living instanceof Player) {
+                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Void Slice" + ChatColor.RED + " from " + player.getName() + "!");
+                        }
                     }
                 }
             }
@@ -650,6 +799,7 @@ public class AbilityManager implements Listener {
 
         new BukkitRunnable() {
             int ticks = 0;
+            Set<UUID> damagedEntities = new HashSet<>();
 
             @Override
             public void run() {
@@ -658,9 +808,11 @@ public class AbilityManager implements Listener {
                     return;
                 }
 
-                // Black hole particles
-                riftLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, riftLocation, 30, 0.5, 0.5, 0.5, 0.1);
-                riftLocation.getWorld().spawnParticle(Particle.PORTAL, riftLocation, 20, 0.5, 0.5, 0.5, 1);
+                // Enhanced black hole particles
+                riftLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, riftLocation, 120, 0.5, 0.5, 0.5, 0.1);
+                riftLocation.getWorld().spawnParticle(Particle.PORTAL, riftLocation, 80, 0.5, 0.5, 0.5, 1);
+                riftLocation.getWorld().spawnParticle(Particle.SQUID_INK, riftLocation, 60, 0.5, 0.5, 0.5, 0.1);
+                riftLocation.getWorld().spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 40, 0.5, 0.5, 0.5, 0.5);
 
                 // Pull entities
                 for (Entity entity : riftLocation.getWorld().getNearbyEntities(riftLocation, 8, 8, 8)) {
@@ -673,9 +825,18 @@ public class AbilityManager implements Listener {
                         Vector direction = riftLocation.toVector().subtract(entity.getLocation().toVector()).normalize();
                         entity.setVelocity(direction.multiply(0.5));
 
-                        // Damage if inside rift
+                        // Damage if inside rift (increased from 3.0)
                         if (entity.getLocation().distance(riftLocation) < 2) {
-                            ((LivingEntity) entity).damage(3.0, player);
+                            LivingEntity living = (LivingEntity) entity;
+                            living.damage(4.5, player); // Increased from 3.0 (50% increase)
+
+                            // Notify victim (once per tick cycle to avoid spam)
+                            if (!damagedEntities.contains(entity.getUniqueId())) {
+                                damagedEntities.add(entity.getUniqueId());
+                                if (living instanceof Player) {
+                                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Void Rift" + ChatColor.RED + " from " + player.getName() + "!");
+                                }
+                            }
                         }
                     }
                 }
@@ -694,20 +855,31 @@ public class AbilityManager implements Listener {
         Vector direction = player.getLocation().getDirection();
         Location start = player.getEyeLocation();
 
+        Set<UUID> hitEntities = new HashSet<>();
+
         for (int i = 1; i <= 35; i++) {
             Location point = start.clone().add(direction.clone().multiply(i));
 
-            point.getWorld().spawnParticle(Particle.REVERSE_PORTAL, point, 5, 0.2, 0.2, 0.2, 0);
+            // Enhanced particles
+            point.getWorld().spawnParticle(Particle.REVERSE_PORTAL, point, 20, 0.2, 0.2, 0.2, 0);
+            point.getWorld().spawnParticle(Particle.LARGE_SMOKE, point, 15, 0.2, 0.2, 0.2, 0);
+            point.getWorld().spawnParticle(Particle.SQUID_INK, point, 10, 0.2, 0.2, 0.2, 0.05);
 
             for (Entity entity : point.getWorld().getNearbyEntities(point, 1.5, 1.5, 1.5)) {
-                if (entity instanceof LivingEntity && entity != player) {
+                if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
                     // Trust check
                     if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                         continue;
                     }
                     LivingEntity living = (LivingEntity) entity;
-                    living.damage(7.0, player);
+                    living.damage(10.5, player); // Increased from 7.0 (50% increase)
                     living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 0));
+                    hitEntities.add(entity.getUniqueId());
+
+                    // Notify victim
+                    if (living instanceof Player) {
+                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Void Rupture" + ChatColor.RED + " from " + player.getName() + "!");
+                    }
                 }
             }
         }
@@ -735,14 +907,25 @@ public class AbilityManager implements Listener {
 
                 living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 3));
                 living.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 60, 0));
+
+                // Notify victim about pull
+                if (living instanceof Player) {
+                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Cataclysm Pulse" + ChatColor.RED + " from " + player.getName() + "!");
+                }
             }
         }
 
-        center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 200, 7, 3, 7, 0.1);
+        // Enhanced particles
+        center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 800, 7, 3, 7, 0.1);
+        center.getWorld().spawnParticle(Particle.SQUID_INK, center, 400, 7, 3, 7, 0.1);
+        center.getWorld().spawnParticle(Particle.REVERSE_PORTAL, center, 300, 7, 3, 7, 0.5);
 
         // Final explosion after 2 seconds
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 5, 1, 1, 1, 0);
+            // Enhanced explosion particles
+            center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 20, 1, 1, 1, 0);
+            center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 500, 3, 3, 3, 0.2);
+            center.getWorld().spawnParticle(Particle.SQUID_INK, center, 300, 3, 3, 3, 0.1);
             center.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.5f);
 
             for (Entity entity : center.getWorld().getNearbyEntities(center, 7, 7, 7)) {
@@ -751,7 +934,13 @@ public class AbilityManager implements Listener {
                     if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                         continue;
                     }
-                    ((LivingEntity) entity).damage(8.0, player);
+                    LivingEntity living = (LivingEntity) entity;
+                    living.damage(12.0, player); // Increased from 8.0 (50% increase)
+
+                    // Notify victim about explosion damage
+                    if (living instanceof Player) {
+                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Cataclysm Pulse Explosion" + ChatColor.RED + " from " + player.getName() + "!");
+                    }
                 }
             }
         }, 40L);
@@ -807,11 +996,14 @@ public class AbilityManager implements Listener {
                 player.setHealth(12.0);
                 player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 200, 0));
 
-                // Fiery explosion
-                player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 200, 3, 1, 3, 0.2);
+                // Enhanced fiery explosion particles
+                player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 800, 3, 1, 3, 0.2);
+                player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation(), 400, 3, 1, 3, 0.15);
+                player.getWorld().spawnParticle(Particle.LAVA, player.getLocation(), 200, 3, 1, 3, 0.1);
+                player.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, player.getLocation(), 10, 1, 1, 1, 0);
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.8f);
 
-                // Damage nearby enemies
+                // Damage nearby enemies (increased from 10.0)
                 for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
                     if (entity instanceof LivingEntity) {
                         // Trust check
@@ -821,9 +1013,14 @@ public class AbilityManager implements Listener {
                             }
                         }
                         LivingEntity living = (LivingEntity) entity;
-                        living.damage(10.0);
+                        living.damage(15.0, player); // Increased from 10.0 (50% increase)
                         Vector knockback = entity.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(2);
                         entity.setVelocity(knockback);
+
+                        // Notify victim
+                        if (living instanceof Player) {
+                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.GOLD + "Fire Rebirth Explosion" + ChatColor.RED + " from " + player.getName() + "!");
+                        }
                     }
                 }
 
@@ -886,14 +1083,22 @@ public class AbilityManager implements Listener {
                             if (markedEntity instanceof LivingEntity && markedEntity.isValid() && !markedEntity.isDead()) {
                                 LivingEntity markedLiving = (LivingEntity) markedEntity;
 
-                                // True damage (ignore armor) - directly reduce health
+                                // True damage (ignore armor) - directly reduce health (increased from 6.0)
                                 double currentHealth = markedLiving.getHealth();
-                                markedLiving.setHealth(Math.max(0, currentHealth - 6.0));
+                                markedLiving.setHealth(Math.max(0, currentHealth - 9.0)); // Increased from 6.0 (50% increase)
 
-                                markedLiving.getWorld().spawnParticle(Particle.SOUL, markedLiving.getLocation(), 50, 0.5, 1, 0.5, 0.1);
+                                // Enhanced particles
+                                markedLiving.getWorld().spawnParticle(Particle.SOUL, markedLiving.getLocation(), 200, 0.5, 1, 0.5, 0.1);
+                                markedLiving.getWorld().spawnParticle(Particle.ENCHANT, markedLiving.getLocation(), 150, 0.5, 1, 0.5, 0.1);
+                                markedLiving.getWorld().spawnParticle(Particle.WITCH, markedLiving.getLocation(), 100, 0.5, 1, 0.5, 0.05);
                                 markedLiving.getWorld().playSound(markedLiving.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 0.7f);
 
-                                player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark triggered! 3 hearts of true damage dealt!");
+                                // Notify victim
+                                if (markedLiving instanceof Player) {
+                                    ((Player) markedLiving).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Soul Mark True Damage" + ChatColor.RED + " from " + player.getName() + "!");
+                                }
+
+                                player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark triggered! 4.5 hearts of true damage dealt!");
                             }
                         }
                     }, 300L); // 15 seconds

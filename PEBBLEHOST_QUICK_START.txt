@@ -1,0 +1,161 @@
+================================================================================
+    LEGENDARY WEAPONS SMP - PEBBLEHOST QUICK START GUIDE
+================================================================================
+
+📦 STEP 1: BUILD THE PLUGIN (On Your Computer)
+────────────────────────────────────────────────────────────────────────────
+
+Method A: Double-click "BUILD_FOR_PEBBLEHOST.bat"
+   ✓ Easiest method - just run the batch file
+
+Method B: Manual command
+   1. Open Command Prompt in plugin folder
+   2. Run: gradlew.bat build
+   3. Find JAR in: build\libs\LegendaryWeaponsSMP-1.0.0.jar
+
+────────────────────────────────────────────────────────────────────────────
+
+🌐 STEP 2: UPLOAD TO PEBBLEHOST
+────────────────────────────────────────────────────────────────────────────
+
+1. Go to: https://client.pebblehost.com
+2. Login to your account
+3. Click your Minecraft server
+4. Click "File Manager" (left sidebar)
+5. Navigate to "plugins" folder
+6. Click "Upload" button
+7. Select: build\libs\LegendaryWeaponsSMP-1.0.0.jar
+8. Wait for upload (usually 10-30 seconds)
+
+────────────────────────────────────────────────────────────────────────────
+
+🔄 STEP 3: RESTART SERVER
+────────────────────────────────────────────────────────────────────────────
+
+1. Click "Console" (left sidebar)
+2. Click "Restart" button
+   OR type: stop
+3. Wait 30-60 seconds for restart
+4. Look for: "[LegendaryWeaponsSMP] Legendary Weapons SMP plugin enabled!"
+
+────────────────────────────────────────────────────────────────────────────
+
+🎮 STEP 4: TEST IN-GAME
+────────────────────────────────────────────────────────────────────────────
+
+1. Join server as OP
+2. Run: /givealtar
+3. Place the altar (looks like bedrock)
+4. Right-click altar to open 5×5 crafting
+5. Test weapon: /givelegendary blade_of_the_fractured_stars
+6. Test abilities: /ability 1 and /ability 2
+
+────────────────────────────────────────────────────────────────────────────
+
+🎯 IMPORTANT COMMANDS
+────────────────────────────────────────────────────────────────────────────
+
+Admin Commands (OP only):
+   /givealtar              - Get a Legendary Altar
+   /giveweapon <name>      - Give legendary (marks as crafted)
+   /givelegendary <id>     - Give legendary (testing - doesn't mark)
+   /kreset                 - Reset all crafting progress
+   /kresetplayer <player>  - Reset specific player's progress
+   /cooldown               - Clear ability cooldowns
+
+Player Commands (Everyone):
+   /ability 1              - Use first ability
+   /ability 2              - Use second ability
+   /trust <player>         - Toggle trust (prevent friendly fire)
+
+────────────────────────────────────────────────────────────────────────────
+
+📋 LEGENDARY WEAPON IDS (for /givelegendary command)
+────────────────────────────────────────────────────────────────────────────
+
+   blade_of_the_fractured_stars
+   emberheart_scythe
+   tempestbreaker_spear
+   umbra_veil_dagger
+   heartroot_guardian_axe
+   chains_of_eternity
+   glacierbound_halberd
+   celestial_aegis_shield
+   chrono_edge
+   oblivion_harvester
+   eclipse_devourer
+
+────────────────────────────────────────────────────────────────────────────
+
+❓ TROUBLESHOOTING
+────────────────────────────────────────────────────────────────────────────
+
+Problem: Plugin won't load
+   ✓ Check server is running Paper/Spigot 1.21.8
+   ✓ Check console for error messages
+   ✓ Contact PebbleHost to ensure Java 21+ is installed
+
+Problem: Abilities not working
+   ✓ Make sure you're holding the legendary weapon
+   ✓ Check cooldowns with /cooldown
+   ✓ Verify weapon in main hand (or boots/offhand for specific legendaries)
+
+Problem: Can't upload file
+   ✓ Check file size (<1MB - should be fine)
+   ✓ Try using FTP instead (get credentials from PebbleHost panel)
+   ✓ Clear browser cache and try again
+
+Problem: Lag/Performance issues
+   ✓ Particles are intensive - have players lower particle settings
+   ✓ Edit config.yml: increase passive_tick_interval from 10 to 20
+   ✓ Monitor with /timings command
+
+────────────────────────────────────────────────────────────────────────────
+
+📁 FILES CREATED ON SERVER
+────────────────────────────────────────────────────────────────────────────
+
+After first run:
+   plugins/LegendaryWeaponsSMP-1.0.0.jar  ← The plugin
+   plugins/LegendaryWeaponsSMP/           ← Data folder
+   plugins/LegendaryWeaponsSMP/config.yml ← Crafting recipes
+   plugins/LegendaryWeaponsSMP/crafting.yml ← Who crafted what
+   plugins/LegendaryWeaponsSMP/trust.yml  ← Trust relationships
+   plugins/LegendaryWeaponsSMP/altars.yml ← Altar locations
+
+────────────────────────────────────────────────────────────────────────────
+
+📖 MORE HELP
+────────────────────────────────────────────────────────────────────────────
+
+   • Full deployment guide: See DEPLOYMENT.md
+   • All weapons & recipes: See WEAPONS_GUIDE.md
+   • General info: See README.md
+   • PebbleHost support: https://pebblehost.com/support (24/7 live chat)
+
+────────────────────────────────────────────────────────────────────────────
+
+✅ DEPLOYMENT CHECKLIST
+────────────────────────────────────────────────────────────────────────────
+
+   [ ] Built plugin JAR successfully
+   [ ] Uploaded to PebbleHost plugins folder
+   [ ] Restarted server
+   [ ] No errors in console
+   [ ] Tested /givealtar command
+   [ ] Tested placing altar
+   [ ] Tested opening altar (right-click)
+   [ ] Tested /givelegendary command
+   [ ] Tested /ability 1 and /ability 2
+   [ ] Particles showing correctly
+   [ ] Trust system working (/trust)
+
+================================================================================
+                    🎉 YOU'RE READY TO PLAY! 🎉
+================================================================================
+
+Share altars with players and let the legendary battles begin!
+
+For support: https://github.com/tomiokay/alter-smp-plugin/issues
+
+================================================================================

@@ -1,6 +1,8 @@
 # Legendary Weapons SMP Plugin
 
-A comprehensive Minecraft plugin featuring 11 unique legendary weapons with passive and active abilities, a custom 5×5 crafting system, and global crafting limits (one per world).
+**Epic Minecraft plugin with 11 legendary weapons, each featuring devastating abilities, spectacular particle effects, and a unique 5×5 crafting system. Balanced for PvP with Protection IV armor in mind.**
+
+Transform your SMP with powerful legendary items that players will fight to obtain. Each weapon has 1 passive effect and 2 active abilities, with enhanced visuals that make every battle epic.
 
 ## Features
 
