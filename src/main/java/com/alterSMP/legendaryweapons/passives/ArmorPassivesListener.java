@@ -29,10 +29,14 @@ public class ArmorPassivesListener implements Listener {
 
     // Ionflare Leggings - ion charges
     private Map<UUID, Integer> ionCharges = new HashMap<>();
+    private Set<UUID> chainLightningActive = new HashSet<>(); // Prevent recursive chain lightning
 
     // Skybreaker Boots - falling state
     private Set<UUID> isFalling = new HashSet<>();
     private Map<UUID, Double> fallDistance = new HashMap<>();
+
+    // Bloodreaper Hood - health boost tracking
+    private Map<UUID, Double> originalMaxHealth = new HashMap<>();
 
     public ArmorPassivesListener(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
@@ -233,6 +237,12 @@ public class ArmorPassivesListener implements Listener {
         if (!(event.getEntity() instanceof LivingEntity)) return;
 
         Player player = (Player) event.getDamager();
+
+        // Prevent chain lightning from triggering itself
+        if (chainLightningActive.contains(player.getUniqueId())) {
+            return;
+        }
+
         ItemStack leggings = player.getInventory().getLeggings();
         String legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
 
@@ -252,6 +262,9 @@ public class ArmorPassivesListener implements Listener {
     }
 
     private void chainLightning(Player player, LivingEntity firstTarget) {
+        // Mark chain lightning as active to prevent recursive triggers
+        chainLightningActive.add(player.getUniqueId());
+
         List<LivingEntity> targets = new ArrayList<>();
         targets.add(firstTarget);
 
@@ -296,6 +309,9 @@ public class ArmorPassivesListener implements Listener {
         }
 
         player.sendMessage(ChatColor.GOLD + "⚡ Chain Lightning! Hit " + targets.size() + " targets!");
+
+        // Remove flag after chain lightning completes
+        chainLightningActive.remove(player.getUniqueId());
     }
 
     private void drawLightningLine(Location from, Location to) {
@@ -321,13 +337,47 @@ public class ArmorPassivesListener implements Listener {
         String legendaryId = LegendaryItemFactory.getLegendaryId(helmet);
 
         if (legendaryId != null && legendaryId.equals(LegendaryType.BLOODREAPER_HOOD.getId())) {
-            // Grant +5 hearts for 5 minutes
-            killer.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 6000, 4)); // Level 5 = 5 hearts
-            killer.sendMessage(ChatColor.DARK_RED + "Blood Harvest! " + ChatColor.RED + "+5 hearts for 5 minutes");
+            UUID killerId = killer.getUniqueId();
+
+            // Store original max health if not already stored
+            if (!originalMaxHealth.containsKey(killerId)) {
+                originalMaxHealth.put(killerId, killer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+            }
+
+            // Cancel any existing health restore task
+            if (originalMaxHealth.containsKey(killerId)) {
+                // Set max health to +10 HP (5 hearts)
+                double originalMax = originalMaxHealth.get(killerId);
+                killer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).setBaseValue(originalMax + 10.0);
+
+                // Heal the player by 10 HP
+                double newHealth = Math.min(killer.getHealth() + 10.0, originalMax + 10.0);
+                killer.setHealth(newHealth);
+            }
+
+            killer.sendMessage(ChatColor.DARK_RED + "Blood Harvest! " + ChatColor.RED + "+5 hearts for 2.5 minutes");
 
             // Particles
             killer.getWorld().spawnParticle(Particle.DUST, killer.getLocation().add(0, 1, 0), 50, 0.5, 0.5, 0.5,
                 new Particle.DustOptions(Color.fromRGB(139, 0, 0), 1.5f));
+
+            // Restore health after 2.5 minutes (3000 ticks)
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (killer.isOnline() && originalMaxHealth.containsKey(killerId)) {
+                    double originalMax = originalMaxHealth.get(killerId);
+
+                    // Restore original max health
+                    killer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).setBaseValue(originalMax);
+
+                    // Adjust current health if it exceeds the new max
+                    if (killer.getHealth() > originalMax) {
+                        killer.setHealth(originalMax);
+                    }
+
+                    originalMaxHealth.remove(killerId);
+                    killer.sendMessage(ChatColor.RED + "Blood Harvest expired.");
+                }
+            }, 3000L); // 2.5 minutes = 150 seconds = 3000 ticks
         }
     }
 
