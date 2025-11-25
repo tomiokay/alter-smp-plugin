@@ -97,12 +97,12 @@ public class PassiveEffectManager implements Listener {
                 break;
 
             case HEARTROOT_GUARDIAN_AXE:
-                // Nature Channel - Regen on natural blocks
+                // Nature Channel - Regen 10 on natural blocks
                 Block below = player.getLocation().subtract(0, 1, 0).getBlock();
                 Material belowType = below.getType();
                 if (belowType == Material.GRASS_BLOCK || belowType.name().contains("LOG") ||
                     belowType.name().contains("LEAVES")) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 1, true, false));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 9, true, false)); // Level 10 = amplifier 9
                 }
                 break;
 
