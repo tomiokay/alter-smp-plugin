@@ -12,6 +12,12 @@ commands:
     permission: legendaryweapons.givealtar
     permission-message: 'You do not have permission to use this command'
 
+  removealtar:
+    description: 'Remove a Legendary Altar (look at it and use this command)'
+    usage: '/removealtar'
+    permission: legendaryweapons.removealtar
+    permission-message: 'You do not have permission to use this command'
+
   ability:
     description: 'Use legendary weapon abilities'
     usage: '/ability <1|2>'
@@ -59,6 +65,10 @@ commands:
 permissions:
   legendaryweapons.givealtar:
     description: 'Allows giving legendary altars'
+    default: op
+
+  legendaryweapons.removealtar:
+    description: 'Allows removing legendary altars'
     default: op
 
   legendaryweapons.kreset:

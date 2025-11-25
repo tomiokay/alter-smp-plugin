@@ -5,6 +5,7 @@ import com.alterSMP.legendaryweapons.altar.AltarPlaceListener;
 import com.alterSMP.legendaryweapons.altar.AltarInteractListener;
 import com.alterSMP.legendaryweapons.altar.AltarCraftingListener;
 import com.alterSMP.legendaryweapons.commands.GiveAltarCommand;
+import com.alterSMP.legendaryweapons.commands.RemoveAltarCommand;
 import com.alterSMP.legendaryweapons.commands.AbilityCommand;
 import com.alterSMP.legendaryweapons.commands.KResetCommand;
 import com.alterSMP.legendaryweapons.commands.KResetPlayerCommand;
@@ -57,6 +58,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
 
         // Register commands
         getCommand("givealtar").setExecutor(new GiveAltarCommand(this));
+        getCommand("removealtar").setExecutor(new RemoveAltarCommand(this));
         getCommand("ability").setExecutor(new AbilityCommand(this));
         getCommand("kreset").setExecutor(new KResetCommand(this));
         KResetPlayerCommand kresetPlayerCmd = new KResetPlayerCommand(this);
