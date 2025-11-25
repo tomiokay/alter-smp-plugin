@@ -111,4 +111,10 @@ public class DataManager {
     public Set<String> getAllCraftedLegendaries() {
         return new HashSet<>(globalCraftingHistory.keySet());
     }
+
+    public void resetLegendaryCrafting(String legendaryId) {
+        globalCraftingHistory.remove(legendaryId);
+        saveCraftingHistory();
+        plugin.getLogger().info("Reset crafting for legendary: " + legendaryId);
+    }
 }

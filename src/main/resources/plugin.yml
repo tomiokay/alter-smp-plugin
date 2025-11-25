@@ -22,6 +22,12 @@ commands:
     permission: legendaryweapons.kreset
     permission-message: 'You do not have permission to use this command'
 
+  kresetplayer:
+    description: 'Reset legendary crafting progress for a specific player'
+    usage: '/kresetplayer <player>'
+    permission: legendaryweapons.kresetplayer
+    permission-message: 'You do not have permission to use this command'
+
   lreload:
     description: 'Reload the plugin configuration'
     usage: '/lreload'
@@ -57,6 +63,10 @@ permissions:
 
   legendaryweapons.kreset:
     description: 'Allows resetting legendary crafting progress'
+    default: op
+
+  legendaryweapons.kresetplayer:
+    description: 'Allows resetting legendary crafting progress for specific players'
     default: op
 
   legendaryweapons.reload:
