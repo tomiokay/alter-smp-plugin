@@ -12,7 +12,8 @@
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar clean build)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar build)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar build --rerun-tasks)",
-      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar shadowJar)"
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar shadowJar)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

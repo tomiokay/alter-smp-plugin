@@ -63,4 +63,11 @@ public class CooldownManager {
 
         return (int) Math.ceil(remaining / 1000.0);
     }
+
+    public void clearAllCooldowns(UUID playerUUID) {
+        Map<String, Long> playerCooldowns = cooldowns.get(playerUUID);
+        if (playerCooldowns != null) {
+            playerCooldowns.clear();
+        }
+    }
 }

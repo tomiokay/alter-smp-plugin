@@ -28,6 +28,12 @@ commands:
     permission: legendaryweapons.reload
     permission-message: 'You do not have permission to use this command'
 
+  cooldown:
+    description: 'Clear all ability cooldowns for yourself or another player'
+    usage: '/cooldown [player]'
+    permission: legendaryweapons.cooldown
+    permission-message: 'You do not have permission to use this command'
+
 permissions:
   legendaryweapons.givealtar:
     description: 'Allows giving legendary altars'
@@ -39,4 +45,8 @@ permissions:
 
   legendaryweapons.reload:
     description: 'Allows reloading the plugin configuration'
+    default: op
+
+  legendaryweapons.cooldown:
+    description: 'Allows clearing ability cooldowns'
     default: op
