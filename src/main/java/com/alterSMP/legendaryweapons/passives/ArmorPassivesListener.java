@@ -182,6 +182,14 @@ public class ArmorPassivesListener implements Listener {
             return;
         }
 
+        // Ignore if attacker is doing a shockwave (prevents infinite loop)
+        if (event.getDamager() instanceof Player) {
+            Player attacker = (Player) event.getDamager();
+            if (shockwaveActive.contains(attacker.getUniqueId())) {
+                return;
+            }
+        }
+
         Player player = (Player) event.getEntity();
         ItemStack chestplate = player.getInventory().getChestplate();
         String legendaryId = LegendaryItemFactory.getLegendaryId(chestplate);
