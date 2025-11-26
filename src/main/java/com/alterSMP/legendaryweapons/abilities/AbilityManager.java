@@ -764,28 +764,28 @@ public class AbilityManager implements Listener {
                         for (double x = minX; x <= maxX; x += 1.5) {
                             Location particleLoc = new Location(world, x, y, minZ);
                             if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
                             }
                         }
                         // South wall (maxZ)
                         for (double x = minX; x <= maxX; x += 1.5) {
                             Location particleLoc = new Location(world, x, y, maxZ);
                             if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
                             }
                         }
                         // West wall (minX)
                         for (double z = minZ; z <= maxZ; z += 1.5) {
                             Location particleLoc = new Location(world, minX, y, z);
                             if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
                             }
                         }
                         // East wall (maxX)
                         for (double z = minZ; z <= maxZ; z += 1.5) {
                             Location particleLoc = new Location(world, maxX, y, z);
                             if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
                             }
                         }
                     }
