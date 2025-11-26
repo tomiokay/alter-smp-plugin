@@ -27,8 +27,8 @@ public class LegendaryItemFactory {
         ItemMeta meta = item.getItemMeta();
 
         if (meta != null) {
-            // Set display name with italic (like anvil-renamed items for texture pack compatibility)
-            meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.ITALIC + type.getDisplayName());
+            // Set display name with bold
+            meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + type.getDisplayName());
 
             // Add lore
             List<String> lore = getLoreForLegendary(type);

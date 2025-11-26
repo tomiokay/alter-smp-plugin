@@ -758,16 +758,13 @@ public class AbilityManager implements Listener {
 
                     double playerY = pLoc.getY();
 
-                    // Render particles at player's Y level ± 4 blocks
-                    for (double y = playerY - 4; y <= playerY + 4; y += 0.8) {
+                    // Render particles at player's Y level ± 8 blocks (taller wall)
+                    for (double y = playerY - 8; y <= playerY + 8; y += 0.8) {
                         // North wall (minZ)
                         for (double x = minX; x <= maxX; x += 1.5) {
                             Location particleLoc = new Location(world, x, y, minZ);
                             if (particleLoc.distance(pLoc) < 20) {
                                 world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
-                                if (ticks % 15 == 0) {
-                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
-                                }
                             }
                         }
                         // South wall (maxZ)
@@ -775,9 +772,6 @@ public class AbilityManager implements Listener {
                             Location particleLoc = new Location(world, x, y, maxZ);
                             if (particleLoc.distance(pLoc) < 20) {
                                 world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
-                                if (ticks % 15 == 0) {
-                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
-                                }
                             }
                         }
                         // West wall (minX)
@@ -785,9 +779,6 @@ public class AbilityManager implements Listener {
                             Location particleLoc = new Location(world, minX, y, z);
                             if (particleLoc.distance(pLoc) < 20) {
                                 world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
-                                if (ticks % 15 == 0) {
-                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
-                                }
                             }
                         }
                         // East wall (maxX)
@@ -795,9 +786,6 @@ public class AbilityManager implements Listener {
                             Location particleLoc = new Location(world, maxX, y, z);
                             if (particleLoc.distance(pLoc) < 20) {
                                 world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
-                                if (ticks % 15 == 0) {
-                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
-                                }
                             }
                         }
                     }
