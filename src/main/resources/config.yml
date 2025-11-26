@@ -198,7 +198,7 @@ ranges:
 #   creation_splitter
 #   copper_pickaxe
 #   thunderforge_chestplate
-#   ionflare_leggings
+#   emberstride_greaves
 #   bloodreaper_hood
 #
 
@@ -565,33 +565,33 @@ recipes:
     - COPPER_BLOCK
     - LIGHTNING_ROD
 
-  # Ionflare Leggings
-  ionflare_leggings:
-    - PRISMARINE_CRYSTALS
-    - DIAMOND
-    - DIAMOND
-    - DIAMOND
-    - PRISMARINE_CRYSTALS
-    - DIAMOND
-    - AMETHYST_BLOCK
-    - AMETHYST_BLOCK
-    - AMETHYST_BLOCK
-    - DIAMOND
-    - DIAMOND
-    - AMETHYST_BLOCK
+  # Emberstride Greaves
+  emberstride_greaves:
+    - BLAZE_POWDER
+    - MAGMA_CREAM
+    - MAGMA_CREAM
+    - MAGMA_CREAM
+    - BLAZE_POWDER
+    - MAGMA_CREAM
+    - MAGMA_BLOCK
+    - MAGMA_BLOCK
+    - MAGMA_BLOCK
+    - MAGMA_CREAM
+    - MAGMA_CREAM
+    - MAGMA_BLOCK
     - DIAMOND_LEGGINGS
-    - AMETHYST_BLOCK
-    - DIAMOND
-    - DIAMOND
-    - AMETHYST_BLOCK
-    - AMETHYST_BLOCK
-    - AMETHYST_BLOCK
-    - DIAMOND
-    - PRISMARINE_CRYSTALS
-    - DIAMOND
-    - DIAMOND
-    - DIAMOND
-    - PRISMARINE_CRYSTALS
+    - MAGMA_BLOCK
+    - MAGMA_CREAM
+    - MAGMA_CREAM
+    - MAGMA_BLOCK
+    - MAGMA_BLOCK
+    - MAGMA_BLOCK
+    - MAGMA_CREAM
+    - BLAZE_POWDER
+    - BLAZE_ROD
+    - BLAZE_ROD
+    - BLAZE_ROD
+    - BLAZE_POWDER
 
   # Bloodreaper Hood
   bloodreaper_hood:

@@ -4,6 +4,7 @@ import com.alterSMP.legendaryweapons.LegendaryWeaponsPlugin;
 import com.alterSMP.legendaryweapons.items.LegendaryItemFactory;
 import com.alterSMP.legendaryweapons.items.LegendaryType;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,9 +28,8 @@ public class ArmorPassivesListener implements Listener {
     // Thunderforge Chestplate - hit counter
     private Map<UUID, Integer> hitCounter = new HashMap<>();
 
-    // Ionflare Leggings - ion charges
-    private Map<UUID, Integer> ionCharges = new HashMap<>();
-    private Set<UUID> chainLightningActive = new HashSet<>(); // Prevent recursive chain lightning
+    // Emberstride Greaves - flame trail tracking
+    private Map<UUID, Location> lastFlameLocation = new HashMap<>();
     private Set<UUID> shockwaveActive = new HashSet<>(); // Prevent shockwave damage from counting as hits
 
     // Skybreaker Boots - falling state
@@ -253,112 +253,73 @@ public class ArmorPassivesListener implements Listener {
         player.sendMessage(ChatColor.GOLD + "⚡ Electric Shockwave Released!");
     }
 
-    // ========== IONFLARE LEGGINGS ==========
+    // ========== EMBERSTRIDE GREAVES ==========
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerHit(EntityDamageByEntityEvent event) {
-        if (event.isCancelled()) return;
-        if (!(event.getDamager() instanceof Player)) return;
-        if (!(event.getEntity() instanceof LivingEntity)) return;
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onFireDamage(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
 
-        // Only count melee attacks (not projectiles, abilities, etc.)
-        if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK &&
-            event.getCause() != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+        EntityDamageEvent.DamageCause cause = event.getCause();
+
+        // Check for fire/lava damage types
+        if (cause != EntityDamageEvent.DamageCause.FIRE &&
+            cause != EntityDamageEvent.DamageCause.FIRE_TICK &&
+            cause != EntityDamageEvent.DamageCause.LAVA &&
+            cause != EntityDamageEvent.DamageCause.HOT_FLOOR) {
             return;
         }
 
-        Player player = (Player) event.getDamager();
-
-        // Prevent chain lightning from triggering itself
-        if (chainLightningActive.contains(player.getUniqueId())) {
-            return;
-        }
-
-        // Prevent shockwave damage from counting towards ion charges
-        if (shockwaveActive.contains(player.getUniqueId())) {
-            return;
-        }
-
+        Player player = (Player) event.getEntity();
         ItemStack leggings = player.getInventory().getLeggings();
         String legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.IONFLARE_LEGGINGS.getId())) {
-            // Add ion charge
-            int charges = ionCharges.getOrDefault(player.getUniqueId(), 0) + 1;
-
-            if (charges >= 5) {
-                // Release chain lightning
-                chainLightning(player, (LivingEntity) event.getEntity());
-                ionCharges.put(player.getUniqueId(), 0);
-            } else {
-                ionCharges.put(player.getUniqueId(), charges);
-                player.sendMessage(ChatColor.AQUA + "⚡ Ion Charge: " + ChatColor.YELLOW + charges + "/5");
-            }
+        if (legendaryId != null && legendaryId.equals(LegendaryType.EMBERSTRIDE_GREAVES.getId())) {
+            // Immune to fire, lava, and magma
+            event.setCancelled(true);
+            player.setFireTicks(0); // Extinguish any fire
         }
     }
 
-    private void chainLightning(Player player, LivingEntity firstTarget) {
-        // Mark chain lightning as active to prevent recursive triggers
-        chainLightningActive.add(player.getUniqueId());
+    /**
+     * Called by PassiveEffectManager tick to handle Emberstride Greaves passives
+     */
+    public void tickEmberstrideGreaves(Player player) {
+        ItemStack leggings = player.getInventory().getLeggings();
+        String legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
 
-        List<LivingEntity> targets = new ArrayList<>();
-        targets.add(firstTarget);
-
-        // Find up to 2 more targets
-        Location center = firstTarget.getLocation();
-        List<LivingEntity> nearby = new ArrayList<>(center.getWorld().getNearbyLivingEntities(center, 8.0));
-        nearby.remove(player); // Don't hit caster
-        nearby.remove(firstTarget); // Don't hit first target again
-
-        // Filter out trusted players
-        nearby.removeIf(entity -> {
-            if (entity instanceof Player) {
-                return plugin.getTrustManager().isTrusted(player, (Player) entity);
-            }
-            return false;
-        });
-
-        // Add up to 2 more
-        for (int i = 0; i < Math.min(2, nearby.size()); i++) {
-            targets.add(nearby.get(i));
+        if (legendaryId == null || !legendaryId.equals(LegendaryType.EMBERSTRIDE_GREAVES.getId())) {
+            return;
         }
 
-        // Chain lightning effect
-        LivingEntity previous = null;
-        for (LivingEntity target : targets) {
-            Location from = previous == null ? player.getLocation().add(0, 1, 0) : previous.getEyeLocation();
-            Location to = target.getEyeLocation();
+        UUID playerId = player.getUniqueId();
 
-            // Lightning particles
-            drawLightningLine(from, to);
+        // Flame trail when walking
+        Location currentLoc = player.getLocation();
+        Location lastLoc = lastFlameLocation.get(playerId);
 
-            // Damage
-            target.damage(6.0, player);
-            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 0.8f, 1.5f);
-
-            if (target instanceof Player) {
-                ((Player) target).sendMessage(ChatColor.AQUA + "⚡ Hit by " + ChatColor.GOLD + "Chain Lightning" +
-                    ChatColor.AQUA + " from " + player.getName() + "!");
+        if (lastLoc != null && lastLoc.getWorld().equals(currentLoc.getWorld())) {
+            double distance = lastLoc.distance(currentLoc);
+            // Only spawn flames if player moved and is on ground
+            if (distance > 0.3 && player.isOnGround()) {
+                // Spawn flame particles along path
+                player.getWorld().spawnParticle(Particle.FLAME, currentLoc.clone().add(0, 0.1, 0), 3, 0.2, 0.05, 0.2, 0.01);
+                player.getWorld().spawnParticle(Particle.SMALL_FLAME, currentLoc.clone().add(0, 0.1, 0), 2, 0.1, 0.05, 0.1, 0.01);
             }
+        }
+        lastFlameLocation.put(playerId, currentLoc.clone());
 
-            previous = target;
+        // +10% attack speed when above 50% HP
+        double maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+        if (player.getHealth() > maxHealth * 0.5) {
+            // Apply Haste I for attack speed (10% faster)
+            player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 15, 0, true, false));
         }
 
-        player.sendMessage(ChatColor.GOLD + "⚡ Chain Lightning! Hit " + targets.size() + " targets!");
-
-        // Remove flag after chain lightning completes
-        chainLightningActive.remove(player.getUniqueId());
-    }
-
-    private void drawLightningLine(Location from, Location to) {
-        Vector direction = to.toVector().subtract(from.toVector());
-        double distance = direction.length();
-        direction.normalize();
-
-        for (double i = 0; i < distance; i += 0.3) {
-            Location point = from.clone().add(direction.clone().multiply(i));
-            from.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, point, 3, 0.1, 0.1, 0.1, 0);
-            from.getWorld().spawnParticle(Particle.END_ROD, point, 1, 0.05, 0.05, 0.05, 0);
+        // +100% movement speed in lava (Speed II = 40%, so we use Speed V for ~100%)
+        Material blockAtFeet = player.getLocation().getBlock().getType();
+        if (blockAtFeet == Material.LAVA) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 15, 4, true, false)); // Speed V
+            player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 15, 0, true, false));
         }
     }
 

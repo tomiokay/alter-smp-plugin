@@ -54,7 +54,7 @@ public class AbilityCommand implements CommandExecutor {
         // Check if this legendary has active abilities (some armor pieces don't use /ability)
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == LegendaryType.SKYBREAKER_BOOTS || type == LegendaryType.THUNDERFORGE_CHESTPLATE
-                || type == LegendaryType.IONFLARE_LEGGINGS || type == LegendaryType.BLOODREAPER_HOOD) {
+                || type == LegendaryType.EMBERSTRIDE_GREAVES || type == LegendaryType.BLOODREAPER_HOOD) {
             player.sendMessage(ChatColor.RED + "This legendary only has passive abilities!");
             return true;
         }

@@ -232,8 +232,9 @@ public class LegendaryItemFactory {
                 break;
 
             // Leggings
-            case IONFLARE_LEGGINGS:
+            case EMBERSTRIDE_GREAVES:
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
+                meta.addEnchant(Enchantment.FIRE_PROTECTION, 4, true);
                 meta.addEnchant(Enchantment.SWIFT_SNEAK, 3, true);
                 break;
 
@@ -392,10 +393,12 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Deals damage and knockback");
                 break;
 
-            case IONFLARE_LEGGINGS:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Ion Charges");
-                lore.add(ChatColor.GRAY + "  Hits build charges (max 5)");
-                lore.add(ChatColor.GRAY + "  At 5: chain lightning attack");
+            case EMBERSTRIDE_GREAVES:
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flamebound Feet");
+                lore.add(ChatColor.GRAY + "  Immune to fire, lava, and magma");
+                lore.add(ChatColor.GRAY + "  Walking leaves flame trails");
+                lore.add(ChatColor.GRAY + "  +10% attack speed above 50% HP");
+                lore.add(ChatColor.GRAY + "  +100% movement speed in lava");
                 break;
 
             case BLOODREAPER_HOOD:

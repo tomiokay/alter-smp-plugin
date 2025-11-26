@@ -37,6 +37,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
     private LegendaryItemFactory itemFactory;
     private PassiveEffectManager passiveManager;
     private AbilityManager abilityManager;
+    private ArmorPassivesListener armorPassivesListener;
 
     @Override
     public void onEnable() {
@@ -79,7 +80,8 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AltarInteractListener(this), this);
         getServer().getPluginManager().registerEvents(new AltarCraftingListener(this), this);
         getServer().getPluginManager().registerEvents(new CopperPickaxeListener(this), this);
-        getServer().getPluginManager().registerEvents(new ArmorPassivesListener(this), this);
+        this.armorPassivesListener = new ArmorPassivesListener(this);
+        getServer().getPluginManager().registerEvents(armorPassivesListener, this);
         getServer().getPluginManager().registerEvents(new AnvilProtectionListener(), this);
         getServer().getPluginManager().registerEvents(new RestrictedItemsListener(), this);
 
@@ -139,5 +141,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
 
     public TrustManager getTrustManager() {
         return trustManager;
+    }
+
+    public ArmorPassivesListener getArmorPassivesListener() {
+        return armorPassivesListener;
     }
 }

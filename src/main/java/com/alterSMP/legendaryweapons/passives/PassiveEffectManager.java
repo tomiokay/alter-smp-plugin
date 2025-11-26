@@ -76,6 +76,11 @@ public class PassiveEffectManager implements Listener {
         if (offhandLegendary != null) {
             applyOffhandPassive(player, offhandLegendary);
         }
+
+        // Tick Emberstride Greaves passives (flame trail, attack speed, lava speed)
+        if (plugin.getArmorPassivesListener() != null) {
+            plugin.getArmorPassivesListener().tickEmberstrideGreaves(player);
+        }
     }
 
     private void applyMainHandPassive(Player player, String legendaryId, ItemStack item) {

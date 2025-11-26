@@ -16,7 +16,7 @@ public enum LegendaryType {
     CREATION_SPLITTER("creation_splitter", "Creation Splitter", Material.DIAMOND_SWORD),
     COPPER_PICKAXE("copper_pickaxe", "Copper Pickaxe", Material.NETHERITE_PICKAXE),
     THUNDERFORGE_CHESTPLATE("thunderforge_chestplate", "Thunderforge Chestplate", Material.DIAMOND_CHESTPLATE),
-    IONFLARE_LEGGINGS("ionflare_leggings", "Ionflare Leggings", Material.DIAMOND_LEGGINGS),
+    EMBERSTRIDE_GREAVES("emberstride_greaves", "Emberstride Greaves", Material.DIAMOND_LEGGINGS),
     BLOODREAPER_HOOD("bloodreaper_hood", "Bloodreaper Hood", Material.DIAMOND_HELMET);
 
     private final String id;
