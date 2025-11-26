@@ -58,7 +58,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         altarManager.loadAltars();
 
         // Register commands
-        getCommand("givealtar").setExecutor(new GiveAltarCommand(this));
+        getCommand("giveforge").setExecutor(new GiveAltarCommand(this));
         getCommand("ability").setExecutor(new AbilityCommand(this));
         getCommand("kreset").setExecutor(new KResetCommand(this));
         KResetPlayerCommand kresetPlayerCmd = new KResetPlayerCommand(this);

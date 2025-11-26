@@ -36,17 +36,17 @@ public class AltarInteractListener implements Listener {
             return;
         }
 
-        // Check if the clicked block is an altar
+        // Check if the clicked block is a forge
         if (plugin.getAltarManager().isAltar(event.getClickedBlock().getLocation())) {
             event.setCancelled(true);
 
             Player player = event.getPlayer();
-            openAltarGUI(player);
+            openForgeGUI(player);
         }
     }
 
-    private void openAltarGUI(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 54, ChatColor.DARK_PURPLE + "Legendary Altar");
+    private void openForgeGUI(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 54, ChatColor.DARK_PURPLE + "Legendary Forge");
 
         // Fill with glass panes for decoration
         ItemStack grayPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);

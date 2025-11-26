@@ -265,19 +265,25 @@ public class PassiveEffectManager implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
+        // Soul Collector only works on PLAYER kills
+        if (!(event.getEntity() instanceof Player)) return;
+
         Player killer = event.getEntity().getKiller();
         if (killer == null) return;
+
+        // Don't count self-kills
+        if (killer.equals(event.getEntity())) return;
 
         ItemStack mainHand = killer.getInventory().getItemInMainHand();
         String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
         if (legendaryId != null && legendaryId.equals(LegendaryType.OBLIVION_HARVESTER.getId())) {
-            // Soul Collector - Increase soul count
+            // Soul Collector - Increase soul count (max 5 souls)
             int currentSouls = LegendaryItemFactory.getSoulCount(mainHand);
-            if (currentSouls < 20) {
+            if (currentSouls < 5) {
                 LegendaryItemFactory.setSoulCount(mainHand, currentSouls + 1);
                 killer.sendMessage(ChatColor.DARK_PURPLE + "Soul collected: " +
-                    ChatColor.LIGHT_PURPLE + (currentSouls + 1) + "/20");
+                    ChatColor.LIGHT_PURPLE + (currentSouls + 1) + "/5");
             }
         }
     }

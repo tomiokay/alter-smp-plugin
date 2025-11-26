@@ -372,6 +372,9 @@ public class ArmorPassivesListener implements Listener {
         Player killer = event.getEntity().getKiller();
         if (killer == null) return;
 
+        // Don't count self-kills (suicide)
+        if (killer.equals(event.getEntity())) return;
+
         ItemStack helmet = killer.getInventory().getHelmet();
         String legendaryId = LegendaryItemFactory.getLegendaryId(helmet);
 

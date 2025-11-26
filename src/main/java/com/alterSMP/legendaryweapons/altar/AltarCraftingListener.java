@@ -33,7 +33,7 @@ public class AltarCraftingListener implements Listener {
         }
 
         String title = event.getView().getTitle();
-        if (!title.equals(ChatColor.DARK_PURPLE + "Legendary Altar")) {
+        if (!title.equals(ChatColor.DARK_PURPLE + "Legendary Forge")) {
             return;
         }
 
@@ -74,7 +74,7 @@ public class AltarCraftingListener implements Listener {
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         String title = event.getView().getTitle();
-        if (!title.equals(ChatColor.DARK_PURPLE + "Legendary Altar")) {
+        if (!title.equals(ChatColor.DARK_PURPLE + "Legendary Forge")) {
             return;
         }
 
@@ -93,7 +93,7 @@ public class AltarCraftingListener implements Listener {
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         String title = event.getView().getTitle();
-        if (!title.equals(ChatColor.DARK_PURPLE + "Legendary Altar")) {
+        if (!title.equals(ChatColor.DARK_PURPLE + "Legendary Forge")) {
             return;
         }
 

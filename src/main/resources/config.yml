@@ -102,8 +102,8 @@ damage:
   # Oblivion Harvester
   void_slice_damage: 5.0
   void_rift_damage: 3.0  # Per tick
-  oblivion_max_souls: 20
-  oblivion_damage_per_soul: 0.2
+  oblivion_max_souls: 5
+  oblivion_damage_per_soul: 2.0  # +2 damage per soul (max +10 at 5 souls)
 
   # Eclipse Devourer
   void_rupture_damage: 7.0
@@ -629,16 +629,16 @@ messages:
   ability-failed: "&cFailed to execute ability!"
 
   # Command messages
-  altar-given: "&5You have received a &lLegendary Altar&5!"
-  altar-placed: "&5You have placed a &lLegendary Altar&5!"
-  altar-broken: "&eYou have broken a Legendary Altar."
+  forge-given: "&5You have received a &lLegendary Forge&5!"
+  forge-placed: "&5You have placed a &lLegendary Forge&5!"
+  forge-broken: "&eYou have broken a Legendary Forge."
   reset-broadcast: "&c&lLEGENDARY CRAFTING RESET"
   reset-message: "&eAll players can now craft legendary weapons again!"
 
   # Permission messages
   no-permission: "&cYou do not have permission to use this command."
   player-not-found: "&cPlayer not found: {player}"
-  console-specify-player: "&cConsole must specify a player: /givealtar <player>"
+  console-specify-player: "&cConsole must specify a player: /giveforge <player>"
 
 # ========================================
 # PERFORMANCE SETTINGS

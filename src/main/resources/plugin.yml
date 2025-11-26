@@ -6,10 +6,10 @@ description: 'Legendary Weapons SMP with unique items and abilities'
 author: AlterSMP
 
 commands:
-  givealtar:
-    description: 'Gives a Legendary Altar to a player'
-    usage: '/givealtar [player]'
-    permission: legendaryweapons.givealtar
+  giveforge:
+    description: 'Gives a Legendary Forge to a player'
+    usage: '/giveforge [player]'
+    permission: legendaryweapons.giveforge
     permission-message: 'You do not have permission to use this command'
 
   ability:
@@ -57,8 +57,8 @@ commands:
     permission-message: 'You do not have permission to use this command'
 
 permissions:
-  legendaryweapons.givealtar:
-    description: 'Allows giving legendary altars'
+  legendaryweapons.giveforge:
+    description: 'Allows giving legendary forges'
     default: op
 
   legendaryweapons.kreset:

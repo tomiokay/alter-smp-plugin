@@ -53,23 +53,23 @@ public class LegendaryItemFactory {
         return item;
     }
 
-    public ItemStack createAltarItem() {
+    public ItemStack createForgeItem() {
         ItemStack item = new ItemStack(Material.CHISELED_STONE_BRICKS);
         ItemMeta meta = item.getItemMeta();
 
         if (meta != null) {
-            meta.setDisplayName(ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "Legendary Altar");
+            meta.setDisplayName(ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "Legendary Forge");
 
             List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "A mystical altar used to forge");
+            lore.add(ChatColor.GRAY + "A mystical forge used to craft");
             lore.add(ChatColor.GRAY + "legendary weapons with a 5x5 grid.");
             lore.add("");
             lore.add(ChatColor.YELLOW + "Place this block and right-click");
             lore.add(ChatColor.YELLOW + "to open the legendary crafting menu.");
             meta.setLore(lore);
 
-            // Tag as altar item
-            NamespacedKey key = new NamespacedKey("legendaryweapons", "legendary_altar_item");
+            // Tag as forge item
+            NamespacedKey key = new NamespacedKey("legendaryweapons", "legendary_forge_item");
             meta.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true);
 
             // Add glint
@@ -97,13 +97,13 @@ public class LegendaryItemFactory {
         return null;
     }
 
-    public static boolean isAltarItem(ItemStack item) {
+    public static boolean isForgeItem(ItemStack item) {
         if (item == null || !item.hasItemMeta()) {
             return false;
         }
 
         ItemMeta meta = item.getItemMeta();
-        NamespacedKey key = new NamespacedKey("legendaryweapons", "legendary_altar_item");
+        NamespacedKey key = new NamespacedKey("legendaryweapons", "legendary_forge_item");
 
         return meta.getPersistentDataContainer().has(key, PersistentDataType.BOOLEAN);
     }
@@ -318,8 +318,8 @@ public class LegendaryItemFactory {
 
             case OBLIVION_HARVESTER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Soul Collector");
-                lore.add(ChatColor.GRAY + "  Gain damage from kills");
-                lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/20");
+                lore.add(ChatColor.GRAY + "  +2 damage per player kill (max 5)");
+                lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/5");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Void Slice (30s)");
                 lore.add(ChatColor.GRAY + "  Sweeping void attack");

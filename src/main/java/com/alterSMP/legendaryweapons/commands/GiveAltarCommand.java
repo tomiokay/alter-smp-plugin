@@ -19,7 +19,7 @@ public class GiveAltarCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("legendaryweapons.givealtar")) {
+        if (!sender.hasPermission("legendaryweapons.giveforge")) {
             sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
             return true;
         }
@@ -29,7 +29,7 @@ public class GiveAltarCommand implements CommandExecutor {
         if (args.length == 0) {
             // Give to self
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ChatColor.RED + "Console must specify a player: /givealtar <player>");
+                sender.sendMessage(ChatColor.RED + "Console must specify a player: /giveforge <player>");
                 return true;
             }
             target = (Player) sender;
@@ -42,14 +42,14 @@ public class GiveAltarCommand implements CommandExecutor {
             }
         }
 
-        ItemStack altar = plugin.getItemFactory().createAltarItem();
-        target.getInventory().addItem(altar);
+        ItemStack forge = plugin.getItemFactory().createForgeItem();
+        target.getInventory().addItem(forge);
 
         target.sendMessage(ChatColor.DARK_PURPLE + "You have received a " +
-            ChatColor.BOLD + "Legendary Altar" + ChatColor.DARK_PURPLE + "!");
+            ChatColor.BOLD + "Legendary Forge" + ChatColor.DARK_PURPLE + "!");
 
         if (!target.equals(sender)) {
-            sender.sendMessage(ChatColor.GREEN + "Gave Legendary Altar to " + target.getName());
+            sender.sendMessage(ChatColor.GREEN + "Gave Legendary Forge to " + target.getName());
         }
 
         return true;
