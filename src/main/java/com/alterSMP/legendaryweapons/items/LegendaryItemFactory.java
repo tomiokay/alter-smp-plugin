@@ -46,8 +46,8 @@ public class LegendaryItemFactory {
             meta.setUnbreakable(true);
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
-            // Initialize soul count for Oblivion Harvester
-            if (type == LegendaryType.OBLIVION_HARVESTER) {
+            // Initialize soul count for Soul Devourer
+            if (type == LegendaryType.SOUL_DEVOURER) {
                 NamespacedKey soulKey = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
                 meta.getPersistentDataContainer().set(soulKey, PersistentDataType.INTEGER, 0);
             }
@@ -191,12 +191,12 @@ public class LegendaryItemFactory {
     private void addMaxEnchantments(ItemMeta meta, LegendaryType type) {
         switch (type) {
             // Swords
-            case BLADE_OF_FRACTURED_STARS:
-            case EMBERHEART_SCYTHE:
-            case UMBRA_VEIL_DAGGER:
-            case CHRONO_EDGE:
-            case OBLIVION_HARVESTER:
-            case ECLIPSE_DEVOURER:
+            case HOLY_MOONLIGHT_SWORD:
+            case PHEONIX_GRACE:
+            case THOUSAND_DEMON_DAGGERS:
+            case CHRONO_BLADE:
+            case SOUL_DEVOURER:
+            case CREATION_SPLITTER:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 meta.addEnchant(Enchantment.LOOTING, 3, true);
                 meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
@@ -204,7 +204,7 @@ public class LegendaryItemFactory {
                 break;
 
             // Axe
-            case HEARTROOT_GUARDIAN_AXE:
+            case DIVINE_AXE_RHITTA:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
                 meta.addEnchant(Enchantment.SILK_TOUCH, 1, true);
@@ -267,7 +267,7 @@ public class LegendaryItemFactory {
         lore.add("");
 
         switch (type) {
-            case BLADE_OF_FRACTURED_STARS:
+            case HOLY_MOONLIGHT_SWORD:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flashburst Counter");
                 lore.add(ChatColor.GRAY + "  Every 20 hits blinds nearby enemies");
                 lore.add("");
@@ -277,7 +277,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Teleport up to 45 blocks");
                 break;
 
-            case EMBERHEART_SCYTHE:
+            case PHEONIX_GRACE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Heat Shield");
                 lore.add(ChatColor.GRAY + "  Immune to fire and explosions");
                 lore.add("");
@@ -297,7 +297,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Cone of stunning lightning");
                 break;
 
-            case UMBRA_VEIL_DAGGER:
+            case THOUSAND_DEMON_DAGGERS:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Shadow Presence");
                 lore.add(ChatColor.GRAY + "  Speed III while sneaking");
                 lore.add("");
@@ -307,7 +307,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Mark target for true damage");
                 break;
 
-            case HEARTROOT_GUARDIAN_AXE:
+            case DIVINE_AXE_RHITTA:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Nature Channel");
                 lore.add(ChatColor.GRAY + "  Regeneration on natural blocks");
                 lore.add("");
@@ -346,7 +346,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Create protective barrier");
                 break;
 
-            case CHRONO_EDGE:
+            case CHRONO_BLADE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Last Second");
                 lore.add(ChatColor.GRAY + "  Buffs when low HP");
                 lore.add("");
@@ -356,7 +356,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Return to past state");
                 break;
 
-            case OBLIVION_HARVESTER:
+            case SOUL_DEVOURER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Soul Collector");
                 lore.add(ChatColor.GRAY + "  +2 damage per player kill (max 5)");
                 lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/5");
@@ -367,7 +367,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Create damaging black hole");
                 break;
 
-            case ECLIPSE_DEVOURER:
+            case CREATION_SPLITTER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Dragon's Gaze");
                 lore.add(ChatColor.GRAY + "  Nearby players glow");
                 lore.add("");

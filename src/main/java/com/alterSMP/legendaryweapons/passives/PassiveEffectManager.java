@@ -89,14 +89,14 @@ public class PassiveEffectManager implements Listener {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 20, 0, true, false));
                 break;
 
-            case UMBRA_VEIL_DAGGER:
+            case THOUSAND_DEMON_DAGGERS:
                 // Shadow Presence - Speed III while sneaking
                 if (player.isSneaking()) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20, 2, true, false));
                 }
                 break;
 
-            case HEARTROOT_GUARDIAN_AXE:
+            case DIVINE_AXE_RHITTA:
                 // Nature Channel - Regen 10 on natural blocks
                 Block below = player.getLocation().subtract(0, 1, 0).getBlock();
                 Material belowType = below.getType();
@@ -106,7 +106,7 @@ public class PassiveEffectManager implements Listener {
                 }
                 break;
 
-            case CHRONO_EDGE:
+            case CHRONO_BLADE:
                 // Last Second - Buffs at low HP
                 if (player.getHealth() <= 3.0) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20, 1, true, false));
@@ -114,7 +114,7 @@ public class PassiveEffectManager implements Listener {
                 }
                 break;
 
-            case ECLIPSE_DEVOURER:
+            case CREATION_SPLITTER:
                 // Dragon's Gaze - Nearby players glow
                 for (Entity entity : player.getNearbyEntities(8, 8, 8)) {
                     if (entity instanceof Player) {
@@ -175,7 +175,7 @@ public class PassiveEffectManager implements Listener {
         if (legendaryId != null) {
             LegendaryType type = LegendaryType.fromId(legendaryId);
 
-            if (type == LegendaryType.EMBERHEART_SCYTHE) {
+            if (type == LegendaryType.PHEONIX_GRACE) {
                 // Heat Shield - Immune to fire and explosions
                 EntityDamageEvent.DamageCause cause = event.getCause();
                 if (cause == EntityDamageEvent.DamageCause.FIRE ||
@@ -205,8 +205,8 @@ public class PassiveEffectManager implements Listener {
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
 
-        // Blade of Fractured Stars - Flashburst Counter
-        if (type == LegendaryType.BLADE_OF_FRACTURED_STARS) {
+        // Holy Moonlight Sword - Flashburst Counter
+        if (type == LegendaryType.HOLY_MOONLIGHT_SWORD) {
             int count = bladeHitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
             bladeHitCounter.put(player.getUniqueId(), count);
 
@@ -277,7 +277,7 @@ public class PassiveEffectManager implements Listener {
         ItemStack mainHand = killer.getInventory().getItemInMainHand();
         String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.OBLIVION_HARVESTER.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
             // Soul Collector - Increase soul count (max 5 souls)
             int currentSouls = LegendaryItemFactory.getSoulCount(mainHand);
             if (currentSouls < 5) {

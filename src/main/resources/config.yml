@@ -34,12 +34,12 @@ global:
 
 cooldowns:
   # Holy Moonlight Sword
-  blade_of_the_fractured_stars:
+  holy_moonlight_sword:
     ability1: 25  # Star Rift Slash
     ability2: 45  # Stargate Blink
 
   # Pheonix Grace
-  emberheart_scythe:
+  pheonix_grace:
     ability1: 30   # Flame Harvest
     ability2: 180  # Fire Rebirth
 
@@ -49,12 +49,12 @@ cooldowns:
     ability2: 50  # Stormcall
 
   # Thousand Demon Daggers
-  umbra_veil_dagger:
+  thousand_demon_daggers:
     ability1: 20  # Shadowstep
     ability2: 60  # Soul Mark
 
   # Divine Axe Rhitta
-  heartroot_guardian_axe:
+  divine_axe_rhitta:
     ability1: 35  # Nature Grasp
     ability2: 70  # Forest Shield
 
@@ -73,17 +73,17 @@ cooldowns:
     ability2: 90  # Heaven's Wall
 
   # Chrono Blade
-  chrono_edge:
+  chrono_blade:
     ability1: 40   # Echo Strike
     ability2: 120  # Time Rewind
 
   # Soul Devourer
-  oblivion_harvester:
+  soul_devourer:
     ability1: 30  # Void Slice
     ability2: 85  # Void Rift
 
   # Creation Splitter
-  eclipse_devourer:
+  creation_splitter:
     ability1: 35  # Void Rupture
     ability2: 95  # Cataclysm Pulse
 
@@ -184,27 +184,27 @@ ranges:
 # Format: Row by row, left to right
 # Recipe index: [0-4] = row 1, [5-9] = row 2, etc.
 #
-# Display Name -> Internal ID mapping:
-#   Holy Moonlight Sword -> blade_of_the_fractured_stars
-#   Pheonix Grace -> emberheart_scythe
-#   Tempestbreaker Spear -> tempestbreaker_spear
-#   Thousand Demon Daggers -> umbra_veil_dagger
-#   Divine Axe Rhitta -> heartroot_guardian_axe
-#   Chains of Eternity -> chains_of_eternity
-#   Skybreaker Boots -> skybreaker_boots
-#   Celestial Aegis Shield -> celestial_aegis_shield
-#   Chrono Blade -> chrono_edge
-#   Soul Devourer -> oblivion_harvester
-#   Creation Splitter -> eclipse_devourer
-#   Copper Pickaxe -> copper_pickaxe
-#   Thunderforge Chestplate -> thunderforge_chestplate
-#   Ionflare Leggings -> ionflare_leggings
-#   Bloodreaper Hood -> bloodreaper_hood
+# Internal IDs now match display names (snake_case):
+#   holy_moonlight_sword
+#   pheonix_grace
+#   tempestbreaker_spear
+#   thousand_demon_daggers
+#   divine_axe_rhitta
+#   chains_of_eternity
+#   skybreaker_boots
+#   celestial_aegis_shield
+#   chrono_blade
+#   soul_devourer
+#   creation_splitter
+#   copper_pickaxe
+#   thunderforge_chestplate
+#   ionflare_leggings
+#   bloodreaper_hood
 #
 
 recipes:
   # Holy Moonlight Sword
-  blade_of_the_fractured_stars:
+  holy_moonlight_sword:
     - NETHER_STAR
     - DIAMOND_BLOCK
     - DIAMOND_BLOCK
@@ -232,7 +232,7 @@ recipes:
     - NETHER_STAR
 
   # Pheonix Grace
-  emberheart_scythe:
+  pheonix_grace:
     - BLAZE_ROD
     - FIRE_CHARGE
     - MAGMA_BLOCK
@@ -288,7 +288,7 @@ recipes:
     - TIDE_ARMOR_TRIM_SMITHING_TEMPLATE
 
   # Thousand Demon Daggers
-  umbra_veil_dagger:
+  thousand_demon_daggers:
     - ENDER_EYE
     - OBSIDIAN
     - OBSIDIAN
@@ -316,7 +316,7 @@ recipes:
     - ENDER_EYE
 
   # Divine Axe Rhitta
-  heartroot_guardian_axe:
+  divine_axe_rhitta:
     - WILD_ARMOR_TRIM_SMITHING_TEMPLATE
     - MOSS_BLOCK
     - MOSS_BLOCK
@@ -398,7 +398,7 @@ recipes:
     - END_STONE
 
   # Chrono Blade
-  chrono_edge:
+  chrono_blade:
     - CLOCK
     - REDSTONE_BLOCK
     - REDSTONE_BLOCK
@@ -426,7 +426,7 @@ recipes:
     - CLOCK
 
   # Soul Devourer
-  oblivion_harvester:
+  soul_devourer:
     - NETHERITE_INGOT
     - WITHER_ROSE
     - WITHER_ROSE
@@ -454,7 +454,7 @@ recipes:
     - NETHERITE_INGOT
 
   # Creation Splitter
-  eclipse_devourer:
+  creation_splitter:
     - DRAGON_HEAD
     - DRAGON_BREATH
     - END_STONE

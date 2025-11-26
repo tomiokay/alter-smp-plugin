@@ -87,25 +87,25 @@ public class AbilityManager implements Listener {
 
     private boolean executeAbility1(Player player, LegendaryType type) {
         switch (type) {
-            case BLADE_OF_FRACTURED_STARS:
+            case HOLY_MOONLIGHT_SWORD:
                 return starRiftSlash(player);
-            case EMBERHEART_SCYTHE:
+            case PHEONIX_GRACE:
                 return flameHarvest(player);
             case TEMPESTBREAKER_SPEAR:
                 return galeThrow(player);
-            case UMBRA_VEIL_DAGGER:
+            case THOUSAND_DEMON_DAGGERS:
                 return shadowstep(player);
-            case HEARTROOT_GUARDIAN_AXE:
+            case DIVINE_AXE_RHITTA:
                 return natureGrasp(player);
             case CHAINS_OF_ETERNITY:
                 return soulBind(player);
             case CELESTIAL_AEGIS_SHIELD:
                 return radiantBlock(player);
-            case CHRONO_EDGE:
+            case CHRONO_BLADE:
                 return echoStrike(player);
-            case OBLIVION_HARVESTER:
+            case SOUL_DEVOURER:
                 return voidSlice(player);
-            case ECLIPSE_DEVOURER:
+            case CREATION_SPLITTER:
                 return voidRupture(player);
             case COPPER_PICKAXE:
                 return toggle3x3Mining(player);
@@ -115,25 +115,25 @@ public class AbilityManager implements Listener {
 
     private boolean executeAbility2(Player player, LegendaryType type) {
         switch (type) {
-            case BLADE_OF_FRACTURED_STARS:
+            case HOLY_MOONLIGHT_SWORD:
                 return stargateBlink(player);
-            case EMBERHEART_SCYTHE:
+            case PHEONIX_GRACE:
                 return fireRebirth(player);
             case TEMPESTBREAKER_SPEAR:
                 return stormcall(player);
-            case UMBRA_VEIL_DAGGER:
+            case THOUSAND_DEMON_DAGGERS:
                 return soulMark(player);
-            case HEARTROOT_GUARDIAN_AXE:
+            case DIVINE_AXE_RHITTA:
                 return forestShield(player);
             case CHAINS_OF_ETERNITY:
                 return prisonOfDamned(player);
             case CELESTIAL_AEGIS_SHIELD:
                 return heavensWall(player);
-            case CHRONO_EDGE:
+            case CHRONO_BLADE:
                 return timeRewind(player);
-            case OBLIVION_HARVESTER:
+            case SOUL_DEVOURER:
                 return voidRift(player);
-            case ECLIPSE_DEVOURER:
+            case CREATION_SPLITTER:
                 return cataclysmPulse(player);
             case COPPER_PICKAXE:
                 return toggleEnchantMode(player);
@@ -1087,7 +1087,7 @@ public class AbilityManager implements Listener {
 
             // Soul Mark - only mark target if not already marked
             String legendaryId = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInMainHand());
-            if (legendaryId != null && legendaryId.equals(LegendaryType.UMBRA_VEIL_DAGGER.getId())) {
+            if (legendaryId != null && legendaryId.equals(LegendaryType.THOUSAND_DEMON_DAGGERS.getId())) {
                 if (event.getEntity() instanceof LivingEntity && !soulMarkTargets.containsKey(player.getUniqueId())) {
                     LivingEntity target = (LivingEntity) event.getEntity();
 
@@ -1165,7 +1165,7 @@ public class AbilityManager implements Listener {
             ItemStack mainHand = player.getInventory().getItemInMainHand();
             String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
-            if (legendaryId != null && legendaryId.equals(LegendaryType.ECLIPSE_DEVOURER.getId())) {
+            if (legendaryId != null && legendaryId.equals(LegendaryType.CREATION_SPLITTER.getId())) {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 200, 1));
                 player.sendMessage(ChatColor.DARK_PURPLE + "Dragon's power absorbed! +2 Absorption hearts");
             }
