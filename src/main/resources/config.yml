@@ -33,46 +33,56 @@ global:
 # ========================================
 
 cooldowns:
+  # Holy Moonlight Sword
   blade_of_the_fractured_stars:
     ability1: 25  # Star Rift Slash
     ability2: 45  # Stargate Blink
 
+  # Pheonix Grace
   emberheart_scythe:
     ability1: 30   # Flame Harvest
     ability2: 180  # Fire Rebirth
 
+  # Tempestbreaker Spear
   tempestbreaker_spear:
     ability1: 25  # Gale Throw
     ability2: 50  # Stormcall
 
+  # Thousand Demon Daggers
   umbra_veil_dagger:
     ability1: 20  # Shadowstep
     ability2: 60  # Soul Mark
 
+  # Divine Axe Rhitta
   heartroot_guardian_axe:
     ability1: 35  # Nature Grasp
     ability2: 70  # Forest Shield
 
+  # Chains of Eternity
   chains_of_eternity:
     ability1: 35  # Soul Bind
     ability2: 65  # Prison of the Damned
 
-  glacierbound_halberd:
-    ability1: 28  # Frostbite Sweep
-    ability2: 75  # Winter's Embrace
+  # Skybreaker Boots
+  skybreaker_boots:
+    ability1: 0  # Meteor Slam (shift-activated)
 
+  # Celestial Aegis Shield
   celestial_aegis_shield:
     ability1: 40  # Radiant Block
     ability2: 90  # Heaven's Wall
 
+  # Chrono Blade
   chrono_edge:
     ability1: 40   # Echo Strike
     ability2: 120  # Time Rewind
 
+  # Soul Devourer
   oblivion_harvester:
     ability1: 30  # Void Slice
     ability2: 85  # Void Rift
 
+  # Creation Splitter
   eclipse_devourer:
     ability1: 35  # Void Rupture
     ability2: 95  # Cataclysm Pulse
@@ -82,10 +92,10 @@ cooldowns:
 # ========================================
 
 damage:
-  # Blade of Fractured Stars
+  # Holy Moonlight Sword
   star_rift_slash: 12.0
 
-  # Emberheart Scythe
+  # Pheonix Grace
   flame_harvest_percent: 0.2  # 20% of target's current HP
   fire_rebirth_restore: 12.0  # Hearts restored on death
   fire_rebirth_explosion: 10.0
@@ -93,19 +103,19 @@ damage:
   # Tempestbreaker Spear
   stormcall_damage: 4.0
 
-  # Umbra Veil Dagger
+  # Thousand Demon Daggers
   soul_mark_true_damage: 6.0  # TRUE DAMAGE - ignores armor
 
   # Chains of Eternity (Prison duration in seconds)
   prison_duration: 5
 
-  # Oblivion Harvester
+  # Soul Devourer
   void_slice_damage: 5.0
   void_rift_damage: 3.0  # Per tick
   oblivion_max_souls: 5
   oblivion_damage_per_soul: 2.0  # +2 damage per soul (max +10 at 5 souls)
 
-  # Eclipse Devourer
+  # Creation Splitter
   void_rupture_damage: 7.0
   cataclysm_pulse_damage: 8.0
 
@@ -114,13 +124,13 @@ damage:
 # ========================================
 
 ranges:
-  # Blade of Fractured Stars
+  # Holy Moonlight Sword
   star_rift_range: 30
   stargate_blink_range: 45
   flashburst_radius: 5
   flashburst_hits_required: 20
 
-  # Emberheart Scythe
+  # Pheonix Grace
   flame_harvest_radius: 6
   fire_rebirth_duration: 10  # seconds
 
@@ -128,13 +138,13 @@ ranges:
   stormcall_range: 15
   stormcall_stun_duration: 3  # seconds
 
-  # Umbra Veil Dagger
+  # Thousand Demon Daggers
   shadowstep_distance: 8
   shadowstep_invisibility: 4  # seconds
   soul_mark_delay: 15  # seconds before damage
   shadow_presence_sneak_speed: 3  # Speed level (1-255)
 
-  # Heartroot Guardian Axe
+  # Divine Axe Rhitta
   nature_grasp_radius: 6
   nature_grasp_duration: 2  # seconds
   forest_shield_duration: 10  # seconds
@@ -144,12 +154,6 @@ ranges:
   soul_links_hits_required: 5
   prison_cage_duration: 5  # seconds
 
-  # Glacierbound Halberd
-  frostbite_sweep_range: 8
-  frostbite_freeze_duration: 3  # seconds
-  winters_embrace_radius: 7
-  winters_embrace_duration: 5  # seconds
-
   # Celestial Aegis Shield
   aura_radius: 5
   radiant_block_duration: 5  # seconds
@@ -157,13 +161,13 @@ ranges:
   heavens_wall_radius: 5
   heavens_wall_duration: 6  # seconds
 
-  # Chrono Edge
+  # Chrono Blade
   echo_strike_duration: 6  # seconds
   echo_strike_delay: 1  # seconds
   time_rewind_delay: 5  # seconds
   last_second_hp_threshold: 3.0  # hearts
 
-  # Eclipse Devourer
+  # Creation Splitter
   void_rupture_range: 35
   dragons_gaze_radius: 8
   cataclysm_pulse_radius: 7
@@ -180,8 +184,26 @@ ranges:
 # Format: Row by row, left to right
 # Recipe index: [0-4] = row 1, [5-9] = row 2, etc.
 #
+# Display Name -> Internal ID mapping:
+#   Holy Moonlight Sword -> blade_of_the_fractured_stars
+#   Pheonix Grace -> emberheart_scythe
+#   Tempestbreaker Spear -> tempestbreaker_spear
+#   Thousand Demon Daggers -> umbra_veil_dagger
+#   Divine Axe Rhitta -> heartroot_guardian_axe
+#   Chains of Eternity -> chains_of_eternity
+#   Skybreaker Boots -> skybreaker_boots
+#   Celestial Aegis Shield -> celestial_aegis_shield
+#   Chrono Blade -> chrono_edge
+#   Soul Devourer -> oblivion_harvester
+#   Creation Splitter -> eclipse_devourer
+#   Copper Pickaxe -> copper_pickaxe
+#   Thunderforge Chestplate -> thunderforge_chestplate
+#   Ionflare Leggings -> ionflare_leggings
+#   Bloodreaper Hood -> bloodreaper_hood
+#
 
 recipes:
+  # Holy Moonlight Sword
   blade_of_the_fractured_stars:
     - NETHER_STAR
     - DIAMOND_BLOCK
@@ -209,6 +231,7 @@ recipes:
     - DIAMOND_BLOCK
     - NETHER_STAR
 
+  # Pheonix Grace
   emberheart_scythe:
     - BLAZE_ROD
     - FIRE_CHARGE
@@ -236,6 +259,7 @@ recipes:
     - FIRE_CHARGE
     - BLAZE_ROD
 
+  # Tempestbreaker Spear
   tempestbreaker_spear:
     - TIDE_ARMOR_TRIM_SMITHING_TEMPLATE
     - PHANTOM_MEMBRANE
@@ -263,6 +287,7 @@ recipes:
     - PHANTOM_MEMBRANE
     - TIDE_ARMOR_TRIM_SMITHING_TEMPLATE
 
+  # Thousand Demon Daggers
   umbra_veil_dagger:
     - ENDER_EYE
     - OBSIDIAN
@@ -290,6 +315,7 @@ recipes:
     - OBSIDIAN
     - ENDER_EYE
 
+  # Divine Axe Rhitta
   heartroot_guardian_axe:
     - WILD_ARMOR_TRIM_SMITHING_TEMPLATE
     - MOSS_BLOCK
@@ -317,6 +343,7 @@ recipes:
     - MOSS_BLOCK
     - WILD_ARMOR_TRIM_SMITHING_TEMPLATE
 
+  # Chains of Eternity
   chains_of_eternity:
     - CHAIN
     - SOUL_SAND
@@ -342,33 +369,7 @@ recipes:
     - SOUL_SAND
     - CHAIN
 
-  glacierbound_halberd:
-    - ICE
-    - PACKED_ICE
-    - BLUE_ICE
-    - PACKED_ICE
-    - ICE
-    - PACKED_ICE
-    - DIAMOND
-    - DIAMOND
-    - DIAMOND
-    - PACKED_ICE
-    - BLUE_ICE
-    - DIAMOND
-    - NETHERITE_BOOTS
-    - DIAMOND
-    - BLUE_ICE
-    - PACKED_ICE
-    - DIAMOND
-    - DIAMOND
-    - DIAMOND
-    - PACKED_ICE
-    - ICE
-    - PACKED_ICE
-    - BLUE_ICE
-    - PACKED_ICE
-    - ICE
-
+  # Celestial Aegis Shield
   celestial_aegis_shield:
     - END_STONE
     - GOLD_BLOCK
@@ -396,6 +397,7 @@ recipes:
     - GOLD_BLOCK
     - END_STONE
 
+  # Chrono Blade
   chrono_edge:
     - CLOCK
     - REDSTONE_BLOCK
@@ -423,6 +425,7 @@ recipes:
     - REDSTONE_BLOCK
     - CLOCK
 
+  # Soul Devourer
   oblivion_harvester:
     - NETHERITE_INGOT
     - WITHER_ROSE
@@ -450,6 +453,7 @@ recipes:
     - WITHER_ROSE
     - NETHERITE_INGOT
 
+  # Creation Splitter
   eclipse_devourer:
     - DRAGON_HEAD
     - DRAGON_BREATH
@@ -477,6 +481,7 @@ recipes:
     - DRAGON_BREATH
     - DRAGON_HEAD
 
+  # Skybreaker Boots
   skybreaker_boots:
     - ENCHANTED_BOOK:FEATHER_FALLING:4
     - PHANTOM_MEMBRANE
@@ -504,6 +509,7 @@ recipes:
     - PHANTOM_MEMBRANE
     - ENCHANTED_BOOK:FEATHER_FALLING:4
 
+  # Copper Pickaxe
   copper_pickaxe:
     - COPPER_BLOCK
     - COPPER_BLOCK
@@ -531,6 +537,7 @@ recipes:
     - COPPER_BLOCK
     - COPPER_BLOCK
 
+  # Thunderforge Chestplate
   thunderforge_chestplate:
     - LIGHTNING_ROD
     - COPPER_BLOCK
@@ -558,6 +565,7 @@ recipes:
     - COPPER_BLOCK
     - LIGHTNING_ROD
 
+  # Ionflare Leggings
   ionflare_leggings:
     - PRISMARINE_CRYSTALS
     - DIAMOND
@@ -585,6 +593,7 @@ recipes:
     - DIAMOND
     - PRISMARINE_CRYSTALS
 
+  # Bloodreaper Hood
   bloodreaper_hood:
     - WITHER_ROSE
     - REDSTONE_BLOCK
@@ -645,9 +654,6 @@ messages:
 performance:
   # How often to check for passive effects (in ticks, 20 ticks = 1 second)
   passive-check-interval: 10
-
-  # Cooldown between ice creation for Glacierbound (milliseconds)
-  ice-creation-cooldown: 500
 
   # How often Void Rift damages entities (ticks)
   void-rift-damage-interval: 10
