@@ -234,7 +234,6 @@ public class LegendaryItemFactory {
             // Leggings
             case EMBERSTRIDE_GREAVES:
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
-                meta.addEnchant(Enchantment.FIRE_PROTECTION, 4, true);
                 meta.addEnchant(Enchantment.SWIFT_SNEAK, 3, true);
                 break;
 
