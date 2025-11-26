@@ -102,12 +102,12 @@ public class PassiveEffectManager implements Listener {
                 break;
 
             case DIVINE_AXE_RHITTA:
-                // Nature Channel - Regen 10 on natural blocks
+                // Nature Channel - Regen 5 on natural blocks
                 Block below = player.getLocation().subtract(0, 1, 0).getBlock();
                 Material belowType = below.getType();
                 if (belowType == Material.GRASS_BLOCK || belowType.name().contains("LOG") ||
                     belowType.name().contains("LEAVES")) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 9, true, false)); // Level 10 = amplifier 9
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 4, true, false)); // Level 5 = amplifier 4
                 }
                 break;
 

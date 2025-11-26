@@ -519,18 +519,33 @@ public class AbilityManager implements Listener {
 
             Location center = target.getLocation();
 
-            Set<Location> bars = new HashSet<>();
+            Set<Location> cageBlocks = new HashSet<>();
 
-            // Create 3x3 cage
+            // Create 3x3 cage with walls, floor, and ceiling using barrier blocks
             for (int x = -1; x <= 1; x++) {
                 for (int z = -1; z <= 1; z++) {
-                    if (x == 0 && z == 0) continue; // Skip center
+                    // Floor (y = -1)
+                    Location floorLoc = center.clone().add(x, -1, z);
+                    if (floorLoc.getBlock().getType() == Material.AIR || floorLoc.getBlock().isPassable()) {
+                        floorLoc.getBlock().setType(Material.BARRIER);
+                        cageBlocks.add(floorLoc);
+                    }
 
-                    for (int y = 0; y <= 3; y++) {
+                    // Ceiling (y = 3)
+                    Location ceilingLoc = center.clone().add(x, 3, z);
+                    if (ceilingLoc.getBlock().getType() == Material.AIR || ceilingLoc.getBlock().isPassable()) {
+                        ceilingLoc.getBlock().setType(Material.BARRIER);
+                        cageBlocks.add(ceilingLoc);
+                    }
+
+                    // Walls (skip center column)
+                    if (x == 0 && z == 0) continue;
+
+                    for (int y = 0; y <= 2; y++) {
                         Location loc = center.clone().add(x, y, z);
-                        if (loc.getBlock().getType() == Material.AIR) {
-                            loc.getBlock().setType(Material.IRON_BARS);
-                            bars.add(loc);
+                        if (loc.getBlock().getType() == Material.AIR || loc.getBlock().isPassable()) {
+                            loc.getBlock().setType(Material.BARRIER);
+                            cageBlocks.add(loc);
                         }
                     }
                 }
@@ -546,12 +561,38 @@ public class AbilityManager implements Listener {
                 ((Player) target).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_GRAY + "Prison of the Damned" + ChatColor.RED + " from " + player.getName() + "!");
             }
 
-            // Remove bars after 5 seconds
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                for (Location loc : bars) {
-                    loc.getBlock().setType(Material.AIR);
+            // Spawn cage particles every tick to make it visible
+            new BukkitRunnable() {
+                int ticks = 0;
+
+                @Override
+                public void run() {
+                    if (ticks >= 100) { // 5 seconds
+                        // Remove cage
+                        for (Location loc : cageBlocks) {
+                            if (loc.getBlock().getType() == Material.BARRIER) {
+                                loc.getBlock().setType(Material.AIR);
+                            }
+                        }
+                        cancel();
+                        return;
+                    }
+
+                    // Spawn particles along cage edges to make it visible
+                    for (int x = -1; x <= 1; x++) {
+                        for (int z = -1; z <= 1; z++) {
+                            if (Math.abs(x) == 1 || Math.abs(z) == 1) {
+                                for (int y = 0; y <= 3; y++) {
+                                    Location particleLoc = center.clone().add(x, y, z);
+                                    center.getWorld().spawnParticle(Particle.SOUL, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                                }
+                            }
+                        }
+                    }
+
+                    ticks += 5;
                 }
-            }, 100L);
+            }.runTaskTimer(plugin, 0L, 5L);
 
             player.sendMessage(ChatColor.DARK_GRAY + "Prison of the Damned!");
             return true;
