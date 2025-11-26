@@ -1,11 +1,16 @@
 package com.alterSMP.legendaryweapons.items;
 
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Banner;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -48,6 +53,11 @@ public class LegendaryItemFactory {
             }
 
             item.setItemMeta(meta);
+
+            // Apply yellow cross banner pattern to Celestial Aegis Shield
+            if (type == LegendaryType.CELESTIAL_AEGIS_SHIELD) {
+                applyShieldBannerPattern(item);
+            }
         }
 
         return item;
@@ -146,6 +156,36 @@ public class LegendaryItemFactory {
         }
 
         item.setItemMeta(meta);
+    }
+
+    /**
+     * Apply yellow cross banner pattern to the Celestial Aegis Shield.
+     */
+    private void applyShieldBannerPattern(ItemStack shield) {
+        if (shield == null || shield.getType() != Material.SHIELD) {
+            return;
+        }
+
+        BlockStateMeta blockStateMeta = (BlockStateMeta) shield.getItemMeta();
+        if (blockStateMeta == null) {
+            return;
+        }
+
+        Banner banner = (Banner) blockStateMeta.getBlockState();
+
+        // Set base color to blue (celestial theme)
+        banner.setBaseColor(DyeColor.BLUE);
+
+        // Add yellow cross pattern
+        banner.addPattern(new Pattern(DyeColor.YELLOW, PatternType.CROSS));
+        // Add some additional celestial flair
+        banner.addPattern(new Pattern(DyeColor.LIGHT_BLUE, PatternType.BORDER));
+
+        banner.update();
+        blockStateMeta.setBlockState(banner);
+
+        // Re-apply the legendary metadata that was set before
+        shield.setItemMeta(blockStateMeta);
     }
 
     private void addMaxEnchantments(ItemMeta meta, LegendaryType type) {

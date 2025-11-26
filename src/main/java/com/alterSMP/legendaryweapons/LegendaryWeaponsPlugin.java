@@ -10,7 +10,6 @@ import com.alterSMP.legendaryweapons.commands.KResetCommand;
 import com.alterSMP.legendaryweapons.commands.KResetPlayerCommand;
 import com.alterSMP.legendaryweapons.commands.LReloadCommand;
 import com.alterSMP.legendaryweapons.commands.CooldownCommand;
-import com.alterSMP.legendaryweapons.commands.GiveWeaponCommand;
 import com.alterSMP.legendaryweapons.commands.TrustCommand;
 import com.alterSMP.legendaryweapons.commands.GiveLegendaryCommand;
 import com.alterSMP.legendaryweapons.config.ConfigManager;
@@ -22,6 +21,7 @@ import com.alterSMP.legendaryweapons.passives.PassiveEffectManager;
 import com.alterSMP.legendaryweapons.passives.ArmorPassivesListener;
 import com.alterSMP.legendaryweapons.abilities.AbilityManager;
 import com.alterSMP.legendaryweapons.abilities.CopperPickaxeListener;
+import com.alterSMP.legendaryweapons.listeners.AnvilProtectionListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class LegendaryWeaponsPlugin extends JavaPlugin {
@@ -66,9 +66,6 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         getCommand("kresetplayer").setTabCompleter(kresetPlayerCmd);
         getCommand("lreload").setExecutor(new LReloadCommand(this));
         getCommand("cooldown").setExecutor(new CooldownCommand(this));
-        GiveWeaponCommand giveWeaponCmd = new GiveWeaponCommand(this);
-        getCommand("giveweapon").setExecutor(giveWeaponCmd);
-        getCommand("giveweapon").setTabCompleter(giveWeaponCmd);
         TrustCommand trustCmd = new TrustCommand(this);
         getCommand("trust").setExecutor(trustCmd);
         getCommand("trust").setTabCompleter(trustCmd);
@@ -82,6 +79,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AltarCraftingListener(this), this);
         getServer().getPluginManager().registerEvents(new CopperPickaxeListener(this), this);
         getServer().getPluginManager().registerEvents(new ArmorPassivesListener(this), this);
+        getServer().getPluginManager().registerEvents(new AnvilProtectionListener(), this);
 
         // Start passive effect task (uses config interval)
         passiveManager.startPassiveTask();

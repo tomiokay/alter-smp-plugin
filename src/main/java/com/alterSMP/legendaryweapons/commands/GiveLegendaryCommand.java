@@ -30,50 +30,64 @@ public class GiveLegendaryCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length < 1) {
-            sender.sendMessage(ChatColor.RED + "Usage: /givelegendary <legendary_id> [player]");
-            sender.sendMessage(ChatColor.YELLOW + "Available legendary IDs:");
+            sender.sendMessage(ChatColor.RED + "Usage: /givelegendary <name> [player]");
+            sender.sendMessage(ChatColor.YELLOW + "Available legendaries:");
             for (LegendaryType type : LegendaryType.values()) {
-                sender.sendMessage(ChatColor.GRAY + "  - " + type.getId());
+                sender.sendMessage(ChatColor.GRAY + "  - " + type.getDisplayName());
             }
             return true;
         }
 
-        // Determine if first arg is player or legendary_id
+        // Determine target player and legendary name
         Player target;
-        String legendaryId;
+        String legendaryName;
 
         if (args.length == 1) {
-            // /givelegendary <legendary_id> - give to self or error if console
+            // /givelegendary <name> - give to self or error if console
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ChatColor.RED + "Console must specify a player: /givelegendary <legendary_id> <player>");
+                sender.sendMessage(ChatColor.RED + "Console must specify a player: /givelegendary <name> <player>");
                 return true;
             }
             target = (Player) sender;
-            legendaryId = args[0];
+            legendaryName = args[0];
         } else {
-            // /givelegendary <legendary_id> <player>
-            legendaryId = args[0];
-            target = Bukkit.getPlayer(args[1]);
-            if (target == null) {
-                sender.sendMessage(ChatColor.RED + "Player not found: " + args[1]);
-                return true;
+            // /givelegendary <name> <player> - name may have spaces, last arg is player
+            // Check if last arg is an online player
+            Player potentialTarget = Bukkit.getPlayer(args[args.length - 1]);
+            if (potentialTarget != null && args.length > 1) {
+                // Last arg is a player, everything before is the legendary name
+                target = potentialTarget;
+                StringBuilder nameBuilder = new StringBuilder();
+                for (int i = 0; i < args.length - 1; i++) {
+                    if (i > 0) nameBuilder.append(" ");
+                    nameBuilder.append(args[i]);
+                }
+                legendaryName = nameBuilder.toString();
+            } else {
+                // No player specified or last arg is not a player, treat all as legendary name
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(ChatColor.RED + "Console must specify a player: /givelegendary <name> <player>");
+                    return true;
+                }
+                target = (Player) sender;
+                legendaryName = String.join(" ", args);
             }
         }
 
-        // Find legendary type
+        // Find legendary type by display name (case-insensitive)
         LegendaryType legendaryType = null;
         for (LegendaryType type : LegendaryType.values()) {
-            if (type.getId().equalsIgnoreCase(legendaryId)) {
+            if (type.getDisplayName().equalsIgnoreCase(legendaryName)) {
                 legendaryType = type;
                 break;
             }
         }
 
         if (legendaryType == null) {
-            sender.sendMessage(ChatColor.RED + "Unknown legendary ID: " + legendaryId);
-            sender.sendMessage(ChatColor.YELLOW + "Available legendary IDs:");
+            sender.sendMessage(ChatColor.RED + "Unknown legendary: " + legendaryName);
+            sender.sendMessage(ChatColor.YELLOW + "Available legendaries:");
             for (LegendaryType type : LegendaryType.values()) {
-                sender.sendMessage(ChatColor.GRAY + "  - " + type.getId());
+                sender.sendMessage(ChatColor.GRAY + "  - " + type.getDisplayName());
             }
             return true;
         }
@@ -99,21 +113,50 @@ public class GiveLegendaryCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
 
-        if (args.length == 1) {
-            // Tab complete legendary IDs
+        // Build current input string
+        String currentInput = String.join(" ", args).toLowerCase();
+
+        // Check if any legendary display name starts with the current input
+        boolean foundMatch = false;
+        for (LegendaryType type : LegendaryType.values()) {
+            String displayName = type.getDisplayName().toLowerCase();
+            if (displayName.startsWith(currentInput)) {
+                // Return the next word(s) needed
+                String remaining = type.getDisplayName().substring(currentInput.length()).trim();
+                if (!remaining.isEmpty()) {
+                    String[] remainingParts = remaining.split(" ");
+                    if (args.length > 0 && !args[args.length - 1].isEmpty()) {
+                        // Complete current word
+                        completions.add(args[args.length - 1] + remainingParts[0]);
+                    } else {
+                        completions.add(remainingParts[0]);
+                    }
+                }
+                foundMatch = true;
+            }
+        }
+
+        // If no partial match, show all display names for first arg
+        if (args.length == 1 && !foundMatch) {
             String partial = args[0].toLowerCase();
             for (LegendaryType type : LegendaryType.values()) {
-                if (type.getId().toLowerCase().startsWith(partial)) {
-                    completions.add(type.getId());
+                String displayName = type.getDisplayName();
+                // For names with spaces, just show first word if it matches
+                String firstWord = displayName.split(" ")[0];
+                if (firstWord.toLowerCase().startsWith(partial)) {
+                    completions.add(firstWord);
                 }
             }
-        } else if (args.length == 2) {
-            // Tab complete player names
-            String partial = args[1].toLowerCase();
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (player.getName().toLowerCase().startsWith(partial)) {
+        }
+
+        // Also suggest player names if current input matches a complete legendary name
+        for (LegendaryType type : LegendaryType.values()) {
+            if (type.getDisplayName().equalsIgnoreCase(currentInput.trim())) {
+                // Full legendary name entered, suggest players
+                for (Player player : Bukkit.getOnlinePlayers()) {
                     completions.add(player.getName());
                 }
+                break;
             }
         }
 

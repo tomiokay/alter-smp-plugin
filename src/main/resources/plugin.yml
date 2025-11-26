@@ -40,12 +40,6 @@ commands:
     permission: legendaryweapons.cooldown
     permission-message: 'You do not have permission to use this command'
 
-  giveweapon:
-    description: 'Give a legendary weapon to yourself or another player'
-    usage: '/giveweapon <weapon> [player]'
-    permission: legendaryweapons.giveweapon
-    permission-message: 'You do not have permission to use this command'
-
   trust:
     description: 'Toggle trust for another player (legendary abilities will not affect them)'
     usage: '/trust <player>'
@@ -75,10 +69,6 @@ permissions:
 
   legendaryweapons.cooldown:
     description: 'Allows clearing ability cooldowns'
-    default: op
-
-  legendaryweapons.giveweapon:
-    description: 'Allows giving legendary weapons'
     default: op
 
   legendaryweapons.givelegendary:
