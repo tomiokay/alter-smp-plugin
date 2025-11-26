@@ -42,6 +42,7 @@ public class AbilityManager implements Listener {
     private Map<UUID, Set<Location>> voidRiftBlocks; // Void Rift black hole blocks
     private Set<UUID> mining3x3Active; // Players with 3x3 mining enabled
     private Set<UUID> fortuneModeActive; // Players with Fortune mode (vs Silk Touch)
+    private Set<UUID> shadowstepBackstab; // Next attack does bonus true damage
 
     public AbilityManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
@@ -57,6 +58,7 @@ public class AbilityManager implements Listener {
         this.voidRiftBlocks = new HashMap<>();
         this.mining3x3Active = new HashSet<>();
         this.fortuneModeActive = new HashSet<>();
+        this.shadowstepBackstab = new HashSet<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -332,34 +334,60 @@ public class AbilityManager implements Listener {
     // ========== UMBRA VEIL DAGGER ==========
 
     private boolean shadowstep(Player player) {
-        Vector direction = player.getLocation().getDirection().multiply(8);
-        Location destination = player.getLocation().add(direction);
-
-        // Check for walls
-        RayTraceResult result = player.getWorld().rayTraceBlocks(
-            player.getLocation(),
-            direction.normalize(),
-            8
+        // Find target enemy in line of sight
+        RayTraceResult result = player.getWorld().rayTraceEntities(
+            player.getEyeLocation(),
+            player.getLocation().getDirection(),
+            15,
+            entity -> entity instanceof LivingEntity && entity != player
         );
 
-        if (result != null && result.getHitBlock() != null) {
-            destination = result.getHitBlock().getLocation();
+        if (result == null || !(result.getHitEntity() instanceof LivingEntity)) {
+            player.sendMessage(ChatColor.RED + "No target found! Look at an enemy to shadowstep behind them.");
+            return false;
         }
 
-        // Enhanced particles
+        LivingEntity target = (LivingEntity) result.getHitEntity();
+
+        // Trust check
+        if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+            player.sendMessage(ChatColor.RED + "Cannot shadowstep behind trusted players!");
+            return false;
+        }
+
+        // Calculate position behind the target
+        Vector targetDirection = target.getLocation().getDirection().normalize();
+        Location behindTarget = target.getLocation().clone().subtract(targetDirection.multiply(1.5));
+        behindTarget.setY(target.getLocation().getY());
+
+        // Make player face the target
+        Vector toTarget = target.getLocation().toVector().subtract(behindTarget.toVector()).normalize();
+        behindTarget.setDirection(toTarget);
+
+        // Enhanced particles at origin
         player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 120, 0.5, 1, 0.5, 0);
         player.getWorld().spawnParticle(Particle.SQUID_INK, player.getLocation(), 60, 0.5, 1, 0.5, 0.1);
         player.getWorld().spawnParticle(Particle.SMOKE, player.getLocation(), 80, 0.5, 1, 0.5, 0.05);
 
-        player.teleport(destination);
+        player.teleport(behindTarget);
 
-        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, destination, 120, 0.5, 1, 0.5, 0);
-        player.getWorld().spawnParticle(Particle.SQUID_INK, destination, 60, 0.5, 1, 0.5, 0.1);
-        player.getWorld().spawnParticle(Particle.SMOKE, destination, 80, 0.5, 1, 0.5, 0.05);
+        // Enhanced particles at destination
+        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, behindTarget, 120, 0.5, 1, 0.5, 0);
+        player.getWorld().spawnParticle(Particle.SQUID_INK, behindTarget, 60, 0.5, 1, 0.5, 0.1);
+        player.getWorld().spawnParticle(Particle.SMOKE, behindTarget, 80, 0.5, 1, 0.5, 0.05);
 
-        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 80, 0));
+        // Mark for backstab bonus damage
+        shadowstepBackstab.add(player.getUniqueId());
+
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.6f);
-        player.sendMessage(ChatColor.DARK_GRAY + "Shadowstep!");
+        player.sendMessage(ChatColor.DARK_GRAY + "Shadowstep! Next attack deals bonus true damage!");
+
+        // Remove backstab buff after 5 seconds if not used
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (shadowstepBackstab.remove(player.getUniqueId())) {
+                player.sendMessage(ChatColor.GRAY + "Backstab bonus expired.");
+            }
+        }, 100L);
 
         return true;
     }
@@ -1082,6 +1110,31 @@ public class AbilityManager implements Listener {
                             player.sendMessage(ChatColor.YELLOW + "Echo!");
                         }
                     }, 20L);
+                }
+            }
+
+            // Shadowstep Backstab - bonus true damage on next hit
+            if (shadowstepBackstab.remove(player.getUniqueId())) {
+                if (event.getEntity() instanceof LivingEntity) {
+                    LivingEntity target = (LivingEntity) event.getEntity();
+
+                    // Trust check
+                    if (!(target instanceof Player) || !plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                        // Deal 1 heart (2 HP) of true damage
+                        double currentHealth = target.getHealth();
+                        target.setHealth(Math.max(0, currentHealth - 2.0));
+
+                        // Particles and sound
+                        target.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 30, 0.3, 0.3, 0.3, 0.1);
+                        target.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0);
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 0.8f);
+
+                        player.sendMessage(ChatColor.DARK_GRAY + "Backstab! +1 heart true damage!");
+
+                        if (target instanceof Player) {
+                            ((Player) target).sendMessage(ChatColor.RED + "⚔ Backstabbed by " + player.getName() + "!");
+                        }
+                    }
                 }
             }
 

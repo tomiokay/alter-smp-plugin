@@ -302,7 +302,8 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Speed III while sneaking");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Shadowstep (20s)");
-                lore.add(ChatColor.GRAY + "  Dash and go invisible");
+                lore.add(ChatColor.GRAY + "  Teleport behind target enemy");
+                lore.add(ChatColor.GRAY + "  Next attack deals +1 heart true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Soul Mark (60s)");
                 lore.add(ChatColor.GRAY + "  Mark target for true damage");
                 break;
