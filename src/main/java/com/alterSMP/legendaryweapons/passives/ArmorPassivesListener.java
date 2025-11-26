@@ -198,13 +198,13 @@ public class ArmorPassivesListener implements Listener {
             // Increment hit counter
             int hits = hitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
 
-            if (hits >= 7) {
+            if (hits >= 20) {
                 // Trigger shockwave
                 electricShockwave(player);
                 hitCounter.put(player.getUniqueId(), 0); // Reset counter
             } else {
                 hitCounter.put(player.getUniqueId(), hits);
-                player.sendMessage(ChatColor.YELLOW + "⚡ " + hits + "/7 hits");
+                player.sendMessage(ChatColor.YELLOW + "⚡ " + hits + "/20 hits");
             }
         }
     }

@@ -388,7 +388,7 @@ public class LegendaryItemFactory {
 
             case THUNDERFORGE_CHESTPLATE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Shockwave Counter");
-                lore.add(ChatColor.GRAY + "  Every 7 hits: electric shockwave");
+                lore.add(ChatColor.GRAY + "  Every 20 hits: electric shockwave");
                 lore.add(ChatColor.GRAY + "  Deals damage and knockback");
                 break;
 
