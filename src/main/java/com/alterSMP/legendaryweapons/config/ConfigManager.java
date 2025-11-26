@@ -257,40 +257,42 @@ public class ConfigManager {
 
     // ========== RECIPES ==========
 
-    public Material[][] getRecipe(String legendaryId) {
-        List<String> materialNames = config.getStringList("recipes." + legendaryId);
+    /**
+     * Get recipe ingredients for a legendary item.
+     * Supports special syntax for enchanted books: ENCHANTED_BOOK:ENCHANT_NAME:LEVEL
+     * Example: ENCHANTED_BOOK:FEATHER_FALLING:4
+     */
+    public com.alterSMP.legendaryweapons.altar.RecipeIngredient[][] getRecipeIngredients(String legendaryId) {
+        List<String> ingredientStrings = config.getStringList("recipes." + legendaryId);
 
-        if (materialNames == null || materialNames.size() != 25) {
+        if (ingredientStrings == null || ingredientStrings.size() != 25) {
             plugin.getLogger().warning("Invalid recipe for " + legendaryId + " - using empty recipe");
-            return createEmptyRecipe();
+            return createEmptyIngredientRecipe();
         }
 
-        Material[][] pattern = new Material[5][5];
+        com.alterSMP.legendaryweapons.altar.RecipeIngredient[][] ingredients =
+            new com.alterSMP.legendaryweapons.altar.RecipeIngredient[5][5];
         int index = 0;
 
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 5; col++) {
-                String materialName = materialNames.get(index++);
-                try {
-                    pattern[row][col] = Material.valueOf(materialName);
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid material in recipe " + legendaryId + ": " + materialName);
-                    pattern[row][col] = Material.AIR;
-                }
+                String ingredientStr = ingredientStrings.get(index++);
+                ingredients[row][col] = com.alterSMP.legendaryweapons.altar.RecipeIngredient.parse(ingredientStr);
             }
         }
 
-        return pattern;
+        return ingredients;
     }
 
-    private Material[][] createEmptyRecipe() {
-        Material[][] pattern = new Material[5][5];
+    private com.alterSMP.legendaryweapons.altar.RecipeIngredient[][] createEmptyIngredientRecipe() {
+        com.alterSMP.legendaryweapons.altar.RecipeIngredient[][] ingredients =
+            new com.alterSMP.legendaryweapons.altar.RecipeIngredient[5][5];
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
-                pattern[i][j] = Material.AIR;
+                ingredients[i][j] = new com.alterSMP.legendaryweapons.altar.RecipeIngredient(Material.AIR);
             }
         }
-        return pattern;
+        return ingredients;
     }
 
     // ========== MESSAGES ==========
