@@ -339,12 +339,13 @@ public class LegendaryItemFactory {
 
             case CELESTIAL_AEGIS_SHIELD:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Aura of Protection");
-                lore.add(ChatColor.GRAY + "  Allies gain Resistance I");
+                lore.add(ChatColor.GRAY + "  You and trusted allies gain Resistance I");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Radiant Block (35s)");
                 lore.add(ChatColor.GRAY + "  Reflect 75% damage for 5s");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Heaven's Wall (60s)");
-                lore.add(ChatColor.GRAY + "  Create protective barrier");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Heaven's Wall (90s)");
+                lore.add(ChatColor.GRAY + "  16x16 barrier for 32s");
+                lore.add(ChatColor.GRAY + "  Only trusted players can pass");
                 break;
 
             case CHRONO_BLADE:

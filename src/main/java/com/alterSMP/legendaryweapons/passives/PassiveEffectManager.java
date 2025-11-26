@@ -27,9 +27,9 @@ public class PassiveEffectManager implements Listener {
     private final LegendaryWeaponsPlugin plugin;
 
     // Track hit counters for various passives
-    private Map<UUID, Integer> bladeHitCounter; // Blade of Fractured Stars
+    private Map<UUID, Integer> bladeHitCounter; // Holy Moonlight Sword
     private Map<UUID, Integer> chainsHitCounter; // Chains of Eternity
-    private Map<UUID, Long> lastIceCreateTime; // Glacierbound path cooldown
+    private Map<UUID, Long> lastIceCreateTime; // Skybreaker Boots path cooldown
 
     public PassiveEffectManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
@@ -150,11 +150,14 @@ public class PassiveEffectManager implements Listener {
         if (type == null) return;
 
         if (type == LegendaryType.CELESTIAL_AEGIS_SHIELD) {
-            // Aura of Protection - Allies gain Resistance (only trusted players)
+            // Aura of Protection - Self and trusted allies gain Resistance I
+            // Apply to self first
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20, 0, true, false));
+
+            // Apply to nearby trusted players
             for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
                 if (entity instanceof Player) {
                     Player ally = (Player) entity;
-                    // Only grant resistance to trusted players (or grant to all? Based on task, apply trust check)
                     // Trust check - only help trusted allies
                     if (!plugin.getTrustManager().isTrusted(player, ally)) {
                         continue;

@@ -31,10 +31,12 @@ public class GiveLegendaryCommand implements CommandExecutor, TabCompleter {
 
         if (args.length < 1) {
             sender.sendMessage(ChatColor.RED + "Usage: /givelegendary <id> [player]");
-            sender.sendMessage(ChatColor.YELLOW + "Available legendaries:");
-            for (LegendaryType type : LegendaryType.values()) {
-                sender.sendMessage(ChatColor.GRAY + "  - " + type.getId() + " (" + type.getDisplayName() + ")");
-            }
+            sender.sendMessage(ChatColor.YELLOW + "Available IDs:");
+            sender.sendMessage(ChatColor.GRAY + "  holy_moonlight_sword, pheonix_grace, tempestbreaker_spear,");
+            sender.sendMessage(ChatColor.GRAY + "  thousand_demon_daggers, divine_axe_rhitta, chains_of_eternity,");
+            sender.sendMessage(ChatColor.GRAY + "  skybreaker_boots, celestial_aegis_shield, chrono_blade,");
+            sender.sendMessage(ChatColor.GRAY + "  soul_devourer, creation_splitter, copper_pickaxe,");
+            sender.sendMessage(ChatColor.GRAY + "  thunderforge_chestplate, emberstride_greaves, bloodreaper_hood");
             return true;
         }
 
@@ -51,10 +53,7 @@ public class GiveLegendaryCommand implements CommandExecutor, TabCompleter {
 
         if (legendaryType == null) {
             sender.sendMessage(ChatColor.RED + "Unknown legendary: " + legendaryId);
-            sender.sendMessage(ChatColor.YELLOW + "Available legendaries:");
-            for (LegendaryType type : LegendaryType.values()) {
-                sender.sendMessage(ChatColor.GRAY + "  - " + type.getId() + " (" + type.getDisplayName() + ")");
-            }
+            sender.sendMessage(ChatColor.YELLOW + "Use tab completion to see available IDs.");
             return true;
         }
 

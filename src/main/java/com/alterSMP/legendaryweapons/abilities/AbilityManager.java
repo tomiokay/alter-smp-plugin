@@ -16,6 +16,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -34,7 +35,6 @@ public class AbilityManager implements Listener {
     private Map<UUID, UUID> soulMarkTargets; // Soul Mark target UUIDs
     private Map<UUID, Long> forestShieldActive; // Forest Shield mode
     private Map<UUID, Long> radiantBlockActive; // Radiant Block mode
-    private Map<UUID, Long> heavensWallActive; // Heaven's Wall mode
     private Map<UUID, Long> echoStrikeActive; // Echo Strike mode
     private Map<UUID, SavedState> timeRewindStates; // Saved states for Time Rewind
     private Set<UUID> nextGaleThrow; // Next trident throw is Gale
@@ -43,6 +43,7 @@ public class AbilityManager implements Listener {
     private Set<UUID> mining3x3Active; // Players with 3x3 mining enabled
     private Set<UUID> fortuneModeActive; // Players with Fortune mode (vs Silk Touch)
     private Set<UUID> shadowstepBackstab; // Next attack does bonus true damage
+    private Map<UUID, HeavensWallBarrier> activeBarriers; // Heaven's Wall barriers
 
     public AbilityManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
@@ -50,7 +51,6 @@ public class AbilityManager implements Listener {
         this.soulMarkTargets = new HashMap<>();
         this.forestShieldActive = new HashMap<>();
         this.radiantBlockActive = new HashMap<>();
-        this.heavensWallActive = new HashMap<>();
         this.echoStrikeActive = new HashMap<>();
         this.timeRewindStates = new HashMap<>();
         this.nextGaleThrow = new HashSet<>();
@@ -59,6 +59,7 @@ public class AbilityManager implements Listener {
         this.mining3x3Active = new HashSet<>();
         this.fortuneModeActive = new HashSet<>();
         this.shadowstepBackstab = new HashSet<>();
+        this.activeBarriers = new HashMap<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -143,7 +144,7 @@ public class AbilityManager implements Listener {
         return false;
     }
 
-    // ========== BLADE OF FRACTURED STARS ==========
+    // ========== HOLY MOONLIGHT SWORD ==========
 
     private boolean starRiftSlash(Player player) {
         Vector direction = player.getLocation().getDirection();
@@ -215,7 +216,7 @@ public class AbilityManager implements Listener {
         return true;
     }
 
-    // ========== EMBERHEART SCYTHE ==========
+    // ========== PHEONIX GRACE ==========
 
     private boolean flameHarvest(Player player) {
         int entitiesHit = 0;
@@ -331,7 +332,7 @@ public class AbilityManager implements Listener {
         return true;
     }
 
-    // ========== UMBRA VEIL DAGGER ==========
+    // ========== THOUSAND DEMON DAGGERS ==========
 
     private boolean shadowstep(Player player) {
         // Find target enemy in line of sight
@@ -405,7 +406,7 @@ public class AbilityManager implements Listener {
         return true;
     }
 
-    // ========== HEARTROOT GUARDIAN AXE ==========
+    // ========== DIVINE AXE RHITTA ==========
 
     private boolean natureGrasp(Player player) {
         for (Entity entity : player.getNearbyEntities(6, 6, 6)) {
@@ -602,7 +603,7 @@ public class AbilityManager implements Listener {
         return false;
     }
 
-    // ========== GLACIERBOUND HALBERD ==========
+    // ========== SKYBREAKER BOOTS ==========
 
     private boolean frostbiteSweep(Player player) {
         Vector direction = player.getLocation().getDirection();
@@ -720,43 +721,138 @@ public class AbilityManager implements Listener {
     }
 
     private boolean heavensWall(Player player) {
-        heavensWallActive.put(player.getUniqueId(), System.currentTimeMillis() + 6000);
-
         Location center = player.getLocation();
+        World world = center.getWorld();
 
+        // Create 16x16 barrier centered on player
+        double minX = center.getX() - 8;
+        double maxX = center.getX() + 8;
+        double minZ = center.getZ() - 8;
+        double maxZ = center.getZ() + 8;
+
+        HeavensWallBarrier barrier = new HeavensWallBarrier(player.getUniqueId(), world, minX, maxX, minZ, maxZ);
+        activeBarriers.put(player.getUniqueId(), barrier);
+
+        // Particle effect task - runs every 5 ticks for 32 seconds (640 ticks)
         new BukkitRunnable() {
             int ticks = 0;
 
             @Override
             public void run() {
-                if (ticks >= 120) { // 6 seconds
+                if (ticks >= 640) { // 32 seconds
+                    activeBarriers.remove(player.getUniqueId());
+                    player.sendMessage(ChatColor.GOLD + "Heaven's Wall has faded.");
                     cancel();
-                    heavensWallActive.remove(player.getUniqueId());
                     return;
                 }
 
-                // Spawn barrier particles with enhanced variety
-                for (double theta = 0; theta < 2 * Math.PI; theta += Math.PI / 16) {
-                    for (double y = 0; y < 4; y += 0.5) {
-                        double x = 5 * Math.cos(theta);
-                        double z = 5 * Math.sin(theta);
+                // Spawn particles along the barrier edges (only near players for performance)
+                for (Player nearby : world.getPlayers()) {
+                    Location pLoc = nearby.getLocation();
 
-                        Location particleLoc = center.clone().add(x, y, z);
-                        center.getWorld().spawnParticle(Particle.END_ROD, particleLoc, 3, 0, 0, 0, 0);
-                        center.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0, 0, 0, 0);
-                        center.getWorld().spawnParticle(Particle.ENCHANT, particleLoc, 2, 0, 0, 0, 0);
+                    // Only render particles if player is within 32 blocks of the barrier
+                    if (pLoc.getX() < minX - 32 || pLoc.getX() > maxX + 32 ||
+                        pLoc.getZ() < minZ - 32 || pLoc.getZ() > maxZ + 32) {
+                        continue;
+                    }
+
+                    double playerY = pLoc.getY();
+
+                    // Render particles at player's Y level ± 5 blocks
+                    for (double y = playerY - 5; y <= playerY + 5; y += 1) {
+                        // North wall (minZ)
+                        for (double x = minX; x <= maxX; x += 2) {
+                            Location particleLoc = new Location(world, x, y, minZ);
+                            if (particleLoc.distance(pLoc) < 24) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            }
+                        }
+                        // South wall (maxZ)
+                        for (double x = minX; x <= maxX; x += 2) {
+                            Location particleLoc = new Location(world, x, y, maxZ);
+                            if (particleLoc.distance(pLoc) < 24) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            }
+                        }
+                        // West wall (minX)
+                        for (double z = minZ; z <= maxZ; z += 2) {
+                            Location particleLoc = new Location(world, minX, y, z);
+                            if (particleLoc.distance(pLoc) < 24) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            }
+                        }
+                        // East wall (maxX)
+                        for (double z = minZ; z <= maxZ; z += 2) {
+                            Location particleLoc = new Location(world, maxX, y, z);
+                            if (particleLoc.distance(pLoc) < 24) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            }
+                        }
                     }
                 }
 
-                ticks++;
+                ticks += 5;
             }
-        }.runTaskTimer(plugin, 0L, 1L);
+        }.runTaskTimer(plugin, 0L, 5L);
 
-        player.sendMessage(ChatColor.GOLD + "Heaven's Wall!");
+        player.sendMessage(ChatColor.GOLD + "Heaven's Wall activated! 16x16 barrier for 32 seconds.");
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.0f);
         return true;
     }
 
-    // ========== CHRONO EDGE ==========
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        // Check if player is trying to cross a Heaven's Wall barrier
+        if (activeBarriers.isEmpty()) return;
+
+        Player player = event.getPlayer();
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        if (to == null) return;
+
+        // Only check if player actually moved to a new block
+        if (from.getBlockX() == to.getBlockX() && from.getBlockZ() == to.getBlockZ()) {
+            return;
+        }
+
+        for (Map.Entry<UUID, HeavensWallBarrier> entry : activeBarriers.entrySet()) {
+            HeavensWallBarrier barrier = entry.getValue();
+            UUID ownerUUID = entry.getKey();
+
+            // Skip if different world
+            if (!barrier.world.equals(player.getWorld())) continue;
+
+            // Owner can always pass
+            if (player.getUniqueId().equals(ownerUUID)) continue;
+
+            // Trusted players can pass
+            Player owner = Bukkit.getPlayer(ownerUUID);
+            if (owner != null && plugin.getTrustManager().isTrusted(owner, player)) {
+                continue;
+            }
+
+            // Check if player is trying to cross the barrier
+            boolean wasInside = barrier.isInside(from.getX(), from.getZ());
+            boolean willBeInside = barrier.isInside(to.getX(), to.getZ());
+
+            // If crossing the barrier boundary (either direction)
+            if (wasInside != willBeInside) {
+                // Block the movement
+                event.setCancelled(true);
+
+                // Push player back slightly
+                Vector pushBack = from.toVector().subtract(to.toVector()).normalize().multiply(0.5);
+                player.setVelocity(pushBack);
+
+                // Visual/audio feedback
+                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 20, 0.3, 0.3, 0.3, 0.1);
+                player.playSound(to, Sound.BLOCK_GLASS_BREAK, 0.5f, 2.0f);
+                return;
+            }
+        }
+    }
+
+    // ========== CHRONO BLADE ==========
 
     private boolean echoStrike(Player player) {
         echoStrikeActive.put(player.getUniqueId(), System.currentTimeMillis() + 6000);
@@ -815,7 +911,7 @@ public class AbilityManager implements Listener {
         return true;
     }
 
-    // ========== OBLIVION HARVESTER ==========
+    // ========== SOUL DEVOURER ==========
 
     private boolean voidSlice(Player player) {
         Vector direction = player.getLocation().getDirection();
@@ -929,7 +1025,7 @@ public class AbilityManager implements Listener {
         return true;
     }
 
-    // ========== ECLIPSE DEVOURER ==========
+    // ========== CREATION SPLITTER ==========
 
     private boolean voidRupture(Player player) {
         Vector direction = player.getLocation().getDirection();
@@ -1048,16 +1144,16 @@ public class AbilityManager implements Listener {
 
     private int getCooldownForAbility(LegendaryType type, int abilityNum) {
         Map<String, int[]> cooldowns = new HashMap<>();
-        cooldowns.put("blade_of_the_fractured_stars", new int[]{25, 45});
-        cooldowns.put("emberheart_scythe", new int[]{30, 180});
+        cooldowns.put("holy_moonlight_sword", new int[]{25, 45});
+        cooldowns.put("pheonix_grace", new int[]{30, 180});
         cooldowns.put("tempestbreaker_spear", new int[]{25, 50});
-        cooldowns.put("umbra_veil_dagger", new int[]{20, 60});
-        cooldowns.put("heartroot_guardian_axe", new int[]{35, 70});
+        cooldowns.put("thousand_demon_daggers", new int[]{20, 60});
+        cooldowns.put("divine_axe_rhitta", new int[]{35, 70});
         cooldowns.put("chains_of_eternity", new int[]{35, 65});
         cooldowns.put("celestial_aegis_shield", new int[]{40, 90});
-        cooldowns.put("chrono_edge", new int[]{40, 120});
-        cooldowns.put("oblivion_harvester", new int[]{30, 85});
-        cooldowns.put("eclipse_devourer", new int[]{35, 95});
+        cooldowns.put("chrono_blade", new int[]{40, 120});
+        cooldowns.put("soul_devourer", new int[]{30, 85});
+        cooldowns.put("creation_splitter", new int[]{35, 95});
         cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
 
         int[] cd = cooldowns.get(type.getId());
@@ -1364,6 +1460,26 @@ public class AbilityManager implements Listener {
             this.location = location;
             this.health = health;
             this.hunger = hunger;
+        }
+    }
+
+    // Helper class for Heaven's Wall barrier
+    private static class HeavensWallBarrier {
+        UUID ownerUUID;
+        World world;
+        double minX, maxX, minZ, maxZ;
+
+        HeavensWallBarrier(UUID ownerUUID, World world, double minX, double maxX, double minZ, double maxZ) {
+            this.ownerUUID = ownerUUID;
+            this.world = world;
+            this.minX = minX;
+            this.maxX = maxX;
+            this.minZ = minZ;
+            this.maxZ = maxZ;
+        }
+
+        boolean isInside(double x, double z) {
+            return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
         }
     }
 }
