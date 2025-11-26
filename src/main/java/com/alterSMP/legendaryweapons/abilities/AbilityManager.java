@@ -733,7 +733,7 @@ public class AbilityManager implements Listener {
         HeavensWallBarrier barrier = new HeavensWallBarrier(player.getUniqueId(), world, minX, maxX, minZ, maxZ);
         activeBarriers.put(player.getUniqueId(), barrier);
 
-        // Particle effect task - runs every 5 ticks for 32 seconds (640 ticks)
+        // Particle effect task - runs every 3 ticks for 32 seconds (640 ticks)
         new BukkitRunnable() {
             int ticks = 0;
 
@@ -746,7 +746,7 @@ public class AbilityManager implements Listener {
                     return;
                 }
 
-                // Spawn particles along the barrier edges (only near players for performance)
+                // Spawn star-like particles along the barrier edges
                 for (Player nearby : world.getPlayers()) {
                     Location pLoc = nearby.getLocation();
 
@@ -758,49 +758,61 @@ public class AbilityManager implements Listener {
 
                     double playerY = pLoc.getY();
 
-                    // Render particles at player's Y level ± 5 blocks
-                    for (double y = playerY - 5; y <= playerY + 5; y += 1) {
+                    // Render particles at player's Y level ± 4 blocks
+                    for (double y = playerY - 4; y <= playerY + 4; y += 0.8) {
                         // North wall (minZ)
-                        for (double x = minX; x <= maxX; x += 2) {
+                        for (double x = minX; x <= maxX; x += 1.5) {
                             Location particleLoc = new Location(world, x, y, minZ);
-                            if (particleLoc.distance(pLoc) < 24) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            if (particleLoc.distance(pLoc) < 20) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                if (ticks % 15 == 0) {
+                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
+                                }
                             }
                         }
                         // South wall (maxZ)
-                        for (double x = minX; x <= maxX; x += 2) {
+                        for (double x = minX; x <= maxX; x += 1.5) {
                             Location particleLoc = new Location(world, x, y, maxZ);
-                            if (particleLoc.distance(pLoc) < 24) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            if (particleLoc.distance(pLoc) < 20) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                if (ticks % 15 == 0) {
+                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
+                                }
                             }
                         }
                         // West wall (minX)
-                        for (double z = minZ; z <= maxZ; z += 2) {
+                        for (double z = minZ; z <= maxZ; z += 1.5) {
                             Location particleLoc = new Location(world, minX, y, z);
-                            if (particleLoc.distance(pLoc) < 24) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            if (particleLoc.distance(pLoc) < 20) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                if (ticks % 15 == 0) {
+                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
+                                }
                             }
                         }
                         // East wall (maxX)
-                        for (double z = minZ; z <= maxZ; z += 2) {
+                        for (double z = minZ; z <= maxZ; z += 1.5) {
                             Location particleLoc = new Location(world, maxX, y, z);
-                            if (particleLoc.distance(pLoc) < 24) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.1, 0.1, 0.1, 0);
+                            if (particleLoc.distance(pLoc) < 20) {
+                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0.02);
+                                if (ticks % 15 == 0) {
+                                    world.spawnParticle(Particle.ELECTRIC_SPARK, particleLoc, 1, 0.1, 0.1, 0.1, 0.05);
+                                }
                             }
                         }
                     }
                 }
 
-                ticks += 5;
+                ticks += 3;
             }
-        }.runTaskTimer(plugin, 0L, 5L);
+        }.runTaskTimer(plugin, 0L, 3L);
 
         player.sendMessage(ChatColor.GOLD + "Heaven's Wall activated! 16x16 barrier for 32 seconds.");
         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.0f);
         return true;
     }
 
-    @EventHandler
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
     public void onPlayerMove(PlayerMoveEvent event) {
         // Check if player is trying to cross a Heaven's Wall barrier
         if (activeBarriers.isEmpty()) return;
@@ -810,8 +822,8 @@ public class AbilityManager implements Listener {
         Location to = event.getTo();
         if (to == null) return;
 
-        // Only check if player actually moved to a new block
-        if (from.getBlockX() == to.getBlockX() && from.getBlockZ() == to.getBlockZ()) {
+        // Check if player actually moved position (not just looking around)
+        if (from.getX() == to.getX() && from.getZ() == to.getZ()) {
             return;
         }
 
@@ -837,16 +849,20 @@ public class AbilityManager implements Listener {
 
             // If crossing the barrier boundary (either direction)
             if (wasInside != willBeInside) {
-                // Block the movement
-                event.setCancelled(true);
+                // Block the movement by setting destination to origin
+                event.setTo(from);
 
-                // Push player back slightly
-                Vector pushBack = from.toVector().subtract(to.toVector()).normalize().multiply(0.5);
+                // Push player back
+                Vector pushBack = from.toVector().subtract(to.toVector()).normalize().multiply(0.3);
+                pushBack.setY(0);
                 player.setVelocity(pushBack);
 
-                // Visual/audio feedback
-                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 20, 0.3, 0.3, 0.3, 0.1);
-                player.playSound(to, Sound.BLOCK_GLASS_BREAK, 0.5f, 2.0f);
+                // Visual/audio feedback - star barrier effect
+                Location barrierHit = to.clone();
+                player.getWorld().spawnParticle(Particle.END_ROD, barrierHit, 30, 0.3, 0.5, 0.3, 0.05);
+                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, barrierHit, 20, 0.3, 0.5, 0.3, 0.1);
+                player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, barrierHit, 15, 0.3, 0.5, 0.3, 0);
+                player.playSound(barrierHit, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
                 return;
             }
         }
