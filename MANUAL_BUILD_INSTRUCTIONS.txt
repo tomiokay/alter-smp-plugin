@@ -1,0 +1,116 @@
+================================================================================
+    MANUAL BUILD INSTRUCTIONS
+    (Use if automated scripts don't work)
+================================================================================
+
+The automated build is having file lock issues. Here's how to build manually:
+
+METHOD 1: Fresh Terminal (RECOMMENDED)
+────────────────────────────────────────────────────────────────────────────
+
+1. CLOSE this terminal/IDE completely
+2. Open a NEW Command Prompt or PowerShell
+3. Navigate to the plugin folder:
+   cd "C:\Users\AWANG\OneDrive - Bayview Glen Private School\Desktop\Cursor\alter-smp-plugin"
+
+4. Run the build:
+   gradlew.bat build
+
+5. Find your JAR at:
+   build\libs\LegendaryWeaponsSMP-1.0.0.jar
+
+METHOD 2: Restart Computer (If Method 1 Fails)
+────────────────────────────────────────────────────────────────────────────
+
+1. Save all your work
+2. Restart your computer
+3. Open Command Prompt
+4. Navigate to plugin folder (see step 3 above)
+5. Run: gradlew.bat build
+
+METHOD 3: Use Existing JAR (Quick Option)
+────────────────────────────────────────────────────────────────────────────
+
+If you need to deploy RIGHT NOW and can't build:
+
+⚠️ IMPORTANT: The existing JAR at build\libs\LegendaryWeaponsSMP-1.0.0.jar
+is from BEFORE the latest changes (particles, damage, etc.)
+
+To get the LATEST version with all enhancements, you MUST rebuild using
+Method 1 or 2 above.
+
+However, if you just want to test that deployment works, you can use the
+existing JAR temporarily.
+
+WHAT'S IN THE CURRENT (OLD) JAR:
+────────────────────────────────────────────────────────────────────────────
+✅ All 11 legendary weapons
+✅ Trust system (/trust command)
+✅ All basic abilities
+✅ Crafting system
+✅ Commands (/givealtar, /giveweapon, etc.)
+
+❌ Missing (needs rebuild):
+  - Enhanced particle effects (3-5x more)
+  - Chat notifications when hit
+  - 50% damage increase
+  - Flame Harvest 6 absorption hearts fix
+
+WHY BUILD IS FAILING
+────────────────────────────────────────────────────────────────────────────
+
+The build folder is locked by a process (likely from previous builds).
+Windows won't let Gradle delete it while files are open.
+
+Solutions (in order of ease):
+1. Close ALL terminals and IDEs → try again
+2. Restart computer → try again
+3. Manually delete build folder:
+   - Close this terminal
+   - Delete: C:\Users\AWANG\...\alter-smp-plugin\build
+   - Open new terminal and build
+
+VERIFICATION AFTER BUILD
+────────────────────────────────────────────────────────────────────────────
+
+After successful build, check:
+
+File exists:
+  build\libs\LegendaryWeaponsSMP-1.0.0.jar
+
+File size should be:
+  ~100-200 KB (if much smaller/larger, rebuild)
+
+File date:
+  Should match TODAY's date
+
+DEPLOYMENT TO PEBBLEHOST
+────────────────────────────────────────────────────────────────────────────
+
+Once you have the JAR:
+
+1. Go to: https://client.pebblehost.com
+2. Login → Select your server
+3. File Manager → plugins folder
+4. Upload: LegendaryWeaponsSMP-1.0.0.jar
+5. Console → Restart server
+6. Test: /givealtar in-game
+
+Full guide: See PEBBLEHOST_QUICK_START.txt
+
+NEED HELP?
+────────────────────────────────────────────────────────────────────────────
+
+If build still fails after trying all methods:
+
+1. Check if you have permission to run Gradle
+2. Try running Command Prompt as Administrator
+3. Check if antivirus is blocking Gradle
+4. See DEPLOYMENT.md for more troubleshooting
+
+The code changes are ALL saved and pushed to GitHub:
+https://github.com/tomiokay/alter-smp-plugin
+
+You can always rebuild later or ask someone else to build on their computer!
+
+================================================================================

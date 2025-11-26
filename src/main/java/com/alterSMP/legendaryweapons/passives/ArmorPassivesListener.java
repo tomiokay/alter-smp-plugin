@@ -30,6 +30,7 @@ public class ArmorPassivesListener implements Listener {
     // Ionflare Leggings - ion charges
     private Map<UUID, Integer> ionCharges = new HashMap<>();
     private Set<UUID> chainLightningActive = new HashSet<>(); // Prevent recursive chain lightning
+    private Set<UUID> shockwaveActive = new HashSet<>(); // Prevent shockwave damage from counting as hits
 
     // Skybreaker Boots - falling state
     private Set<UUID> isFalling = new HashSet<>();
@@ -111,8 +112,12 @@ public class ArmorPassivesListener implements Listener {
 
                 double dist = player.getFallDistance();
 
-                // Calculate damage based on fall distance (like mace but slightly less)
-                double baseDamage = Math.min(dist * 0.8, 40.0); // Max 40 damage (20 hearts)
+                // Calculate damage exactly like vanilla mace: base 6 + (fall_distance - 1.5) * 3, capped at 100
+                double baseDamage = 6.0;
+                if (dist > 1.5) {
+                    baseDamage += (dist - 1.5) * 3.0;
+                }
+                baseDamage = Math.min(baseDamage, 100.0); // Cap at 100 damage
 
                 // Area attack
                 Location loc = player.getLocation();
@@ -167,9 +172,15 @@ public class ArmorPassivesListener implements Listener {
     // ========== THUNDERFORGE CHESTPLATE ==========
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerDamaged(EntityDamageEvent event) {
+    public void onPlayerDamagedMelee(EntityDamageByEntityEvent event) {
         if (event.isCancelled()) return;
         if (!(event.getEntity() instanceof Player)) return;
+
+        // Only count melee attacks (direct entity damage, not projectiles)
+        if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK &&
+            event.getCause() != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+            return;
+        }
 
         Player player = (Player) event.getEntity();
         ItemStack chestplate = player.getInventory().getChestplate();
@@ -193,6 +204,9 @@ public class ArmorPassivesListener implements Listener {
     private void electricShockwave(Player player) {
         Location loc = player.getLocation();
         double radius = 5.0;
+
+        // Mark shockwave as active to prevent ion charge counting
+        shockwaveActive.add(player.getUniqueId());
 
         // Particles
         player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc, 200, 2, 1, 2, 0.3);
@@ -225,6 +239,9 @@ public class ArmorPassivesListener implements Listener {
             }
         }
 
+        // Remove shockwave flag
+        shockwaveActive.remove(player.getUniqueId());
+
         player.sendMessage(ChatColor.GOLD + "⚡ Electric Shockwave Released!");
     }
 
@@ -236,10 +253,21 @@ public class ArmorPassivesListener implements Listener {
         if (!(event.getDamager() instanceof Player)) return;
         if (!(event.getEntity() instanceof LivingEntity)) return;
 
+        // Only count melee attacks (not projectiles, abilities, etc.)
+        if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK &&
+            event.getCause() != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+            return;
+        }
+
         Player player = (Player) event.getDamager();
 
         // Prevent chain lightning from triggering itself
         if (chainLightningActive.contains(player.getUniqueId())) {
+            return;
+        }
+
+        // Prevent shockwave damage from counting towards ion charges
+        if (shockwaveActive.contains(player.getUniqueId())) {
             return;
         }
 

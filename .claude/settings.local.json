@@ -24,7 +24,10 @@
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar clean shadowJar --no-daemon)",
       "Bash(echo:*)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar \"C:\\Users\\AWANG\\OneDrive - Bayview Glen Private School\\Desktop\\Cursor\\alter-smp-plugin\\gradle\\wrapper\\gradle-wrapper.jar\" --stop 2)",
-      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar clean build --no-daemon)"
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar clean build --no-daemon)",
+      "Bash(gh repo edit:*)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar shadowJar --no-daemon)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

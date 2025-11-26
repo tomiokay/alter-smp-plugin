@@ -163,7 +163,7 @@ public class AbilityManager implements Listener {
                         continue;
                     }
                     LivingEntity victim = (LivingEntity) entity;
-                    victim.damage(18.0, player);
+                    victim.damage(35.0, player); // ~7 hearts through full Prot 4
 
                     // Notify victim
                     if (victim instanceof Player) {
@@ -229,11 +229,11 @@ public class AbilityManager implements Listener {
 
                 LivingEntity living = (LivingEntity) entity;
 
-                // Calculate 30% of current HP (increased from 20%)
-                double damage = living.getHealth() * 0.3;
+                // Calculate 40% of current HP
+                double damage = living.getHealth() * 0.4;
 
                 living.damage(damage, player);
-                living.setFireTicks(60);
+                living.setFireTicks(100); // 5 seconds of fire
                 entitiesHit++;
 
                 // Enhanced particles
@@ -312,7 +312,7 @@ public class AbilityManager implements Listener {
                             continue;
                         }
                         LivingEntity living = (LivingEntity) entity;
-                        living.damage(6.0, player); // Increased from 4.0 (50% increase)
+                        living.damage(15.0, player); // ~3 hearts through full Prot 4
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
                         living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 0));
 
@@ -762,10 +762,13 @@ public class AbilityManager implements Listener {
                 Vector perpendicular = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(offset);
                 Location sweepPoint = point.clone().add(perpendicular);
 
-                // Enhanced particles
-                sweepPoint.getWorld().spawnParticle(Particle.LARGE_SMOKE, sweepPoint, 12, 0.1, 0.1, 0.1, 0);
-                sweepPoint.getWorld().spawnParticle(Particle.SQUID_INK, sweepPoint, 8, 0.1, 0.1, 0.1, 0.05);
-                sweepPoint.getWorld().spawnParticle(Particle.REVERSE_PORTAL, sweepPoint, 5, 0.1, 0.1, 0.1, 0);
+                // Enhanced particles with End theme - very visible
+                sweepPoint.getWorld().spawnParticle(Particle.LARGE_SMOKE, sweepPoint, 30, 0.2, 0.2, 0.2, 0.02);
+                sweepPoint.getWorld().spawnParticle(Particle.SQUID_INK, sweepPoint, 20, 0.2, 0.2, 0.2, 0.08);
+                sweepPoint.getWorld().spawnParticle(Particle.REVERSE_PORTAL, sweepPoint, 25, 0.3, 0.3, 0.3, 0.5);
+                sweepPoint.getWorld().spawnParticle(Particle.END_ROD, sweepPoint, 15, 0.2, 0.2, 0.2, 0.05);
+                sweepPoint.getWorld().spawnParticle(Particle.DRAGON_BREATH, sweepPoint, 20, 0.3, 0.3, 0.3, 0.03);
+                sweepPoint.getWorld().spawnParticle(Particle.PORTAL, sweepPoint, 30, 0.3, 0.3, 0.3, 0.8);
 
                 for (Entity entity : sweepPoint.getWorld().getNearbyEntities(sweepPoint, 1, 1, 1)) {
                     if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
@@ -774,7 +777,7 @@ public class AbilityManager implements Listener {
                             continue;
                         }
                         LivingEntity living = (LivingEntity) entity;
-                        living.damage(7.5, player); // Increased from 5.0 (50% increase)
+                        living.damage(20.0, player); // ~4 hearts through full Prot 4
                         hitEntities.add(entity.getUniqueId());
 
                         // Notify victim
@@ -813,11 +816,14 @@ public class AbilityManager implements Listener {
                     return;
                 }
 
-                // Enhanced black hole particles
-                riftLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, riftLocation, 120, 0.5, 0.5, 0.5, 0.1);
-                riftLocation.getWorld().spawnParticle(Particle.PORTAL, riftLocation, 80, 0.5, 0.5, 0.5, 1);
-                riftLocation.getWorld().spawnParticle(Particle.SQUID_INK, riftLocation, 60, 0.5, 0.5, 0.5, 0.1);
-                riftLocation.getWorld().spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 40, 0.5, 0.5, 0.5, 0.5);
+                // Enhanced black hole particles with End theme - very visible
+                riftLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, riftLocation, 200, 1.5, 1.5, 1.5, 0.15);
+                riftLocation.getWorld().spawnParticle(Particle.PORTAL, riftLocation, 150, 1.5, 1.5, 1.5, 2);
+                riftLocation.getWorld().spawnParticle(Particle.SQUID_INK, riftLocation, 100, 1.0, 1.0, 1.0, 0.15);
+                riftLocation.getWorld().spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 80, 1.0, 1.0, 1.0, 1);
+                riftLocation.getWorld().spawnParticle(Particle.END_ROD, riftLocation, 80, 1.5, 1.5, 1.5, 0.08);
+                riftLocation.getWorld().spawnParticle(Particle.DRAGON_BREATH, riftLocation, 120, 1.2, 1.2, 1.2, 0.05);
+                riftLocation.getWorld().spawnParticle(Particle.WITCH, riftLocation, 50, 1.0, 1.0, 1.0, 0.1);
 
                 // Pull entities
                 for (Entity entity : riftLocation.getWorld().getNearbyEntities(riftLocation, 8, 8, 8)) {
@@ -833,7 +839,7 @@ public class AbilityManager implements Listener {
                         // Damage if inside rift (increased from 3.0)
                         if (entity.getLocation().distance(riftLocation) < 2) {
                             LivingEntity living = (LivingEntity) entity;
-                            living.damage(4.5, player); // Increased from 3.0 (50% increase)
+                            living.damage(12.0, player); // ~2.5 hearts through full Prot 4 per tick
 
                             // Notify victim (once per tick cycle to avoid spam)
                             if (!damagedEntities.contains(entity.getUniqueId())) {
@@ -865,10 +871,14 @@ public class AbilityManager implements Listener {
         for (int i = 1; i <= 35; i++) {
             Location point = start.clone().add(direction.clone().multiply(i));
 
-            // Enhanced particles
-            point.getWorld().spawnParticle(Particle.REVERSE_PORTAL, point, 20, 0.2, 0.2, 0.2, 0);
-            point.getWorld().spawnParticle(Particle.LARGE_SMOKE, point, 15, 0.2, 0.2, 0.2, 0);
-            point.getWorld().spawnParticle(Particle.SQUID_INK, point, 10, 0.2, 0.2, 0.2, 0.05);
+            // Enhanced particles with End theme - very visible beam
+            point.getWorld().spawnParticle(Particle.REVERSE_PORTAL, point, 40, 0.4, 0.4, 0.4, 0.8);
+            point.getWorld().spawnParticle(Particle.LARGE_SMOKE, point, 35, 0.4, 0.4, 0.4, 0.05);
+            point.getWorld().spawnParticle(Particle.SQUID_INK, point, 25, 0.4, 0.4, 0.4, 0.1);
+            point.getWorld().spawnParticle(Particle.END_ROD, point, 20, 0.5, 0.5, 0.5, 0.05);
+            point.getWorld().spawnParticle(Particle.DRAGON_BREATH, point, 30, 0.4, 0.4, 0.4, 0.03);
+            point.getWorld().spawnParticle(Particle.PORTAL, point, 35, 0.5, 0.5, 0.5, 1.0);
+            point.getWorld().spawnParticle(Particle.WITCH, point, 15, 0.3, 0.3, 0.3, 0.05);
 
             for (Entity entity : point.getWorld().getNearbyEntities(point, 1.5, 1.5, 1.5)) {
                 if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
@@ -877,7 +887,7 @@ public class AbilityManager implements Listener {
                         continue;
                     }
                     LivingEntity living = (LivingEntity) entity;
-                    living.damage(10.5, player); // Increased from 7.0 (50% increase)
+                    living.damage(30.0, player); // ~6 hearts through full Prot 4
                     living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 0));
                     hitEntities.add(entity.getUniqueId());
 
@@ -920,18 +930,29 @@ public class AbilityManager implements Listener {
             }
         }
 
-        // Enhanced particles
-        center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 800, 7, 3, 7, 0.1);
-        center.getWorld().spawnParticle(Particle.SQUID_INK, center, 400, 7, 3, 7, 0.1);
-        center.getWorld().spawnParticle(Particle.REVERSE_PORTAL, center, 300, 7, 3, 7, 0.5);
+        // Enhanced particles with End theme - massive pull effect
+        center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 1200, 7, 3, 7, 0.15);
+        center.getWorld().spawnParticle(Particle.SQUID_INK, center, 600, 7, 3, 7, 0.15);
+        center.getWorld().spawnParticle(Particle.REVERSE_PORTAL, center, 500, 7, 3, 7, 1.0);
+        center.getWorld().spawnParticle(Particle.END_ROD, center, 400, 7, 3, 7, 0.1);
+        center.getWorld().spawnParticle(Particle.DRAGON_BREATH, center, 500, 7, 3, 7, 0.05);
+        center.getWorld().spawnParticle(Particle.PORTAL, center, 600, 7, 3, 7, 2.0);
+        center.getWorld().spawnParticle(Particle.WITCH, center, 200, 7, 3, 7, 0.1);
+        center.getWorld().playSound(center, Sound.ENTITY_WITHER_SPAWN, 1.0f, 0.5f);
 
         // Final explosion after 2 seconds
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Enhanced explosion particles
-            center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 20, 1, 1, 1, 0);
-            center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 500, 3, 3, 3, 0.2);
-            center.getWorld().spawnParticle(Particle.SQUID_INK, center, 300, 3, 3, 3, 0.1);
+            // Enhanced explosion particles with End theme - massive explosion
+            center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 30, 2, 2, 2, 0);
+            center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 800, 5, 5, 5, 0.3);
+            center.getWorld().spawnParticle(Particle.SQUID_INK, center, 500, 5, 5, 5, 0.2);
+            center.getWorld().spawnParticle(Particle.END_ROD, center, 300, 5, 5, 5, 0.2);
+            center.getWorld().spawnParticle(Particle.DRAGON_BREATH, center, 400, 5, 5, 5, 0.1);
+            center.getWorld().spawnParticle(Particle.PORTAL, center, 500, 5, 5, 5, 2.5);
+            center.getWorld().spawnParticle(Particle.REVERSE_PORTAL, center, 400, 5, 5, 5, 1.5);
+            center.getWorld().spawnParticle(Particle.WITCH, center, 150, 4, 4, 4, 0.15);
             center.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.5f);
+            center.getWorld().playSound(center, Sound.ENTITY_ENDER_DRAGON_GROWL, 1.5f, 0.6f);
 
             for (Entity entity : center.getWorld().getNearbyEntities(center, 7, 7, 7)) {
                 if (entity instanceof LivingEntity && entity != player) {
@@ -940,7 +961,7 @@ public class AbilityManager implements Listener {
                         continue;
                     }
                     LivingEntity living = (LivingEntity) entity;
-                    living.damage(12.0, player); // Increased from 8.0 (50% increase)
+                    living.damage(35.0, player); // ~7 hearts through full Prot 4
 
                     // Notify victim about explosion damage
                     if (living instanceof Player) {
@@ -1018,7 +1039,7 @@ public class AbilityManager implements Listener {
                             }
                         }
                         LivingEntity living = (LivingEntity) entity;
-                        living.damage(15.0, player); // Increased from 10.0 (50% increase)
+                        living.damage(40.0, player); // ~8 hearts through full Prot 4
                         Vector knockback = entity.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(2);
                         entity.setVelocity(knockback);
 
@@ -1188,7 +1209,7 @@ public class AbilityManager implements Listener {
                     living.setVelocity(direction.multiply(1.5).setY(0.8));
 
                     // Damage
-                    living.damage(8.0, player);
+                    living.damage(25.0, player); // ~5 hearts through full Prot 4
 
                     // Levitation effect
                     living.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 20, 5));
