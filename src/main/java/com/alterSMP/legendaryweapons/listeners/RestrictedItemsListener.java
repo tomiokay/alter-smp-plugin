@@ -7,8 +7,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityResurrectEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
@@ -82,7 +85,7 @@ public class RestrictedItemsListener implements Listener {
     /**
      * Prevent equipping restricted netherite armor via inventory clicks
      */
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
@@ -96,10 +99,10 @@ public class RestrictedItemsListener implements Listener {
         if (isRestrictedNetherite(cursor)) {
             int slot = event.getRawSlot();
             // Armor slots in player inventory are 5-8 (helmet, chestplate, leggings, boots)
-            // Also check hotbar placement
             if (slot >= 5 && slot <= 8) {
                 event.setCancelled(true);
                 player.sendMessage(ChatColor.RED + "Non-legendary netherite armor is disabled!");
+                player.updateInventory();
                 return;
             }
         }
@@ -111,6 +114,18 @@ public class RestrictedItemsListener implements Listener {
                 type == Material.NETHERITE_LEGGINGS || type == Material.NETHERITE_BOOTS) {
                 event.setCancelled(true);
                 player.sendMessage(ChatColor.RED + "Non-legendary netherite armor is disabled!");
+                player.updateInventory();
+                return;
+            }
+        }
+
+        // Check number key swap to armor slots
+        if (event.getClick().name().contains("NUMBER_KEY") && event.getRawSlot() >= 5 && event.getRawSlot() <= 8) {
+            ItemStack hotbarItem = player.getInventory().getItem(event.getHotbarButton());
+            if (isRestrictedNetherite(hotbarItem)) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.RED + "Non-legendary netherite armor is disabled!");
+                player.updateInventory();
                 return;
             }
         }
@@ -121,6 +136,7 @@ public class RestrictedItemsListener implements Listener {
             if (event.getRawSlot() == 45) {
                 event.setCancelled(true);
                 player.sendMessage(ChatColor.RED + "Totems of Undying are disabled on this server!");
+                player.updateInventory();
             }
         }
     }
@@ -164,24 +180,24 @@ public class RestrictedItemsListener implements Listener {
     }
 
     /**
-     * Prevent using restricted netherite items via right-click
+     * Prevent equipping restricted netherite armor via right-click in air
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack mainHand = player.getInventory().getItemInMainHand();
-        ItemStack offHand = player.getInventory().getItemInOffHand();
 
-        // Check totem in either hand
-        if (isTotem(mainHand) || isTotem(offHand)) {
-            // Totems don't need interaction blocking, they work on death
-            // This is handled by EntityResurrectEvent
-        }
-
-        // Check restricted netherite
-        if (isRestrictedNetherite(mainHand)) {
-            event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "Non-legendary netherite items are disabled!");
+        // Check if right-clicking with armor (to equip)
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (isRestrictedNetherite(mainHand)) {
+                Material type = mainHand.getType();
+                if (type == Material.NETHERITE_HELMET || type == Material.NETHERITE_CHESTPLATE ||
+                    type == Material.NETHERITE_LEGGINGS || type == Material.NETHERITE_BOOTS) {
+                    event.setCancelled(true);
+                    player.sendMessage(ChatColor.RED + "Non-legendary netherite armor is disabled!");
+                    player.updateInventory();
+                }
+            }
         }
     }
 }
