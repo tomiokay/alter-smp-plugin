@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
@@ -190,16 +189,4 @@ public class LegendaryProtectionListener implements Listener {
         itemEntity.setFireTicks(0);
     }
 
-    /**
-     * Prevent legendary items from despawning
-     */
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onItemDespawn(ItemDespawnEvent event) {
-        Item itemEntity = event.getEntity();
-        ItemStack item = itemEntity.getItemStack();
-
-        if (isLegendary(item)) {
-            event.setCancelled(true);
-        }
-    }
 }
