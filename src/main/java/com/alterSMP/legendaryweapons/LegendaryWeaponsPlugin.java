@@ -23,6 +23,7 @@ import com.alterSMP.legendaryweapons.abilities.AbilityManager;
 import com.alterSMP.legendaryweapons.abilities.CopperPickaxeListener;
 import com.alterSMP.legendaryweapons.listeners.AnvilProtectionListener;
 import com.alterSMP.legendaryweapons.listeners.RestrictedItemsListener;
+import com.alterSMP.legendaryweapons.listeners.LegendaryProtectionListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class LegendaryWeaponsPlugin extends JavaPlugin {
@@ -84,6 +85,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(armorPassivesListener, this);
         getServer().getPluginManager().registerEvents(new AnvilProtectionListener(), this);
         getServer().getPluginManager().registerEvents(new RestrictedItemsListener(), this);
+        getServer().getPluginManager().registerEvents(new LegendaryProtectionListener(), this);
 
         // Start passive effect task (uses config interval)
         passiveManager.startPassiveTask();
