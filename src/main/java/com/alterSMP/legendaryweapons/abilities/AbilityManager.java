@@ -566,37 +566,72 @@ public class AbilityManager implements Listener {
         // Verdant Cyclone - 360° spin attack with leaves and wind
         Location center = player.getLocation();
         World world = center.getWorld();
+        final float startYaw = player.getLocation().getYaw();
 
-        int enemiesHit = 0;
+        // Spin the player's camera 360 degrees over 10 ticks (0.5 seconds)
+        new BukkitRunnable() {
+            int ticks = 0;
+            final int totalTicks = 10;
 
-        // Hit all entities in 5 block radius
-        for (Entity entity : world.getNearbyEntities(center, 5, 3, 5)) {
-            if (entity instanceof LivingEntity && entity != player) {
-                LivingEntity living = (LivingEntity) entity;
-
-                // Trust check
-                if (living instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) living)) {
-                    continue;
+            @Override
+            public void run() {
+                if (ticks >= totalTicks || !player.isOnline()) {
+                    // Reset to original yaw at the end
+                    Location loc = player.getLocation();
+                    loc.setYaw(startYaw);
+                    player.teleport(loc);
+                    cancel();
+                    return;
                 }
 
-                // Deal 2 hearts damage (4 HP)
-                living.damage(4.0, player);
+                // Calculate new yaw (360 degrees over totalTicks)
+                float newYaw = startYaw + (360f * ticks / totalTicks);
+                Location loc = player.getLocation();
+                loc.setYaw(newYaw);
+                player.teleport(loc);
 
-                // Push enemies back
-                Vector knockback = living.getLocation().toVector().subtract(center.toVector()).normalize();
-                knockback.setY(0.3); // Slight upward lift
-                living.setVelocity(knockback.multiply(1.5));
-
-                enemiesHit++;
-
-                // Particles on each hit target
-                world.spawnParticle(Particle.CHERRY_LEAVES, living.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.1);
-
-                if (living instanceof Player) {
-                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.GREEN + "Verdant Cyclone" + ChatColor.RED + " from " + player.getName() + "!");
-                }
+                ticks++;
             }
-        }
+        }.runTaskTimer(plugin, 0L, 1L);
+
+        // Deal damage at the halfway point of the spin
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                int enemiesHit = 0;
+
+                // Hit all entities in 5 block radius
+                for (Entity entity : world.getNearbyEntities(center, 5, 3, 5)) {
+                    if (entity instanceof LivingEntity && entity != player) {
+                        LivingEntity living = (LivingEntity) entity;
+
+                        // Trust check
+                        if (living instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) living)) {
+                            continue;
+                        }
+
+                        // Deal 20 damage = 2 hearts after full prot 4 diamond (~80% reduction)
+                        living.damage(20.0, player);
+
+                        // Push enemies back
+                        Vector knockback = living.getLocation().toVector().subtract(center.toVector()).normalize();
+                        knockback.setY(0.3);
+                        living.setVelocity(knockback.multiply(1.5));
+
+                        enemiesHit++;
+
+                        // Particles on each hit target
+                        world.spawnParticle(Particle.CHERRY_LEAVES, living.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.1);
+
+                        if (living instanceof Player) {
+                            ((Player) living).sendMessage(ChatColor.RED + "Hit by " + ChatColor.GREEN + "Verdant Cyclone" + ChatColor.RED + " from " + player.getName() + "!");
+                        }
+                    }
+                }
+
+                player.sendMessage(ChatColor.GREEN + "Verdant Cyclone! Hit " + enemiesHit + " enemies!");
+            }
+        }.runTaskLater(plugin, 5L); // Damage at halfway through spin
 
         // Massive spin particle effect - leaves and wind in a circle
         for (double angle = 0; angle < 360; angle += 10) {
@@ -616,7 +651,6 @@ public class AbilityManager implements Listener {
         world.playSound(center, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.8f);
         world.playSound(center, Sound.ENTITY_WIND_CHARGE_WIND_BURST, 1.0f, 1.0f);
 
-        player.sendMessage(ChatColor.GREEN + "Verdant Cyclone! Hit " + enemiesHit + " enemies!");
         return true;
     }
 

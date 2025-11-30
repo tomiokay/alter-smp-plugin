@@ -38,6 +38,9 @@ public class LegendaryItemFactory {
             NamespacedKey key = new NamespacedKey("legendaryweapons", LEGENDARY_KEY);
             meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, type.getId());
 
+            // Set custom model data for resource pack compatibility
+            meta.setCustomModelData(type.getCustomModelData());
+
             // Add max enchantments based on type
             addMaxEnchantments(meta, type);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
@@ -140,7 +143,7 @@ public class LegendaryItemFactory {
 
         ItemMeta meta = item.getItemMeta();
         NamespacedKey key = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
-        meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, Math.min(count, 5));
+        meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, Math.min(count, 20));
 
         // Update lore
         List<String> lore = meta.getLore();
@@ -148,7 +151,7 @@ public class LegendaryItemFactory {
             // Find and update soul count line
             for (int i = 0; i < lore.size(); i++) {
                 if (lore.get(i).contains("Souls:")) {
-                    lore.set(i, ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + count + "/5");
+                    lore.set(i, ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + count + "/20");
                     break;
                 }
             }
@@ -178,16 +181,15 @@ public class LegendaryItemFactory {
 
         // Add yellow cross pattern
         banner.addPattern(new Pattern(DyeColor.YELLOW, PatternType.CROSS));
-        // Add some additional celestial flair
-        banner.addPattern(new Pattern(DyeColor.LIGHT_BLUE, PatternType.BORDER));
 
         banner.update();
         blockStateMeta.setBlockState(banner);
-
-        // Re-apply the legendary metadata that was set before
         shield.setItemMeta(blockStateMeta);
     }
 
+    /**
+     * Add appropriate enchantments to legendaries based on their type.
+     */
     private void addMaxEnchantments(ItemMeta meta, LegendaryType type) {
         switch (type) {
             // Swords
@@ -203,24 +205,21 @@ public class LegendaryItemFactory {
                 meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
                 break;
 
+            // Trident
+            case TEMPESTBREAKER_SPEAR:
+                meta.addEnchant(Enchantment.IMPALING, 5, true);
+                meta.addEnchant(Enchantment.RIPTIDE, 3, true);
+                break;
+
             // Axe
             case DIVINE_AXE_RHITTA:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
-                meta.addEnchant(Enchantment.SILK_TOUCH, 1, true);
                 break;
 
-            // Trident
-            case TEMPESTBREAKER_SPEAR:
-                meta.addEnchant(Enchantment.LOYALTY, 3, true);
-                meta.addEnchant(Enchantment.IMPALING, 5, true);
-                break;
-
-            // Shovel
+            // Shovel (Chains)
             case CHAINS_OF_ETERNITY:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
-                meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
-                meta.addEnchant(Enchantment.FORTUNE, 3, true);
                 break;
 
             // Boots
@@ -228,13 +227,12 @@ public class LegendaryItemFactory {
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
                 meta.addEnchant(Enchantment.FEATHER_FALLING, 4, true);
                 meta.addEnchant(Enchantment.DEPTH_STRIDER, 3, true);
-                meta.addEnchant(Enchantment.SOUL_SPEED, 3, true);
                 break;
 
             // Leggings
             case EMBERSTRIDE_GREAVES:
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
-                meta.addEnchant(Enchantment.SWIFT_SNEAK, 3, true);
+                meta.addEnchant(Enchantment.FIRE_PROTECTION, 4, true);
                 break;
 
             // Chestplate
@@ -306,7 +304,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Teleport behind target enemy");
                 lore.add(ChatColor.GRAY + "  Next attack deals +1 heart true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Soul Mark (60s)");
-                lore.add(ChatColor.GRAY + "  Mark target, next hit deals +4 hearts true damage");
+                lore.add(ChatColor.GRAY + "  Mark target, next hit +4 hearts true dmg");
                 break;
 
             case DIVINE_AXE_RHITTA:
@@ -316,7 +314,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Nature Grasp (35s)");
                 lore.add(ChatColor.GRAY + "  Root enemies in place");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Verdant Cyclone (70s)");
-                lore.add(ChatColor.GRAY + "  360° spin attack, 2 hearts damage");
+                lore.add(ChatColor.GRAY + "  360 spin attack, 2 hearts damage");
                 break;
 
             case CHAINS_OF_ETERNITY:
@@ -324,7 +322,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Every 5th hit immobilizes");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Soul Bind (35s)");
-                lore.add(ChatColor.GRAY + "  Pull and slow target");
+                lore.add(ChatColor.GRAY + "  Pull target, 4 hearts damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Prison of the Damned (65s)");
                 lore.add(ChatColor.GRAY + "  Cage target in iron bars");
                 break;
@@ -351,15 +349,12 @@ public class LegendaryItemFactory {
 
             case CHRONO_BLADE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Time Slow");
-                lore.add(ChatColor.GRAY + "  First hit slows target (20s CD/target)");
-                lore.add(ChatColor.GRAY + "  -20% move/attack speed for 3s");
+                lore.add(ChatColor.GRAY + "  First hit slows target (20s CD)");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Time Distortion (40s)");
-                lore.add(ChatColor.GRAY + "  6-block slow bubble for 3s");
-                lore.add(ChatColor.GRAY + "  Enemies at 20% speed, 4 true dmg on end");
+                lore.add(ChatColor.GRAY + "  6-block slow bubble, 4 true dmg on end");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Chrono Shift (120s)");
                 lore.add(ChatColor.GRAY + "  Mark position, re-cast to return");
-                lore.add(ChatColor.GRAY + "  Clears debuffs, grants Speed II");
                 break;
 
             case SOUL_DEVOURER:
@@ -376,12 +371,10 @@ public class LegendaryItemFactory {
             case CREATION_SPLITTER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Endbound Soulkeeper");
                 lore.add(ChatColor.GRAY + "  Kill players to steal hearts (+1 max)");
-                lore.add(ChatColor.GRAY + "  Max +5 hearts, unique per victim");
-                lore.add(ChatColor.GRAY + "  Death returns all stolen hearts");
+                lore.add(ChatColor.GRAY + "  Max +5 hearts, death returns all");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (18s)");
-                lore.add(ChatColor.GRAY + "  7-block cone slash, 2 true damage");
-                lore.add(ChatColor.GRAY + "  Ender Decay + Levitation, recoil back");
+                lore.add(ChatColor.GRAY + "  7-block cone, 2 true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Genesis Collapse (2min)");
                 lore.add(ChatColor.GRAY + "  Pull enemies, 5 true damage, shield");
                 break;
