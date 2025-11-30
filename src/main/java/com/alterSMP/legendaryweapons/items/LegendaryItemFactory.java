@@ -1,5 +1,7 @@
 package com.alterSMP.legendaryweapons.items;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Equippable;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -8,6 +10,7 @@ import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
@@ -56,6 +59,17 @@ public class LegendaryItemFactory {
                 meta.getPersistentDataContainer().set(soulKey, PersistentDataType.INTEGER, 0);
             }
 
+            // NEW: Add equippable component for armor pieces to use copper textures
+            if (isArmorPiece(type)) {
+                EquipmentSlot slot = getArmorSlot(type);
+                if (slot != null) {
+                    Equippable equippable = Equippable.equippable(slot)
+                        .setModel(NamespacedKey.minecraft("legendary"))
+                        .build();
+                    meta.setData(DataComponentTypes.EQUIPPABLE, equippable);
+                }
+            }
+
             item.setItemMeta(meta);
 
             // Apply yellow cross banner pattern to Celestial Aegis Shield
@@ -65,6 +79,30 @@ public class LegendaryItemFactory {
         }
 
         return item;
+    }
+
+    // NEW: Helper method to check if legendary is an armor piece
+    private boolean isArmorPiece(LegendaryType type) {
+        return type == LegendaryType.BLOODREAPER_HOOD ||
+               type == LegendaryType.THUNDERFORGE_CHESTPLATE ||
+               type == LegendaryType.EMBERSTRIDE_GREAVES ||
+               type == LegendaryType.SKYBREAKER_BOOTS;
+    }
+
+    // NEW: Helper method to get the equipment slot for armor
+    private EquipmentSlot getArmorSlot(LegendaryType type) {
+        switch (type) {
+            case BLOODREAPER_HOOD:
+                return EquipmentSlot.HEAD;
+            case THUNDERFORGE_CHESTPLATE:
+                return EquipmentSlot.CHEST;
+            case EMBERSTRIDE_GREAVES:
+                return EquipmentSlot.LEGS;
+            case SKYBREAKER_BOOTS:
+                return EquipmentSlot.FEET;
+            default:
+                return null;
+        }
     }
 
     public ItemStack createForgeItem() {
