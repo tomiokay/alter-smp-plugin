@@ -102,21 +102,17 @@ public class PassiveEffectManager implements Listener {
                 break;
 
             case DIVINE_AXE_RHITTA:
-                // Nature Channel - Regen 5 on natural blocks
+                // Nature Channel - Regen 3 on natural blocks
                 Block below = player.getLocation().subtract(0, 1, 0).getBlock();
                 Material belowType = below.getType();
                 if (belowType == Material.GRASS_BLOCK || belowType.name().contains("LOG") ||
                     belowType.name().contains("LEAVES")) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 4, true, false)); // Level 5 = amplifier 4
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 2, true, false)); // Level 3 = amplifier 2
                 }
                 break;
 
             case CHRONO_BLADE:
-                // Last Second - Buffs at low HP
-                if (player.getHealth() <= 3.0) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20, 1, true, false));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20, 0, true, false));
-                }
+                // Time Slow passive is handled on-hit in AbilityManager
                 break;
 
             case CREATION_SPLITTER:
@@ -204,6 +200,13 @@ public class PassiveEffectManager implements Listener {
             return;
         }
 
+        // IMPORTANT: Only trigger passives on MELEE attacks, not abilities
+        EntityDamageEvent.DamageCause cause = event.getCause();
+        if (cause != EntityDamageEvent.DamageCause.ENTITY_ATTACK &&
+            cause != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+            return; // Not a melee attack, don't trigger passives
+        }
+
         Player player = (Player) event.getDamager();
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
@@ -212,6 +215,17 @@ public class PassiveEffectManager implements Listener {
 
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
+
+        // Thousand Demon Daggers - Soul Mark processing
+        if (type == LegendaryType.THOUSAND_DEMON_DAGGERS && event.getEntity() instanceof LivingEntity) {
+            LivingEntity target = (LivingEntity) event.getEntity();
+            // Trust check
+            if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                // Don't process soul mark on trusted players
+            } else {
+                plugin.getAbilityManager().processSoulMark(player, target);
+            }
+        }
 
         // Holy Moonlight Sword - Flashburst Counter
         if (type == LegendaryType.HOLY_MOONLIGHT_SWORD) {
@@ -290,6 +304,8 @@ public class PassiveEffectManager implements Listener {
             int currentSouls = LegendaryItemFactory.getSoulCount(mainHand);
             if (currentSouls < 5) {
                 LegendaryItemFactory.setSoulCount(mainHand, currentSouls + 1);
+                // Put the modified item back into the inventory to persist the change
+                killer.getInventory().setItemInMainHand(mainHand);
                 killer.sendMessage(ChatColor.DARK_PURPLE + "Soul collected: " +
                     ChatColor.LIGHT_PURPLE + (currentSouls + 1) + "/5");
             }

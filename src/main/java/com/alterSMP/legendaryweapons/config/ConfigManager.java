@@ -52,6 +52,10 @@ public class ConfigManager {
         return config.getBoolean("global.enable-abilities", true);
     }
 
+    public boolean isNetheriteRestricted() {
+        return config.getBoolean("global.restrict-netherite", true);
+    }
+
     // ========== COOLDOWNS ==========
 
     public int getCooldown(String legendaryId, int abilityNum) {

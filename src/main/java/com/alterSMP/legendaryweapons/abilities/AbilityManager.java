@@ -16,6 +16,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -32,7 +33,8 @@ public class AbilityManager implements Listener {
 
     // Ability state tracking
     private Map<UUID, Long> fireRebirthActive; // Fire Rebirth activation times
-    private Map<UUID, UUID> soulMarkTargets; // Soul Mark target UUIDs
+    private Set<UUID> soulMarkReady; // Players ready to mark next hit
+    private Map<UUID, UUID> soulMarkTargets; // Attacker UUID -> Marked target UUID
     private Map<UUID, Long> forestShieldActive; // Forest Shield mode
     private Map<UUID, Long> radiantBlockActive; // Radiant Block mode
     private Map<UUID, Long> echoStrikeActive; // Echo Strike mode
@@ -44,10 +46,14 @@ public class AbilityManager implements Listener {
     private Set<UUID> fortuneModeActive; // Players with Fortune mode (vs Silk Touch)
     private Set<UUID> shadowstepBackstab; // Next attack does bonus true damage
     private Map<UUID, HeavensWallBarrier> activeBarriers; // Heaven's Wall barriers
+    private Map<UUID, Map<UUID, Long>> timeSlowCooldowns; // Chrono Blade passive cooldown per target
+    private Set<UUID> timeDistortionActive; // Time Distortion bubble active
+    private Set<Location> activePrisonBlocks; // Prison of the Damned blocks (unbreakable)
 
     public AbilityManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
         this.fireRebirthActive = new HashMap<>();
+        this.soulMarkReady = new HashSet<>();
         this.soulMarkTargets = new HashMap<>();
         this.forestShieldActive = new HashMap<>();
         this.radiantBlockActive = new HashMap<>();
@@ -60,8 +66,19 @@ public class AbilityManager implements Listener {
         this.fortuneModeActive = new HashSet<>();
         this.shadowstepBackstab = new HashSet<>();
         this.activeBarriers = new HashMap<>();
+        this.timeSlowCooldowns = new HashMap<>();
+        this.timeDistortionActive = new HashSet<>();
+        this.activePrisonBlocks = new HashSet<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    /**
+     * Check if player has a marked Chrono Shift position.
+     * Used to allow re-casting to teleport back without cooldown.
+     */
+    public boolean hasChronoShiftMarked(UUID playerUUID) {
+        return timeRewindStates.containsKey(playerUUID);
     }
 
     public boolean executeAbility(Player player, String legendaryId, int abilityNum) {
@@ -109,7 +126,7 @@ public class AbilityManager implements Listener {
             case SOUL_DEVOURER:
                 return voidSlice(player);
             case CREATION_SPLITTER:
-                return voidRupture(player);
+                return endSever(player);
             case COPPER_PICKAXE:
                 return toggle3x3Mining(player);
         }
@@ -251,9 +268,15 @@ public class AbilityManager implements Listener {
             }
         }
 
-        // Grant 6 absorption hearts (12 HP) if at least one entity was hit
+        // Grant +6 absorption hearts per enemy hit (max 18 hearts = 3 enemies)
         if (entitiesHit > 0) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 600, 2)); // Level 3 = 6 hearts
+            int absorptionHearts = Math.min(entitiesHit * 6, 18); // Max 18 hearts
+            int absorptionLevel = (absorptionHearts / 2) - 1; // Level 0 = 2 hearts, Level 2 = 6 hearts, etc.
+            absorptionLevel = Math.max(0, Math.min(absorptionLevel, 8)); // Cap at level 8 (18 hearts)
+            player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 600, absorptionLevel));
+            player.sendMessage(ChatColor.RED + "Flame Harvest! +" + absorptionHearts + " absorption hearts (" + entitiesHit + " enemies hit)");
+        } else {
+            player.sendMessage(ChatColor.RED + "Flame Harvest! No enemies hit.");
         }
 
         // Enhanced particles
@@ -262,7 +285,6 @@ public class AbilityManager implements Listener {
         player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation(), 100, 3, 1, 3, 0.05);
 
         player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.8f);
-        player.sendMessage(ChatColor.RED + "Flame Harvest! +6 absorption hearts (" + entitiesHit + " enemies hit)");
         return true;
     }
 
@@ -294,41 +316,78 @@ public class AbilityManager implements Listener {
     }
 
     private boolean stormcall(Player player) {
-        Vector direction = player.getLocation().getDirection();
-        Location start = player.getEyeLocation();
+        // Stationary lightning storm radius around player
+        Location center = player.getLocation();
+        World world = player.getWorld();
+        double radius = 8.0;
 
-        for (int i = 1; i <= 15; i++) {
-            Location point = start.clone().add(direction.clone().multiply(i));
+        Set<UUID> hitEntities = new HashSet<>();
 
-            // Enhanced particles
-            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, point, 40, 0.5, 0.5, 0.5, 0.1);
-            player.getWorld().spawnParticle(Particle.CLOUD, point, 15, 0.5, 0.5, 0.5, 0);
+        // Strike lightning multiple times in the radius over 2 seconds
+        new BukkitRunnable() {
+            int strikes = 0;
 
-            final int delay = i * 2;
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                point.getWorld().strikeLightningEffect(point);
+            @Override
+            public void run() {
+                if (strikes >= 8) {
+                    cancel();
+                    return;
+                }
 
-                for (Entity entity : point.getWorld().getNearbyEntities(point, 2, 2, 2)) {
+                // Random positions in radius for lightning
+                for (int i = 0; i < 3; i++) {
+                    double angle = Math.random() * Math.PI * 2;
+                    double dist = Math.random() * radius;
+                    Location strikePos = center.clone().add(
+                        Math.cos(angle) * dist,
+                        0,
+                        Math.sin(angle) * dist
+                    );
+
+                    // Lightning effect
+                    world.strikeLightningEffect(strikePos);
+
+                    // Electric particles
+                    world.spawnParticle(Particle.ELECTRIC_SPARK, strikePos, 80, 1, 2, 1, 0.3);
+                    world.spawnParticle(Particle.FIREWORK, strikePos, 30, 0.5, 1, 0.5, 0.1);
+                }
+
+                // Damage all enemies in the radius
+                for (Entity entity : world.getNearbyEntities(center, radius, radius, radius)) {
                     if (entity instanceof LivingEntity && entity != player) {
                         // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                             continue;
                         }
                         LivingEntity living = (LivingEntity) entity;
-                        living.damage(15.0, player); // ~3 hearts through full Prot 4
-                        living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
-                        living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 0));
 
-                        // Notify victim
-                        if (living instanceof Player) {
-                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.YELLOW + "Stormcall" + ChatColor.RED + " from " + player.getName() + "!");
+                        // Deal high damage (~6 hearts through prot 4 = ~30 raw damage per strike)
+                        living.damage(30.0, player);
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
+
+                        // Notify victim once
+                        if (!hitEntities.contains(entity.getUniqueId())) {
+                            hitEntities.add(entity.getUniqueId());
+                            if (living instanceof Player) {
+                                ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.YELLOW + "Stormcall" + ChatColor.RED + " from " + player.getName() + "!");
+                            }
                         }
                     }
                 }
-            }, delay);
+
+                strikes++;
+            }
+        }.runTaskTimer(plugin, 0L, 5L); // Every 5 ticks for 2 seconds total
+
+        // Initial particles showing the radius
+        for (double angle = 0; angle < 360; angle += 10) {
+            double rad = Math.toRadians(angle);
+            Location edgePoint = center.clone().add(Math.cos(rad) * radius, 0.5, Math.sin(rad) * radius);
+            world.spawnParticle(Particle.ELECTRIC_SPARK, edgePoint, 20, 0.2, 0.3, 0.2, 0.1);
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Stormcall!");
+        world.playSound(center, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 2.0f, 0.8f);
+        player.sendMessage(ChatColor.YELLOW + "Stormcall! Lightning storm for 2 seconds!");
         return true;
     }
 
@@ -394,16 +453,74 @@ public class AbilityManager implements Listener {
     }
 
     private boolean soulMark(Player player) {
-        // Mark is activated, next hit will mark the target
-        // Actual marking happens in the event handler below
+        // Activate soul mark - next melee hit will mark the target
+        soulMarkReady.add(player.getUniqueId());
 
         // Enhanced particles
         player.getWorld().spawnParticle(Particle.SOUL, player.getLocation(), 150, 1, 1, 1, 0.05);
         player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 100, 1, 1, 1, 0.1);
         player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 50, 1, 1, 1, 0);
 
-        player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark ready! Hit an entity to mark them.");
+        player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark ready! Hit an enemy to mark them for bonus damage.");
+
+        // Remove ready state after 10 seconds if not used
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (soulMarkReady.remove(player.getUniqueId())) {
+                player.sendMessage(ChatColor.GRAY + "Soul Mark expired - no target hit.");
+            }
+        }, 200L);
+
         return true;
+    }
+
+    /**
+     * Check if a player has Soul Mark ready and process marking.
+     * Called from damage event - only for MELEE attacks!
+     */
+    public void processSoulMark(Player attacker, LivingEntity target) {
+        // Check if attacker is ready to mark
+        if (soulMarkReady.remove(attacker.getUniqueId())) {
+            // Mark the target
+            soulMarkTargets.put(attacker.getUniqueId(), target.getUniqueId());
+
+            // Visual effect on marked target
+            target.getWorld().spawnParticle(Particle.SOUL, target.getLocation().add(0, 1, 0), 100, 0.5, 0.5, 0.5, 0.1);
+            target.getWorld().spawnParticle(Particle.WITCH, target.getLocation().add(0, 1, 0), 50, 0.5, 0.5, 0.5, 0.1);
+            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 1.5f);
+
+            attacker.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark applied! Your attacks deal +4 hearts true damage to this target.");
+            if (target instanceof Player) {
+                ((Player) target).sendMessage(ChatColor.DARK_PURPLE + "You have been Soul Marked by " + attacker.getName() + "!");
+            }
+
+            // Mark expires after 15 seconds
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (soulMarkTargets.remove(attacker.getUniqueId()) != null) {
+                    attacker.sendMessage(ChatColor.GRAY + "Soul Mark on target expired.");
+                }
+            }, 300L);
+            return;
+        }
+
+        // Check if target is marked by this attacker - deal bonus damage
+        UUID markedTarget = soulMarkTargets.get(attacker.getUniqueId());
+        if (markedTarget != null && markedTarget.equals(target.getUniqueId())) {
+            // Deal 4 hearts TRUE damage (8 HP, bypasses armor)
+            double currentHealth = target.getHealth();
+            double newHealth = Math.max(0, currentHealth - 8.0);
+            target.setHealth(newHealth);
+
+            // Particles on marked hit
+            target.getWorld().spawnParticle(Particle.SOUL, target.getLocation().add(0, 1, 0), 40, 0.3, 0.5, 0.3, 0.1);
+        }
+    }
+
+    /**
+     * Check if a player has an active soul mark on a target.
+     */
+    public boolean hasSoulMarkOn(UUID attackerUUID, UUID targetUUID) {
+        UUID marked = soulMarkTargets.get(attackerUUID);
+        return marked != null && marked.equals(targetUUID);
     }
 
     // ========== DIVINE AXE RHITTA ==========
@@ -446,15 +563,60 @@ public class AbilityManager implements Listener {
     }
 
     private boolean forestShield(Player player) {
-        forestShieldActive.put(player.getUniqueId(), System.currentTimeMillis() + 10000);
+        // Verdant Cyclone - 360° spin attack with leaves and wind
+        Location center = player.getLocation();
+        World world = center.getWorld();
 
-        // Enhanced particles
-        player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 300, 1, 1, 1, 0.1);
-        player.getWorld().spawnParticle(Particle.COMPOSTER, player.getLocation(), 150, 1, 1, 1, 0);
-        player.getWorld().spawnParticle(Particle.CHERRY_LEAVES, player.getLocation(), 100, 1, 1, 1, 0.05);
+        int enemiesHit = 0;
 
-        player.sendMessage(ChatColor.GREEN + "Forest Shield active! Your axe has Breach III for 10 seconds!");
-        player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 0.8f);
+        // Hit all entities in 5 block radius
+        for (Entity entity : world.getNearbyEntities(center, 5, 3, 5)) {
+            if (entity instanceof LivingEntity && entity != player) {
+                LivingEntity living = (LivingEntity) entity;
+
+                // Trust check
+                if (living instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) living)) {
+                    continue;
+                }
+
+                // Deal 2 hearts damage (4 HP)
+                living.damage(4.0, player);
+
+                // Push enemies back
+                Vector knockback = living.getLocation().toVector().subtract(center.toVector()).normalize();
+                knockback.setY(0.3); // Slight upward lift
+                living.setVelocity(knockback.multiply(1.5));
+
+                enemiesHit++;
+
+                // Particles on each hit target
+                world.spawnParticle(Particle.CHERRY_LEAVES, living.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.1);
+
+                if (living instanceof Player) {
+                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.GREEN + "Verdant Cyclone" + ChatColor.RED + " from " + player.getName() + "!");
+                }
+            }
+        }
+
+        // Massive spin particle effect - leaves and wind in a circle
+        for (double angle = 0; angle < 360; angle += 10) {
+            double radians = Math.toRadians(angle);
+            for (double r = 1; r <= 5; r += 0.5) {
+                double x = r * Math.cos(radians);
+                double z = r * Math.sin(radians);
+                Location particleLoc = center.clone().add(x, 0.5, z);
+                world.spawnParticle(Particle.CHERRY_LEAVES, particleLoc, 3, 0.1, 0.2, 0.1, 0.05);
+                world.spawnParticle(Particle.HAPPY_VILLAGER, particleLoc, 2, 0.1, 0.2, 0.1, 0);
+            }
+        }
+        // Wind spiral effect
+        world.spawnParticle(Particle.CLOUD, center.clone().add(0, 1, 0), 100, 2, 1, 2, 0.1);
+        world.spawnParticle(Particle.SWEEP_ATTACK, center.clone().add(0, 1, 0), 20, 2, 0.5, 2, 0);
+
+        world.playSound(center, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.8f);
+        world.playSound(center, Sound.ENTITY_WIND_CHARGE_WIND_BURST, 1.0f, 1.0f);
+
+        player.sendMessage(ChatColor.GREEN + "Verdant Cyclone! Hit " + enemiesHit + " enemies!");
         return true;
     }
 
@@ -477,9 +639,17 @@ public class AbilityManager implements Listener {
                 return false;
             }
 
-            // Pull toward player
+            // Calculate pull velocity - stop 1 block in front of player
+            double distance = target.getLocation().distance(player.getLocation());
+            double pullDistance = Math.max(0, distance - 1.5); // Stop 1.5 blocks away
+
             Vector direction = player.getLocation().toVector().subtract(target.getLocation().toVector()).normalize();
-            target.setVelocity(direction.multiply(2));
+            // Pull strength based on distance - stronger pull for farther targets
+            double pullStrength = Math.min(pullDistance * 0.5, 2.0);
+            target.setVelocity(direction.multiply(pullStrength));
+
+            // Deal damage (4 hearts through prot 4 = ~20 raw damage)
+            target.damage(20.0, player);
 
             target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
 
@@ -522,31 +692,31 @@ public class AbilityManager implements Listener {
 
             Set<Location> cageBlocks = new HashSet<>();
 
-            // Create 3x3 cage with walls, floor, and ceiling using barrier blocks
+            // Create 3x3 cage with iron bars walls, floor, and ceiling
             for (int x = -1; x <= 1; x++) {
                 for (int z = -1; z <= 1; z++) {
-                    // Floor (y = -1)
+                    // Floor (y = -1) - use barrier for floor so they can't fall through
                     Location floorLoc = center.clone().add(x, -1, z);
                     if (floorLoc.getBlock().getType() == Material.AIR || floorLoc.getBlock().isPassable()) {
                         floorLoc.getBlock().setType(Material.BARRIER);
                         cageBlocks.add(floorLoc);
                     }
 
-                    // Ceiling (y = 3)
+                    // Ceiling (y = 3) - use iron bars
                     Location ceilingLoc = center.clone().add(x, 3, z);
                     if (ceilingLoc.getBlock().getType() == Material.AIR || ceilingLoc.getBlock().isPassable()) {
-                        ceilingLoc.getBlock().setType(Material.BARRIER);
+                        ceilingLoc.getBlock().setType(Material.IRON_BARS);
                         cageBlocks.add(ceilingLoc);
                     }
 
-                    // Walls (skip center column)
-                    if (x == 0 && z == 0) continue;
-
-                    for (int y = 0; y <= 2; y++) {
-                        Location loc = center.clone().add(x, y, z);
-                        if (loc.getBlock().getType() == Material.AIR || loc.getBlock().isPassable()) {
-                            loc.getBlock().setType(Material.BARRIER);
-                            cageBlocks.add(loc);
+                    // Walls - only place on the outer edges (not center column, and only edges)
+                    if (Math.abs(x) == 1 || Math.abs(z) == 1) {
+                        for (int y = 0; y <= 2; y++) {
+                            Location loc = center.clone().add(x, y, z);
+                            if (loc.getBlock().getType() == Material.AIR || loc.getBlock().isPassable()) {
+                                loc.getBlock().setType(Material.IRON_BARS);
+                                cageBlocks.add(loc);
+                            }
                         }
                     }
                 }
@@ -562,6 +732,9 @@ public class AbilityManager implements Listener {
                 ((Player) target).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_GRAY + "Prison of the Damned" + ChatColor.RED + " from " + player.getName() + "!");
             }
 
+            // Add blocks to active prison blocks set (makes them unbreakable)
+            activePrisonBlocks.addAll(cageBlocks);
+
             // Spawn cage particles every tick to make it visible
             new BukkitRunnable() {
                 int ticks = 0;
@@ -571,9 +744,12 @@ public class AbilityManager implements Listener {
                     if (ticks >= 100) { // 5 seconds
                         // Remove cage
                         for (Location loc : cageBlocks) {
-                            if (loc.getBlock().getType() == Material.BARRIER) {
+                            Material type = loc.getBlock().getType();
+                            if (type == Material.BARRIER || type == Material.IRON_BARS) {
                                 loc.getBlock().setType(Material.AIR);
                             }
+                            // Remove from active prison blocks
+                            activePrisonBlocks.remove(loc);
                         }
                         cancel();
                         return;
@@ -730,7 +906,7 @@ public class AbilityManager implements Listener {
         double minZ = center.getZ() - 8;
         double maxZ = center.getZ() + 8;
 
-        HeavensWallBarrier barrier = new HeavensWallBarrier(player.getUniqueId(), world, minX, maxX, minZ, maxZ);
+        HeavensWallBarrier barrier = new HeavensWallBarrier(player.getUniqueId(), world, minX, maxX, minZ, maxZ, center.getY());
         activeBarriers.put(player.getUniqueId(), barrier);
 
         // Particle effect task - runs every 3 ticks for 32 seconds (640 ticks)
@@ -811,7 +987,7 @@ public class AbilityManager implements Listener {
         if (to == null) return;
 
         // Check if player actually moved position (not just looking around)
-        if (from.getX() == to.getX() && from.getZ() == to.getZ()) {
+        if (from.getX() == to.getX() && from.getY() == to.getY() && from.getZ() == to.getZ()) {
             return;
         }
 
@@ -822,27 +998,60 @@ public class AbilityManager implements Listener {
             // Skip if different world
             if (!barrier.world.equals(player.getWorld())) continue;
 
-            // Owner can always pass
-            if (player.getUniqueId().equals(ownerUUID)) continue;
+            // Check if player is trying to cross the barrier
+            boolean wasInside = barrier.isInside(from.getX(), from.getZ());
+            boolean willBeInside = barrier.isInside(to.getX(), to.getZ());
 
-            // Trusted players can pass
+            // Owner cannot leave the barrier (but can move inside)
+            if (player.getUniqueId().equals(ownerUUID)) {
+                // Block if trying to leave (was inside, now outside)
+                if (wasInside && !willBeInside) {
+                    event.setTo(from);
+                    Vector pushBack = from.toVector().subtract(to.toVector()).normalize().multiply(0.3);
+                    pushBack.setY(0);
+                    player.setVelocity(pushBack);
+                    player.getWorld().spawnParticle(Particle.END_ROD, to.clone(), 30, 0.3, 0.5, 0.3, 0.05);
+                    player.playSound(to, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
+                    return;
+                }
+                continue; // Owner can move freely inside
+            }
+
+            // Trusted players can pass freely
             Player owner = Bukkit.getPlayer(ownerUUID);
             if (owner != null && plugin.getTrustManager().isTrusted(owner, player)) {
                 continue;
             }
 
-            // Check if player is trying to cross the barrier
-            boolean wasInside = barrier.isInside(from.getX(), from.getZ());
-            boolean willBeInside = barrier.isInside(to.getX(), to.getZ());
+            // Check if player is on the wall edge (trying to stand on the barrier)
+            if (barrier.isOnWallEdge(to.getX(), to.getY(), to.getZ())) {
+                // Push player away from the wall
+                event.setTo(from);
 
-            // If crossing the barrier boundary (either direction)
+                // Calculate push direction - away from nearest wall edge
+                double pushX = 0, pushZ = 0;
+                if (Math.abs(to.getX() - barrier.minX) < 0.5) pushX = -0.5;
+                else if (Math.abs(to.getX() - barrier.maxX) < 0.5) pushX = 0.5;
+                if (Math.abs(to.getZ() - barrier.minZ) < 0.5) pushZ = -0.5;
+                else if (Math.abs(to.getZ() - barrier.maxZ) < 0.5) pushZ = 0.5;
+
+                Vector pushAway = new Vector(pushX, -0.2, pushZ); // Push away and slightly down
+                player.setVelocity(pushAway);
+
+                // Visual/audio feedback
+                player.getWorld().spawnParticle(Particle.END_ROD, to.clone(), 20, 0.2, 0.3, 0.2, 0.05);
+                player.playSound(to, Sound.BLOCK_AMETHYST_BLOCK_HIT, 0.8f, 1.5f);
+                return;
+            }
+
+            // If crossing the barrier boundary (either direction) - for non-trusted players
             if (wasInside != willBeInside) {
                 // Block the movement by setting destination to origin
                 event.setTo(from);
 
-                // Push player back
+                // Push player back and slightly down (to prevent floating)
                 Vector pushBack = from.toVector().subtract(to.toVector()).normalize().multiply(0.3);
-                pushBack.setY(0);
+                pushBack.setY(-0.1); // Slight downward push
                 player.setVelocity(pushBack);
 
                 // Visual/audio feedback - star barrier effect
@@ -856,90 +1065,280 @@ public class AbilityManager implements Listener {
         }
     }
 
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
+    public void onEnderPearlLand(ProjectileHitEvent event) {
+        // Block ender pearls from crossing Heaven's Wall
+        if (!(event.getEntity() instanceof org.bukkit.entity.EnderPearl)) return;
+        if (activeBarriers.isEmpty()) return;
+
+        org.bukkit.entity.EnderPearl pearl = (org.bukkit.entity.EnderPearl) event.getEntity();
+        if (!(pearl.getShooter() instanceof Player)) return;
+
+        Player player = (Player) pearl.getShooter();
+        Location pearlLoc = pearl.getLocation();
+
+        for (Map.Entry<UUID, HeavensWallBarrier> entry : activeBarriers.entrySet()) {
+            HeavensWallBarrier barrier = entry.getValue();
+            UUID ownerUUID = entry.getKey();
+
+            // Skip if different world
+            if (!barrier.world.equals(pearlLoc.getWorld())) continue;
+
+            // Owner can't pearl out
+            if (player.getUniqueId().equals(ownerUUID)) {
+                boolean playerInside = barrier.isInside(player.getLocation().getX(), player.getLocation().getZ());
+                boolean pearlInside = barrier.isInside(pearlLoc.getX(), pearlLoc.getZ());
+                if (playerInside && !pearlInside) {
+                    event.setCancelled(true);
+                    pearl.remove();
+                    player.sendMessage(ChatColor.GOLD + "Your ender pearl hit Heaven's Wall!");
+                    player.getWorld().spawnParticle(Particle.END_ROD, pearlLoc, 30, 0.3, 0.3, 0.3, 0.05);
+                    player.playSound(pearlLoc, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
+                    return;
+                }
+                continue;
+            }
+
+            // Trusted players can pearl through
+            Player owner = Bukkit.getPlayer(ownerUUID);
+            if (owner != null && plugin.getTrustManager().isTrusted(owner, player)) {
+                continue;
+            }
+
+            // Check if pearl is crossing or landing on the barrier
+            boolean playerInside = barrier.isInside(player.getLocation().getX(), player.getLocation().getZ());
+            boolean pearlInside = barrier.isInside(pearlLoc.getX(), pearlLoc.getZ());
+
+            if (playerInside != pearlInside || barrier.isOnWallEdge(pearlLoc.getX(), pearlLoc.getY(), pearlLoc.getZ())) {
+                event.setCancelled(true);
+                pearl.remove();
+                player.sendMessage(ChatColor.GOLD + "Your ender pearl hit Heaven's Wall!");
+                player.getWorld().spawnParticle(Particle.END_ROD, pearlLoc, 30, 0.3, 0.3, 0.3, 0.05);
+                player.playSound(pearlLoc, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
+                return;
+            }
+        }
+    }
+
     // ========== CHRONO BLADE ==========
 
     private boolean echoStrike(Player player) {
-        echoStrikeActive.put(player.getUniqueId(), System.currentTimeMillis() + 6000);
-        echoStrikeTargets.put(player.getUniqueId(), new HashSet<>());
+        // Time Distortion - 6-block radius bubble that slows enemies for 3 seconds
+        if (timeDistortionActive.contains(player.getUniqueId())) {
+            player.sendMessage(ChatColor.RED + "Time Distortion is already active!");
+            return false;
+        }
 
-        // Enhanced particles
-        player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, player.getLocation(), 200, 1, 1, 1, 0.1);
-        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 150, 1, 1, 1, 0.1);
-        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 100, 1, 1, 1, 0.05);
+        Location center = player.getLocation().clone();
+        World world = center.getWorld();
+        UUID playerUUID = player.getUniqueId();
 
-        player.sendMessage(ChatColor.YELLOW + "Echo Strike active! Hits will repeat after 1 second!");
-        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.5f);
+        timeDistortionActive.add(playerUUID);
 
-        // Clear after 6 seconds
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            echoStrikeActive.remove(player.getUniqueId());
-            echoStrikeTargets.remove(player.getUniqueId());
-        }, 120L);
+        player.sendMessage(ChatColor.YELLOW + "⏳ Time Distortion activated!");
+        world.playSound(center, Sound.BLOCK_BEACON_ACTIVATE, 1.5f, 0.5f);
+        world.playSound(center, Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 1.0f, 0.7f);
+
+        // Track affected entities for the final damage
+        Set<UUID> affectedEntities = new HashSet<>();
+
+        // Run effect every 2 ticks for 3 seconds (60 ticks)
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 60) { // 3 seconds
+                    // Bubble ends - snap back and deal damage
+                    timeDistortionActive.remove(playerUUID);
+
+                    // Deal 4 true damage to all affected entities
+                    for (UUID entityUUID : affectedEntities) {
+                        Entity entity = Bukkit.getEntity(entityUUID);
+                        if (entity instanceof LivingEntity && entity.isValid() && !entity.isDead()) {
+                            LivingEntity living = (LivingEntity) entity;
+                            double currentHealth = living.getHealth();
+                            living.setHealth(Math.max(0, currentHealth - 8.0)); // 4 hearts = 8 damage
+
+                            // Snap particles on each target
+                            living.getWorld().spawnParticle(Particle.FLASH, living.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0);
+                            living.getWorld().spawnParticle(Particle.REVERSE_PORTAL, living.getLocation().add(0, 1, 0), 50, 0.3, 0.5, 0.3, 1);
+
+                            if (living instanceof Player) {
+                                ((Player) living).sendMessage(ChatColor.RED + "⚔ Time snapped! 4 hearts true damage from " + player.getName() + "!");
+                            }
+                        }
+                    }
+
+                    // Final snap effect
+                    world.spawnParticle(Particle.FLASH, center, 3, 3, 3, 3, 0);
+                    world.spawnParticle(Particle.REVERSE_PORTAL, center, 300, 6, 3, 6, 2);
+                    world.playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.5f);
+                    world.playSound(center, Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 1.5f, 0.5f);
+
+                    player.sendMessage(ChatColor.YELLOW + "⏳ Time snaps back! " + affectedEntities.size() + " enemies hit for 4 true damage!");
+
+                    cancel();
+                    return;
+                }
+
+                // Apply HEAVY slow effects to enemies in range - much more time distortion
+                for (Entity entity : world.getNearbyEntities(center, 6, 6, 6)) {
+                    if (entity instanceof LivingEntity && entity != player) {
+                        LivingEntity living = (LivingEntity) entity;
+
+                        // Trust check
+                        if (living instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) living)) {
+                            continue;
+                        }
+
+                        affectedEntities.add(living.getUniqueId());
+
+                        // EXTREME slowness (almost frozen - Slowness 127 = near immobile)
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 10, 127, true, false));
+                        // Completely slowed attack speed
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 10, 4, true, false));
+                        // Add weakness to reduce damage output
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 10, 2, true, false));
+                        // Add jump restriction (negative jump boost)
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 10, 128, true, false));
+                    }
+                }
+
+                // Bubble particles - sphere effect
+                double radius = 6;
+                for (double phi = 0; phi < Math.PI; phi += Math.PI / 8) {
+                    for (double theta = 0; theta < 2 * Math.PI; theta += Math.PI / 8) {
+                        double x = radius * Math.sin(phi) * Math.cos(theta);
+                        double y = radius * Math.cos(phi);
+                        double z = radius * Math.sin(phi) * Math.sin(theta);
+                        Location particleLoc = center.clone().add(x, y + 1, z);
+                        world.spawnParticle(Particle.ENCHANT, particleLoc, 1, 0, 0, 0, 0);
+                    }
+                }
+
+                // Inner distortion particles
+                world.spawnParticle(Particle.REVERSE_PORTAL, center.clone().add(0, 1, 0), 20, 3, 2, 3, 0.1);
+                world.spawnParticle(Particle.ENCHANTED_HIT, center.clone().add(0, 1, 0), 10, 3, 2, 3, 0);
+
+                ticks += 2;
+            }
+        }.runTaskTimer(plugin, 0L, 2L);
 
         return true;
     }
 
     private boolean timeRewind(Player player) {
+        UUID uuid = player.getUniqueId();
+
+        // Check if player already has a marked position - if so, trigger the shift early
+        if (timeRewindStates.containsKey(uuid)) {
+            triggerChronoShift(player);
+            return true;
+        }
+
+        // Mark current position
         SavedState state = new SavedState(
             player.getLocation().clone(),
             player.getHealth(),
             player.getFoodLevel()
         );
 
-        timeRewindStates.put(player.getUniqueId(), state);
+        timeRewindStates.put(uuid, state);
 
-        // Enhanced particles
-        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 300, 1, 1, 1, 1);
-        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 150, 1, 1, 1, 0.1);
-        player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, player.getLocation(), 100, 1, 1, 1, 0.1);
+        // Marking particles
+        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 200, 0.5, 0.5, 0.5, 0.5);
+        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 100, 0.5, 0.5, 0.5, 0.1);
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.5f);
 
-        player.sendMessage(ChatColor.YELLOW + "Time state saved! Rewinding in 5 seconds...");
+        player.sendMessage(ChatColor.YELLOW + "⏳ Chrono Shift: Position marked! Re-cast to teleport back (10s)");
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            SavedState saved = timeRewindStates.remove(player.getUniqueId());
-            if (saved != null) {
-                player.teleport(saved.location);
-                player.setHealth(saved.health);
-                player.setFoodLevel(saved.hunger);
-
-                // Enhanced particles
-                player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 400, 1, 1, 1, 1);
-                player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 200, 1, 1, 1, 0.1);
-                player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 150, 1, 1, 1, 0.5);
-
-                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
-                player.sendMessage(ChatColor.YELLOW + "Time Rewound!");
+        // Schedule auto-teleport after 10 seconds
+        int taskId = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (timeRewindStates.containsKey(uuid)) {
+                triggerChronoShift(player);
             }
-        }, 100L);
+        }, 200L).getTaskId(); // 10 seconds = 200 ticks
+
+        state.taskId = taskId;
 
         return true;
+    }
+
+    private void triggerChronoShift(Player player) {
+        UUID uuid = player.getUniqueId();
+        SavedState saved = timeRewindStates.remove(uuid);
+
+        if (saved == null) return;
+
+        // Cancel the scheduled task if it exists (player triggered early)
+        if (saved.taskId != -1) {
+            Bukkit.getScheduler().cancelTask(saved.taskId);
+        }
+
+        // Teleport back to marked position
+        player.teleport(saved.location);
+
+        // Remove all negative effects
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            PotionEffectType type = effect.getType();
+            // Remove negative effects
+            if (type.equals(PotionEffectType.POISON) ||
+                type.equals(PotionEffectType.WITHER) ||
+                type.equals(PotionEffectType.SLOWNESS) ||
+                type.equals(PotionEffectType.MINING_FATIGUE) ||
+                type.equals(PotionEffectType.NAUSEA) ||
+                type.equals(PotionEffectType.BLINDNESS) ||
+                type.equals(PotionEffectType.HUNGER) ||
+                type.equals(PotionEffectType.WEAKNESS) ||
+                type.equals(PotionEffectType.LEVITATION) ||
+                type.equals(PotionEffectType.UNLUCK) ||
+                type.equals(PotionEffectType.DARKNESS)) {
+                player.removePotionEffect(type);
+            }
+        }
+
+        // Grant Speed II for 10 seconds (200 ticks)
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 200, 1, true, true));
+
+        // Enhanced particles at destination
+        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, player.getLocation(), 400, 1, 1, 1, 1);
+        player.getWorld().spawnParticle(Particle.ENCHANT, player.getLocation(), 200, 1, 1, 1, 0.1);
+        player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 150, 1, 1, 1, 0.5);
+        player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 50, 0.5, 1, 0.5, 0.1);
+
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 1.2f);
+        player.sendMessage(ChatColor.YELLOW + "⏳ Chrono Shift! Negative effects cleared, Speed II granted!");
     }
 
     // ========== SOUL DEVOURER ==========
 
     private boolean voidSlice(Player player) {
-        Vector direction = player.getLocation().getDirection();
-        Location start = player.getLocation();
+        Vector direction = player.getLocation().getDirection().setY(0).normalize();
+        Location start = player.getLocation().add(0, 1, 0); // At chest height
+        World world = player.getWorld();
 
         Set<UUID> hitEntities = new HashSet<>();
 
-        for (int i = 1; i <= 6; i++) {
+        // Purple horizontal slice - wide arc in front
+        for (int i = 1; i <= 8; i++) {
             Location point = start.clone().add(direction.clone().multiply(i));
 
-            // Wide sweep
-            for (double offset = -1.5; offset <= 1.5; offset += 0.5) {
+            // Wide horizontal sweep - side to side
+            for (double offset = -2.5; offset <= 2.5; offset += 0.3) {
                 Vector perpendicular = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(offset);
                 Location sweepPoint = point.clone().add(perpendicular);
 
-                // Enhanced particles with End theme - very visible
-                sweepPoint.getWorld().spawnParticle(Particle.LARGE_SMOKE, sweepPoint, 30, 0.2, 0.2, 0.2, 0.02);
-                sweepPoint.getWorld().spawnParticle(Particle.SQUID_INK, sweepPoint, 20, 0.2, 0.2, 0.2, 0.08);
-                sweepPoint.getWorld().spawnParticle(Particle.REVERSE_PORTAL, sweepPoint, 25, 0.3, 0.3, 0.3, 0.5);
-                sweepPoint.getWorld().spawnParticle(Particle.END_ROD, sweepPoint, 15, 0.2, 0.2, 0.2, 0.05);
-                sweepPoint.getWorld().spawnParticle(Particle.DRAGON_BREATH, sweepPoint, 20, 0.3, 0.3, 0.3, 0.03);
-                sweepPoint.getWorld().spawnParticle(Particle.PORTAL, sweepPoint, 30, 0.3, 0.3, 0.3, 0.8);
+                // LOTS of purple particles - horizontal slice effect
+                world.spawnParticle(Particle.REVERSE_PORTAL, sweepPoint, 40, 0.1, 0.05, 0.1, 0.8);
+                world.spawnParticle(Particle.DRAGON_BREATH, sweepPoint, 30, 0.15, 0.05, 0.15, 0.05);
+                world.spawnParticle(Particle.WITCH, sweepPoint, 25, 0.1, 0.05, 0.1, 0.15);
+                world.spawnParticle(Particle.PORTAL, sweepPoint, 35, 0.15, 0.05, 0.15, 1.0);
+                world.spawnParticle(Particle.DUST, sweepPoint, 20, 0.1, 0.05, 0.1,
+                    new Particle.DustOptions(Color.fromRGB(128, 0, 255), 1.5f)); // Purple dust
 
-                for (Entity entity : sweepPoint.getWorld().getNearbyEntities(sweepPoint, 1, 1, 1)) {
+                for (Entity entity : world.getNearbyEntities(sweepPoint, 1.2, 1.5, 1.2)) {
                     if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
                         // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
@@ -948,6 +1347,10 @@ public class AbilityManager implements Listener {
                         LivingEntity living = (LivingEntity) entity;
                         living.damage(20.0, player); // ~4 hearts through full Prot 4
                         hitEntities.add(entity.getUniqueId());
+
+                        // Extra particles on hit
+                        world.spawnParticle(Particle.REVERSE_PORTAL, living.getLocation().add(0, 1, 0), 60, 0.3, 0.5, 0.3, 1.0);
+                        world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 40, 0.3, 0.5, 0.3, 0.2);
 
                         // Notify victim
                         if (living instanceof Player) {
@@ -958,7 +1361,9 @@ public class AbilityManager implements Listener {
             }
         }
 
-        player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SHOOT, 1.0f, 0.6f);
+        // Sweep attack sound
+        world.playSound(start, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.5f);
+        world.playSound(start, Sound.ENTITY_WITHER_SHOOT, 1.0f, 0.6f);
         player.sendMessage(ChatColor.DARK_PURPLE + "Void Slice!");
         return true;
     }
@@ -974,43 +1379,75 @@ public class AbilityManager implements Listener {
             ? result.getHitBlock().getLocation().add(0, 1, 0)
             : player.getLocation().add(player.getLocation().getDirection().multiply(10));
 
+        World world = riftLocation.getWorld();
+
         new BukkitRunnable() {
             int ticks = 0;
             Set<UUID> damagedEntities = new HashSet<>();
 
             @Override
             public void run() {
-                if (ticks >= 40) { // 2 seconds
+                if (ticks >= 60) { // 3 seconds
                     cancel();
                     return;
                 }
 
-                // Enhanced black hole particles with End theme - very visible
-                riftLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, riftLocation, 200, 1.5, 1.5, 1.5, 0.15);
-                riftLocation.getWorld().spawnParticle(Particle.PORTAL, riftLocation, 150, 1.5, 1.5, 1.5, 2);
-                riftLocation.getWorld().spawnParticle(Particle.SQUID_INK, riftLocation, 100, 1.0, 1.0, 1.0, 0.15);
-                riftLocation.getWorld().spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 80, 1.0, 1.0, 1.0, 1);
-                riftLocation.getWorld().spawnParticle(Particle.END_ROD, riftLocation, 80, 1.5, 1.5, 1.5, 0.08);
-                riftLocation.getWorld().spawnParticle(Particle.DRAGON_BREATH, riftLocation, 120, 1.2, 1.2, 1.2, 0.05);
-                riftLocation.getWorld().spawnParticle(Particle.WITCH, riftLocation, 50, 1.0, 1.0, 1.0, 0.1);
+                // MASSIVE gravitational black hole effect - spiral particles being sucked in
+                // Outer spiral particles moving inward
+                for (double angle = 0; angle < 360; angle += 20) {
+                    double radians = Math.toRadians(angle + ticks * 15); // Rotating spiral
+                    for (double r = 4; r >= 0.5; r -= 0.5) {
+                        double x = r * Math.cos(radians + r * 0.5);
+                        double z = r * Math.sin(radians + r * 0.5);
+                        double y = (4 - r) * 0.3; // Funnel shape
+                        Location spiralPoint = riftLocation.clone().add(x, y, z);
 
-                // Pull entities
-                for (Entity entity : riftLocation.getWorld().getNearbyEntities(riftLocation, 8, 8, 8)) {
-                    if (entity instanceof LivingEntity) {
+                        world.spawnParticle(Particle.REVERSE_PORTAL, spiralPoint, 5, 0.1, 0.1, 0.1, 0.3);
+                        world.spawnParticle(Particle.PORTAL, spiralPoint, 3, 0.1, 0.1, 0.1, 0.5);
+                    }
+                }
+
+                // Dense center particles
+                world.spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 150, 0.8, 0.8, 0.8, 1.5);
+                world.spawnParticle(Particle.DRAGON_BREATH, riftLocation, 100, 0.6, 0.6, 0.6, 0.1);
+                world.spawnParticle(Particle.WITCH, riftLocation, 80, 0.5, 0.5, 0.5, 0.2);
+                world.spawnParticle(Particle.SQUID_INK, riftLocation, 60, 0.4, 0.4, 0.4, 0.1);
+                world.spawnParticle(Particle.DUST, riftLocation, 50, 0.5, 0.5, 0.5,
+                    new Particle.DustOptions(Color.fromRGB(50, 0, 80), 2.0f)); // Dark purple core
+
+                // Pull-in particle lines from nearby area
+                for (int i = 0; i < 8; i++) {
+                    double angle = Math.random() * Math.PI * 2;
+                    double dist = 3 + Math.random() * 3;
+                    Location pullStart = riftLocation.clone().add(
+                        Math.cos(angle) * dist,
+                        (Math.random() - 0.5) * 3,
+                        Math.sin(angle) * dist
+                    );
+                    world.spawnParticle(Particle.REVERSE_PORTAL, pullStart, 10, 0.1, 0.1, 0.1, 0.8);
+                }
+
+                // Pull entities with stronger force
+                for (Entity entity : world.getNearbyEntities(riftLocation, 10, 10, 10)) {
+                    if (entity instanceof LivingEntity && entity != player) {
                         // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                             continue;
                         }
 
+                        double distance = entity.getLocation().distance(riftLocation);
                         Vector direction = riftLocation.toVector().subtract(entity.getLocation().toVector()).normalize();
-                        entity.setVelocity(direction.multiply(0.5));
 
-                        // Damage if inside rift (increased from 3.0)
-                        if (entity.getLocation().distance(riftLocation) < 2) {
+                        // Stronger pull the closer they are
+                        double pullStrength = Math.min(1.0, 6.0 / (distance + 1));
+                        entity.setVelocity(direction.multiply(pullStrength));
+
+                        // Damage if inside rift core
+                        if (distance < 2.5) {
                             LivingEntity living = (LivingEntity) entity;
                             living.damage(12.0, player); // ~2.5 hearts through full Prot 4 per tick
 
-                            // Notify victim (once per tick cycle to avoid spam)
+                            // Notify victim (once to avoid spam)
                             if (!damagedEntities.contains(entity.getUniqueId())) {
                                 damagedEntities.add(entity.getUniqueId());
                                 if (living instanceof Player) {
@@ -1021,126 +1458,177 @@ public class AbilityManager implements Listener {
                     }
                 }
 
-                ticks += 10; // Run every 10 ticks
-            }
-        }.runTaskTimer(plugin, 0L, 10L);
+                // Ambient sound
+                if (ticks % 20 == 0) {
+                    world.playSound(riftLocation, Sound.BLOCK_PORTAL_AMBIENT, 2.0f, 0.5f);
+                }
 
+                ticks += 5; // Run every 5 ticks for smoother effect
+            }
+        }.runTaskTimer(plugin, 0L, 5L);
+
+        world.playSound(riftLocation, Sound.ENTITY_ENDERMAN_TELEPORT, 2.0f, 0.3f);
         player.sendMessage(ChatColor.DARK_PURPLE + "Void Rift!");
         return true;
     }
 
     // ========== CREATION SPLITTER ==========
 
-    private boolean voidRupture(Player player) {
+    private boolean endSever(Player player) {
         Vector direction = player.getLocation().getDirection();
-        Location start = player.getEyeLocation();
+        Location playerLoc = player.getLocation();
+        World world = player.getWorld();
 
         Set<UUID> hitEntities = new HashSet<>();
 
-        for (int i = 1; i <= 35; i++) {
-            Location point = start.clone().add(direction.clone().multiply(i));
+        // Create 7-block cone slash in front
+        for (int distance = 1; distance <= 7; distance++) {
+            // Wider spread as distance increases (cone shape)
+            double spread = distance * 0.5;
 
-            // Enhanced particles with End theme - very visible beam
-            point.getWorld().spawnParticle(Particle.REVERSE_PORTAL, point, 40, 0.4, 0.4, 0.4, 0.8);
-            point.getWorld().spawnParticle(Particle.LARGE_SMOKE, point, 35, 0.4, 0.4, 0.4, 0.05);
-            point.getWorld().spawnParticle(Particle.SQUID_INK, point, 25, 0.4, 0.4, 0.4, 0.1);
-            point.getWorld().spawnParticle(Particle.END_ROD, point, 20, 0.5, 0.5, 0.5, 0.05);
-            point.getWorld().spawnParticle(Particle.DRAGON_BREATH, point, 30, 0.4, 0.4, 0.4, 0.03);
-            point.getWorld().spawnParticle(Particle.PORTAL, point, 35, 0.5, 0.5, 0.5, 1.0);
-            point.getWorld().spawnParticle(Particle.WITCH, point, 15, 0.3, 0.3, 0.3, 0.05);
+            for (double angle = -45; angle <= 45; angle += 15) {
+                Vector rotated = rotateVector(direction.clone(), angle);
+                Location point = playerLoc.clone().add(0, 1, 0).add(rotated.multiply(distance));
 
-            for (Entity entity : point.getWorld().getNearbyEntities(point, 1.5, 1.5, 1.5)) {
-                if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
-                    // Trust check
-                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
-                        continue;
-                    }
-                    LivingEntity living = (LivingEntity) entity;
-                    living.damage(30.0, player); // ~6 hearts through full Prot 4
-                    living.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 0));
-                    hitEntities.add(entity.getUniqueId());
+                // Purple "cut" line particles - Enhanced purple theme
+                world.spawnParticle(Particle.REVERSE_PORTAL, point, 15, 0.3, 0.3, 0.3, 0.5);
+                world.spawnParticle(Particle.DRAGON_BREATH, point, 10, 0.2, 0.2, 0.2, 0.05);
+                world.spawnParticle(Particle.WITCH, point, 8, 0.2, 0.2, 0.2, 0.1);
+                world.spawnParticle(Particle.PORTAL, point, 5, 0.2, 0.2, 0.2, 0.5);
 
-                    // Notify victim
-                    if (living instanceof Player) {
-                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Void Rupture" + ChatColor.RED + " from " + player.getName() + "!");
+                // Check for entities in cone
+                for (Entity entity : world.getNearbyEntities(point, 1.2, 1.5, 1.2)) {
+                    if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
+                        // Trust check
+                        if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                            continue;
+                        }
+
+                        LivingEntity living = (LivingEntity) entity;
+                        hitEntities.add(entity.getUniqueId());
+
+                        // 2 TRUE DAMAGE (bypasses armor) - 2 hearts = 4 HP
+                        double currentHealth = living.getHealth();
+                        double newHealth = Math.max(0, currentHealth - 4.0); // 2 hearts = 4 damage
+                        living.setHealth(newHealth);
+                        living.setNoDamageTicks(0);
+
+                        // Ender Decay - 10% lower defense (Weakness effect approximation)
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 0)); // 4 seconds
+
+                        // Slight levitation (0.5s = 10 ticks)
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 10, 0));
+
+                        // Purple visual effects on hit
+                        world.spawnParticle(Particle.REVERSE_PORTAL, living.getLocation().add(0, 1, 0), 50, 0.4, 0.6, 0.4, 0.8);
+                        world.spawnParticle(Particle.DRAGON_BREATH, living.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.05);
+                        world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3, 0.1);
+
+                        // Notify victim
+                        if (living instanceof Player) {
+                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "End Sever" + ChatColor.RED + " from " + player.getName() + "!");
+                        }
                     }
                 }
             }
         }
 
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 0.7f);
-        player.sendMessage(ChatColor.DARK_PURPLE + "Void Rupture!");
+        // Teleport user 2 blocks backward (End recoil)
+        Vector backward = direction.clone().multiply(-2);
+        Location recoilLoc = playerLoc.clone().add(backward);
+        recoilLoc.setY(playerLoc.getY()); // Keep same Y level
+        recoilLoc.setPitch(playerLoc.getPitch());
+        recoilLoc.setYaw(playerLoc.getYaw());
+
+        // Check if recoil location is safe
+        if (recoilLoc.getBlock().isPassable() && recoilLoc.clone().add(0, 1, 0).getBlock().isPassable()) {
+            player.teleport(recoilLoc);
+            world.spawnParticle(Particle.REVERSE_PORTAL, playerLoc, 50, 0.3, 0.5, 0.3, 0.5);
+            world.spawnParticle(Particle.REVERSE_PORTAL, recoilLoc, 50, 0.3, 0.5, 0.3, 0.5);
+        }
+
+        // Sound effects
+        world.playSound(playerLoc, Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 1.5f);
+        world.playSound(playerLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.8f);
+        world.playSound(playerLoc, Sound.BLOCK_END_PORTAL_SPAWN, 0.5f, 2.0f);
+
+        player.sendMessage(ChatColor.DARK_PURPLE + "End Sever!");
         return true;
     }
 
     private boolean cataclysmPulse(Player player) {
         Location center = player.getLocation();
+        World world = center.getWorld();
 
-        // Initial pull
-        for (Entity entity : center.getWorld().getNearbyEntities(center, 7, 7, 7)) {
-            if (entity instanceof LivingEntity && entity != player) {
-                // Trust check
-                if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
-                    continue;
-                }
+        // Channel particles during 1 second charge - Purple theme
+        world.spawnParticle(Particle.REVERSE_PORTAL, center, 250, 1, 1, 1, 0.7);
+        world.spawnParticle(Particle.WITCH, center, 100, 1, 1, 1, 0.2);
+        world.spawnParticle(Particle.DRAGON_BREATH, center, 80, 1, 1, 1, 0.1);
+        world.playSound(center, Sound.BLOCK_BEACON_POWER_SELECT, 1.5f, 0.5f);
 
-                LivingEntity living = (LivingEntity) entity;
+        player.sendMessage(ChatColor.DARK_PURPLE + "Genesis Collapse charging...");
 
-                Vector direction = center.toVector().subtract(entity.getLocation().toVector()).normalize();
-                entity.setVelocity(direction.multiply(1.5));
-
-                living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 3));
-                living.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 60, 0));
-
-                // Notify victim about pull
-                if (living instanceof Player) {
-                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Cataclysm Pulse" + ChatColor.RED + " from " + player.getName() + "!");
-                }
-            }
-        }
-
-        // Enhanced particles with End theme - massive pull effect
-        center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 1200, 7, 3, 7, 0.15);
-        center.getWorld().spawnParticle(Particle.SQUID_INK, center, 600, 7, 3, 7, 0.15);
-        center.getWorld().spawnParticle(Particle.REVERSE_PORTAL, center, 500, 7, 3, 7, 1.0);
-        center.getWorld().spawnParticle(Particle.END_ROD, center, 400, 7, 3, 7, 0.1);
-        center.getWorld().spawnParticle(Particle.DRAGON_BREATH, center, 500, 7, 3, 7, 0.05);
-        center.getWorld().spawnParticle(Particle.PORTAL, center, 600, 7, 3, 7, 2.0);
-        center.getWorld().spawnParticle(Particle.WITCH, center, 200, 7, 3, 7, 0.1);
-        center.getWorld().playSound(center, Sound.ENTITY_WITHER_SPAWN, 1.0f, 0.5f);
-
-        // Final explosion after 2 seconds
+        // After 1 second channel, unleash collapse
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Enhanced explosion particles with End theme - massive explosion
-            center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 30, 2, 2, 2, 0);
-            center.getWorld().spawnParticle(Particle.LARGE_SMOKE, center, 800, 5, 5, 5, 0.3);
-            center.getWorld().spawnParticle(Particle.SQUID_INK, center, 500, 5, 5, 5, 0.2);
-            center.getWorld().spawnParticle(Particle.END_ROD, center, 300, 5, 5, 5, 0.2);
-            center.getWorld().spawnParticle(Particle.DRAGON_BREATH, center, 400, 5, 5, 5, 0.1);
-            center.getWorld().spawnParticle(Particle.PORTAL, center, 500, 5, 5, 5, 2.5);
-            center.getWorld().spawnParticle(Particle.REVERSE_PORTAL, center, 400, 5, 5, 5, 1.5);
-            center.getWorld().spawnParticle(Particle.WITCH, center, 150, 4, 4, 4, 0.15);
-            center.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.5f);
-            center.getWorld().playSound(center, Sound.ENTITY_ENDER_DRAGON_GROWL, 1.5f, 0.6f);
+            Location collapseCenter = player.getLocation();
 
-            for (Entity entity : center.getWorld().getNearbyEntities(center, 7, 7, 7)) {
+            // Pull all enemies within 7 blocks to center
+            for (Entity entity : world.getNearbyEntities(collapseCenter, 7, 7, 7)) {
                 if (entity instanceof LivingEntity && entity != player) {
                     // Trust check
                     if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                         continue;
                     }
-                    LivingEntity living = (LivingEntity) entity;
-                    living.damage(35.0, player); // ~7 hearts through full Prot 4
 
-                    // Notify victim about explosion damage
+                    LivingEntity living = (LivingEntity) entity;
+
+                    // Pull to center
+                    Vector direction = collapseCenter.toVector().subtract(entity.getLocation().toVector()).normalize();
+                    entity.setVelocity(direction.multiply(2.0));
+
+                    // 5 TRUE DAMAGE (bypasses armor) - 5 hearts = 10 HP
+                    double currentHealth = living.getHealth();
+                    double newHealth = Math.max(0, currentHealth - 10.0); // 5 hearts = 10 damage
+                    living.setHealth(newHealth);
+
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 40, 0));
+
+                    // Purple effects on each target
+                    world.spawnParticle(Particle.REVERSE_PORTAL, living.getLocation().add(0, 1, 0), 40, 0.4, 0.6, 0.4, 0.8);
+                    world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 25, 0.3, 0.5, 0.3, 0.1);
+
+                    // Notify victim
                     if (living instanceof Player) {
-                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Cataclysm Pulse Explosion" + ChatColor.RED + " from " + player.getName() + "!");
+                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Genesis Collapse" + ChatColor.RED + " - 5 true damage from " + player.getName() + "!");
                     }
                 }
             }
-        }, 40L);
 
-        player.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "CATACLYSM PULSE!");
+            // Massive purple shockwave particles
+            world.spawnParticle(Particle.REVERSE_PORTAL, collapseCenter, 600, 5, 3, 5, 2.0);
+            world.spawnParticle(Particle.DRAGON_BREATH, collapseCenter, 500, 5, 3, 5, 0.15);
+            world.spawnParticle(Particle.WITCH, collapseCenter, 300, 5, 3, 5, 0.2);
+            world.spawnParticle(Particle.PORTAL, collapseCenter, 500, 5, 3, 5, 2.5);
+
+            // Sound effects
+            world.playSound(collapseCenter, Sound.ENTITY_WITHER_SPAWN, 1.0f, 0.5f);
+            world.playSound(collapseCenter, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.5f);
+            world.playSound(collapseCenter, Sound.ENTITY_ENDER_DRAGON_GROWL, 1.5f, 0.6f);
+
+            // Teleport player slightly upward (End-style blink)
+            Location blinkLoc = player.getLocation().add(0, 1.5, 0);
+            if (blinkLoc.getBlock().isPassable()) {
+                player.teleport(blinkLoc);
+                world.spawnParticle(Particle.REVERSE_PORTAL, blinkLoc, 50, 0.3, 0.3, 0.3, 0.3);
+            }
+
+            // Give Absorption IV for 5 seconds (100 ticks)
+            player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 100, 3));
+
+            player.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "GENESIS COLLAPSE!");
+        }, 20L); // 1 second delay
+
         return true;
     }
 
@@ -1149,7 +1637,7 @@ public class AbilityManager implements Listener {
     private int getCooldownForAbility(LegendaryType type, int abilityNum) {
         Map<String, int[]> cooldowns = new HashMap<>();
         cooldowns.put("holy_moonlight_sword", new int[]{25, 45});
-        cooldowns.put("pheonix_grace", new int[]{30, 180});
+        cooldowns.put("pheonix_grace", new int[]{90, 300}); // Flame Harvest 1m30s, Fire Rebirth 5min
         cooldowns.put("tempestbreaker_spear", new int[]{25, 50});
         cooldowns.put("thousand_demon_daggers", new int[]{20, 60});
         cooldowns.put("divine_axe_rhitta", new int[]{35, 70});
@@ -1157,7 +1645,7 @@ public class AbilityManager implements Listener {
         cooldowns.put("celestial_aegis_shield", new int[]{40, 90});
         cooldowns.put("chrono_blade", new int[]{40, 120});
         cooldowns.put("soul_devourer", new int[]{30, 85});
-        cooldowns.put("creation_splitter", new int[]{35, 95});
+        cooldowns.put("creation_splitter", new int[]{18, 120}); // End Sever 18s, Genesis Collapse 2min
         cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
 
         int[] cd = cooldowns.get(type.getId());
@@ -1243,12 +1731,19 @@ public class AbilityManager implements Listener {
 
                     double damage = event.getFinalDamage();
 
+                    // Temporarily remove echo strike to prevent the echo from triggering another echo
+                    Long savedEndTime = echoStrikeActive.remove(player.getUniqueId());
+
                     // Schedule echo hit
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
                         if (target.isValid() && !target.isDead()) {
                             target.damage(damage, player);
                             target.getWorld().spawnParticle(Particle.CRIT, target.getLocation(), 20, 0.5, 0.5, 0.5, 0);
                             player.sendMessage(ChatColor.YELLOW + "Echo!");
+                        }
+                        // Re-enable echo strike after the echo damage is dealt
+                        if (savedEndTime != null && System.currentTimeMillis() < savedEndTime) {
+                            echoStrikeActive.put(player.getUniqueId(), savedEndTime);
                         }
                     }, 20L);
                 }
@@ -1322,6 +1817,64 @@ public class AbilityManager implements Listener {
                             }
                         }
                     }, 300L); // 15 seconds
+                }
+            }
+
+            // Chrono Blade - Time Slow passive (first hit applies slow, 20s cooldown per target)
+            if (legendaryId != null && legendaryId.equals(LegendaryType.CHRONO_BLADE.getId())) {
+                if (event.getEntity() instanceof LivingEntity) {
+                    LivingEntity target = (LivingEntity) event.getEntity();
+
+                    // Trust check
+                    if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                        // Skip trusted players
+                    } else {
+                        UUID playerUUID = player.getUniqueId();
+                        UUID targetUUID = target.getUniqueId();
+
+                        // Check cooldown for this specific target
+                        Map<UUID, Long> targetCooldowns = timeSlowCooldowns.computeIfAbsent(playerUUID, k -> new HashMap<>());
+                        long now = System.currentTimeMillis();
+                        Long lastSlowed = targetCooldowns.get(targetUUID);
+
+                        if (lastSlowed == null || now - lastSlowed >= 20000) { // 20 second cooldown
+                            // Apply Time Slow - 20% slower movement and attack speed for 3 seconds
+                            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 0, true, true)); // Slowness I = 20% slower
+                            target.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 60, 0, true, true)); // Approximates attack speed reduction
+
+                            // Record cooldown
+                            targetCooldowns.put(targetUUID, now);
+
+                            // Particles
+                            target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.1);
+                            target.getWorld().spawnParticle(Particle.REVERSE_PORTAL, target.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3, 0.3);
+                            player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.5f, 1.5f);
+
+                            if (target instanceof Player) {
+                                ((Player) target).sendMessage(ChatColor.YELLOW + "⏳ Time Slow! Movement and attack speed reduced!");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Soul Devourer - bonus damage based on soul count (+2 damage per soul)
+            if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
+                int soulCount = LegendaryItemFactory.getSoulCount(player.getInventory().getItemInMainHand());
+                if (soulCount > 0 && event.getEntity() instanceof LivingEntity) {
+                    LivingEntity target = (LivingEntity) event.getEntity();
+
+                    // Trust check
+                    if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                        // Skip trusted players
+                    } else {
+                        // +2 damage per soul (so +4 HP damage per soul)
+                        double bonusDamage = soulCount * 4.0; // 2 hearts = 4 HP per soul
+                        event.setDamage(event.getDamage() + bonusDamage);
+
+                        // Soul particles on hit
+                        target.getWorld().spawnParticle(Particle.SOUL, target.getLocation().add(0, 1, 0), 5, 0.3, 0.3, 0.3, 0.05);
+                    }
                 }
             }
         }
@@ -1454,16 +2007,27 @@ public class AbilityManager implements Listener {
         return fortuneModeActive.contains(playerId);
     }
 
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        // Prevent breaking Prison of the Damned blocks
+        if (activePrisonBlocks.contains(event.getBlock().getLocation())) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ChatColor.DARK_GRAY + "This block is bound by dark magic!");
+        }
+    }
+
     // Helper class for Time Rewind
     private static class SavedState {
         Location location;
         double health;
         int hunger;
+        int taskId; // For cancelling scheduled teleport
 
         SavedState(Location location, double health, int hunger) {
             this.location = location;
             this.health = health;
             this.hunger = hunger;
+            this.taskId = -1;
         }
     }
 
@@ -1472,18 +2036,52 @@ public class AbilityManager implements Listener {
         UUID ownerUUID;
         World world;
         double minX, maxX, minZ, maxZ;
+        double minY, maxY; // Y bounds for the barrier
 
-        HeavensWallBarrier(UUID ownerUUID, World world, double minX, double maxX, double minZ, double maxZ) {
+        HeavensWallBarrier(UUID ownerUUID, World world, double minX, double maxX, double minZ, double maxZ, double centerY) {
             this.ownerUUID = ownerUUID;
             this.world = world;
             this.minX = minX;
             this.maxX = maxX;
             this.minZ = minZ;
             this.maxZ = maxZ;
+            // Barrier extends 50 blocks up and down from center (effectively infinite for gameplay)
+            this.minY = centerY - 50;
+            this.maxY = centerY + 50;
         }
 
         boolean isInside(double x, double z) {
             return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+        }
+
+        // Check if a location is on the barrier wall itself (within 0.5 blocks of the edge)
+        boolean isOnWallEdge(double x, double y, double z) {
+            if (y < minY || y > maxY) return false;
+
+            boolean nearMinX = Math.abs(x - minX) < 0.5;
+            boolean nearMaxX = Math.abs(x - maxX) < 0.5;
+            boolean nearMinZ = Math.abs(z - minZ) < 0.5;
+            boolean nearMaxZ = Math.abs(z - maxZ) < 0.5;
+
+            boolean withinZ = z >= minZ && z <= maxZ;
+            boolean withinX = x >= minX && x <= maxX;
+
+            return (nearMinX && withinZ) || (nearMaxX && withinZ) ||
+                   (nearMinZ && withinX) || (nearMaxZ && withinX);
+        }
+
+        // Check if a line segment (from -> to) crosses the barrier
+        boolean crossesBarrier(Location from, Location to) {
+            if (!world.equals(from.getWorld())) return false;
+
+            boolean fromInside = isInside(from.getX(), from.getZ());
+            boolean toInside = isInside(to.getX(), to.getZ());
+
+            // Check Y bounds
+            if (from.getY() < minY && to.getY() < minY) return false;
+            if (from.getY() > maxY && to.getY() > maxY) return false;
+
+            return fromInside != toInside;
         }
     }
 }

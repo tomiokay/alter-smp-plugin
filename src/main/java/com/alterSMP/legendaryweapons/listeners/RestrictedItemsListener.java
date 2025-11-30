@@ -1,5 +1,6 @@
 package com.alterSMP.legendaryweapons.listeners;
 
+import com.alterSMP.legendaryweapons.LegendaryWeaponsPlugin;
 import com.alterSMP.legendaryweapons.items.LegendaryItemFactory;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -26,6 +27,12 @@ import java.util.Set;
  */
 public class RestrictedItemsListener implements Listener {
 
+    private final LegendaryWeaponsPlugin plugin;
+
+    public RestrictedItemsListener(LegendaryWeaponsPlugin plugin) {
+        this.plugin = plugin;
+    }
+
     private static final Set<Material> NETHERITE_ITEMS = EnumSet.of(
         // Armor
         Material.NETHERITE_HELMET,
@@ -45,6 +52,11 @@ public class RestrictedItemsListener implements Listener {
      * Check if an item is a restricted netherite item (non-legendary netherite)
      */
     private boolean isRestrictedNetherite(ItemStack item) {
+        // Check if netherite restriction is enabled in config
+        if (!plugin.getConfigManager().isNetheriteRestricted()) {
+            return false;
+        }
+
         if (item == null || item.getType() == Material.AIR) {
             return false;
         }
@@ -127,6 +139,60 @@ public class RestrictedItemsListener implements Listener {
                 player.sendMessage(ChatColor.RED + "Non-legendary netherite armor is disabled!");
                 player.updateInventory();
                 return;
+            }
+        }
+
+        // Prevent moving restricted netherite weapons/tools TO hotbar slots (0-8)
+        // This prevents the exploit of moving netherite from inventory to hotbar
+        int destSlot = event.getRawSlot();
+        InventoryType.SlotType slotType = event.getSlotType();
+
+        // Check if placing cursor item into hotbar (raw slots 36-44 in player inventory view, or slots 0-8 in QUICKBAR)
+        if (isRestrictedNetherite(cursor)) {
+            Material type = cursor.getType();
+            if (type == Material.NETHERITE_SWORD || type == Material.NETHERITE_AXE ||
+                type == Material.NETHERITE_PICKAXE || type == Material.NETHERITE_SHOVEL ||
+                type == Material.NETHERITE_HOE) {
+                // Hotbar slots are 0-8 in player inventory, raw slots 36-44 when viewing own inventory
+                if (slotType == InventoryType.SlotType.QUICKBAR || (destSlot >= 36 && destSlot <= 44)) {
+                    event.setCancelled(true);
+                    player.sendMessage(ChatColor.RED + "Non-legendary netherite weapons/tools cannot be placed in hotbar!");
+                    player.updateInventory();
+                    return;
+                }
+            }
+        }
+
+        // Check shift-click moving restricted netherite weapons/tools to hotbar
+        if (event.isShiftClick() && isRestrictedNetherite(current)) {
+            Material type = current.getType();
+            if (type == Material.NETHERITE_SWORD || type == Material.NETHERITE_AXE ||
+                type == Material.NETHERITE_PICKAXE || type == Material.NETHERITE_SHOVEL ||
+                type == Material.NETHERITE_HOE) {
+                // Shift-click from non-hotbar could move to hotbar
+                if (slotType != InventoryType.SlotType.QUICKBAR) {
+                    event.setCancelled(true);
+                    player.sendMessage(ChatColor.RED + "Non-legendary netherite weapons/tools are disabled!");
+                    player.updateInventory();
+                    return;
+                }
+            }
+        }
+
+        // Check number key swap moving netherite weapons/tools to hotbar
+        if (event.getClick() == ClickType.NUMBER_KEY) {
+            ItemStack hotbarItem = player.getInventory().getItem(event.getHotbarButton());
+            // If current item is restricted netherite and would be swapped to hotbar
+            if (isRestrictedNetherite(current)) {
+                Material type = current.getType();
+                if (type == Material.NETHERITE_SWORD || type == Material.NETHERITE_AXE ||
+                    type == Material.NETHERITE_PICKAXE || type == Material.NETHERITE_SHOVEL ||
+                    type == Material.NETHERITE_HOE) {
+                    event.setCancelled(true);
+                    player.sendMessage(ChatColor.RED + "Non-legendary netherite weapons/tools cannot be placed in hotbar!");
+                    player.updateInventory();
+                    return;
+                }
             }
         }
 

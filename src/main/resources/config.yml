@@ -28,6 +28,11 @@ global:
   # Whether active abilities are enabled
   enable-abilities: true
 
+  # Whether to restrict non-legendary netherite items
+  # When true: Non-legendary netherite armor/weapons/tools cannot be used
+  # When false: All netherite items work normally
+  restrict-netherite: true
+
 # ========================================
 # ABILITY COOLDOWNS (in seconds)
 # ========================================

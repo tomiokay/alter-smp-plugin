@@ -79,16 +79,8 @@ public class CopperPickaxeListener implements Listener {
         for (Block block : blocksToBreak) {
             if (block.equals(centerBlock)) continue; // Skip center block (already being broken)
             if (block.getType() == Material.AIR) continue;
-            if (!block.getType().toString().contains("ORE") &&
-                !block.getType().toString().contains("STONE") &&
-                !block.getType().toString().contains("DIRT") &&
-                !block.getType().toString().contains("GRAVEL") &&
-                !block.getType().toString().contains("SAND") &&
-                !block.getType().toString().contains("NETHERRACK") &&
-                !block.getType().toString().contains("END_STONE") &&
-                !block.getType().toString().contains("DEEPSLATE")) {
-                continue; // Only break mineable blocks
-            }
+            if (block.getType() == Material.BEDROCK) continue; // Can't break bedrock
+            if (block.getType().getHardness() < 0) continue; // Can't break unbreakable blocks
 
             // Drop items as if player broke it
             Collection<ItemStack> drops = block.getDrops(player.getInventory().getItemInMainHand(), player);

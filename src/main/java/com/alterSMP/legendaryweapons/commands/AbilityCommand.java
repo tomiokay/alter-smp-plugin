@@ -59,8 +59,11 @@ public class AbilityCommand implements CommandExecutor {
             return true;
         }
 
-        // Check cooldown
-        if (plugin.getCooldownManager().isOnCooldown(player.getUniqueId(), legendaryId, abilityNum)) {
+        // Check cooldown - but skip for Chrono Blade ability 2 if position is already marked
+        boolean skipCooldownCheck = (type == LegendaryType.CHRONO_BLADE && abilityNum == 2
+            && plugin.getAbilityManager().hasChronoShiftMarked(player.getUniqueId()));
+
+        if (!skipCooldownCheck && plugin.getCooldownManager().isOnCooldown(player.getUniqueId(), legendaryId, abilityNum)) {
             int remaining = plugin.getCooldownManager().getRemainingCooldown(
                 player.getUniqueId(), legendaryId, abilityNum);
             player.sendMessage(ChatColor.YELLOW + "Ability on cooldown: " +

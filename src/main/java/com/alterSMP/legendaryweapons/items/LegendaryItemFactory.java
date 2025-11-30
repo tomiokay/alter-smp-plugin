@@ -140,7 +140,7 @@ public class LegendaryItemFactory {
 
         ItemMeta meta = item.getItemMeta();
         NamespacedKey key = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
-        meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, Math.min(count, 20));
+        meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, Math.min(count, 5));
 
         // Update lore
         List<String> lore = meta.getLore();
@@ -148,7 +148,7 @@ public class LegendaryItemFactory {
             // Find and update soul count line
             for (int i = 0; i < lore.size(); i++) {
                 if (lore.get(i).contains("Souls:")) {
-                    lore.set(i, ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + count + "/20");
+                    lore.set(i, ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + count + "/5");
                     break;
                 }
             }
@@ -281,9 +281,10 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Heat Shield");
                 lore.add(ChatColor.GRAY + "  Immune to fire and explosions");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Flame Harvest (30s)");
-                lore.add(ChatColor.GRAY + "  Fiery explosion grants absorption");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Fire Rebirth (180s)");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Flame Harvest (1m30s)");
+                lore.add(ChatColor.GRAY + "  Fiery explosion, +6 absorption per enemy");
+                lore.add(ChatColor.GRAY + "  Max 18 absorption hearts");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Fire Rebirth (5min)");
                 lore.add(ChatColor.GRAY + "  Cheat death with flames");
                 break;
 
@@ -294,7 +295,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Gale Throw (25s)");
                 lore.add(ChatColor.GRAY + "  Wind vortex on impact");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Stormcall (50s)");
-                lore.add(ChatColor.GRAY + "  Cone of stunning lightning");
+                lore.add(ChatColor.GRAY + "  8-block lightning storm radius");
                 break;
 
             case THOUSAND_DEMON_DAGGERS:
@@ -305,17 +306,17 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Teleport behind target enemy");
                 lore.add(ChatColor.GRAY + "  Next attack deals +1 heart true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Soul Mark (60s)");
-                lore.add(ChatColor.GRAY + "  Mark target for true damage");
+                lore.add(ChatColor.GRAY + "  Mark target, next hit deals +4 hearts true damage");
                 break;
 
             case DIVINE_AXE_RHITTA:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Nature Channel");
-                lore.add(ChatColor.GRAY + "  Regeneration on natural blocks");
+                lore.add(ChatColor.GRAY + "  Regen III on natural blocks");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Nature Grasp (35s)");
                 lore.add(ChatColor.GRAY + "  Root enemies in place");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Forest Shield (70s)");
-                lore.add(ChatColor.GRAY + "  Axe becomes breach weapon");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Verdant Cyclone (70s)");
+                lore.add(ChatColor.GRAY + "  360° spin attack, 2 hearts damage");
                 break;
 
             case CHAINS_OF_ETERNITY:
@@ -349,13 +350,16 @@ public class LegendaryItemFactory {
                 break;
 
             case CHRONO_BLADE:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Last Second");
-                lore.add(ChatColor.GRAY + "  Buffs when low HP");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Time Slow");
+                lore.add(ChatColor.GRAY + "  First hit slows target (20s CD/target)");
+                lore.add(ChatColor.GRAY + "  -20% move/attack speed for 3s");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Echo Strike (40s)");
-                lore.add(ChatColor.GRAY + "  Hits repeat after 1 second");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Time Rewind (120s)");
-                lore.add(ChatColor.GRAY + "  Return to past state");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Time Distortion (40s)");
+                lore.add(ChatColor.GRAY + "  6-block slow bubble for 3s");
+                lore.add(ChatColor.GRAY + "  Enemies at 20% speed, 4 true dmg on end");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Chrono Shift (120s)");
+                lore.add(ChatColor.GRAY + "  Mark position, re-cast to return");
+                lore.add(ChatColor.GRAY + "  Clears debuffs, grants Speed II");
                 break;
 
             case SOUL_DEVOURER:
@@ -370,13 +374,16 @@ public class LegendaryItemFactory {
                 break;
 
             case CREATION_SPLITTER:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Dragon's Gaze");
-                lore.add(ChatColor.GRAY + "  Nearby players glow");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Endbound Soulkeeper");
+                lore.add(ChatColor.GRAY + "  Kill players to steal hearts (+1 max)");
+                lore.add(ChatColor.GRAY + "  Max +5 hearts, unique per victim");
+                lore.add(ChatColor.GRAY + "  Death returns all stolen hearts");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Void Rupture (35s)");
-                lore.add(ChatColor.GRAY + "  Void arc with blindness");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Cataclysm Pulse (95s)");
-                lore.add(ChatColor.GRAY + "  Dark explosion with pull");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (18s)");
+                lore.add(ChatColor.GRAY + "  7-block cone slash, 2 true damage");
+                lore.add(ChatColor.GRAY + "  Ender Decay + Levitation, recoil back");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Genesis Collapse (2min)");
+                lore.add(ChatColor.GRAY + "  Pull enemies, 5 true damage, shield");
                 break;
 
             case COPPER_PICKAXE:
@@ -389,17 +396,17 @@ public class LegendaryItemFactory {
                 break;
 
             case THUNDERFORGE_CHESTPLATE:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Shockwave Counter");
-                lore.add(ChatColor.GRAY + "  Every 20 hits: electric shockwave");
-                lore.add(ChatColor.GRAY + "  Deals damage and knockback");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Thunder Strike");
+                lore.add(ChatColor.GRAY + "  Every 10 melee hits: lightning strike");
+                lore.add(ChatColor.GRAY + "  Deals 3 hearts true damage");
                 break;
 
             case EMBERSTRIDE_GREAVES:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flamebound Feet");
                 lore.add(ChatColor.GRAY + "  Immune to fire, lava, and magma");
-                lore.add(ChatColor.GRAY + "  Walking leaves flame trails");
+                lore.add(ChatColor.GRAY + "  Flame trail damages enemies");
                 lore.add(ChatColor.GRAY + "  +10% attack speed above 50% HP");
-                lore.add(ChatColor.GRAY + "  +100% movement speed in lava");
+                lore.add(ChatColor.GRAY + "  +500% movement speed in lava");
                 break;
 
             case BLOODREAPER_HOOD:

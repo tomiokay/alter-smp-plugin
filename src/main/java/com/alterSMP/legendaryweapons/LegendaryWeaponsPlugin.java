@@ -24,6 +24,8 @@ import com.alterSMP.legendaryweapons.abilities.CopperPickaxeListener;
 import com.alterSMP.legendaryweapons.listeners.AnvilProtectionListener;
 import com.alterSMP.legendaryweapons.listeners.RestrictedItemsListener;
 import com.alterSMP.legendaryweapons.listeners.LegendaryProtectionListener;
+import com.alterSMP.legendaryweapons.listeners.CreationSplitterListener;
+import com.alterSMP.legendaryweapons.data.HeartManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class LegendaryWeaponsPlugin extends JavaPlugin {
@@ -39,6 +41,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
     private PassiveEffectManager passiveManager;
     private AbilityManager abilityManager;
     private ArmorPassivesListener armorPassivesListener;
+    private HeartManager heartManager;
 
     @Override
     public void onEnable() {
@@ -55,6 +58,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         this.itemFactory = new LegendaryItemFactory();
         this.abilityManager = new AbilityManager(this);
         this.passiveManager = new PassiveEffectManager(this);
+        this.heartManager = new HeartManager(this);
 
         // Load data
         dataManager.loadAll();
@@ -84,8 +88,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         this.armorPassivesListener = new ArmorPassivesListener(this);
         getServer().getPluginManager().registerEvents(armorPassivesListener, this);
         getServer().getPluginManager().registerEvents(new AnvilProtectionListener(), this);
-        getServer().getPluginManager().registerEvents(new RestrictedItemsListener(), this);
+        getServer().getPluginManager().registerEvents(new RestrictedItemsListener(this), this);
         getServer().getPluginManager().registerEvents(new LegendaryProtectionListener(), this);
+        getServer().getPluginManager().registerEvents(new CreationSplitterListener(this), this);
 
         // Start passive effect task (uses config interval)
         passiveManager.startPassiveTask();
@@ -104,6 +109,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         }
         if (trustManager != null) {
             trustManager.saveTrustData();
+        }
+        if (heartManager != null) {
+            heartManager.saveData();
         }
 
         getLogger().info("Legendary Weapons SMP plugin disabled!");
@@ -147,5 +155,9 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
 
     public ArmorPassivesListener getArmorPassivesListener() {
         return armorPassivesListener;
+    }
+
+    public HeartManager getHeartManager() {
+        return heartManager;
     }
 }

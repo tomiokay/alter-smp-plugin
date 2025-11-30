@@ -172,9 +172,10 @@ public class ArmorPassivesListener implements Listener {
     // ========== THUNDERFORGE CHESTPLATE ==========
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerDamagedMelee(EntityDamageByEntityEvent event) {
+    public void onPlayerMeleeHit(EntityDamageByEntityEvent event) {
         if (event.isCancelled()) return;
-        if (!(event.getEntity() instanceof Player)) return;
+        if (!(event.getDamager() instanceof Player)) return;
+        if (!(event.getEntity() instanceof LivingEntity)) return;
 
         // Only count melee attacks (direct entity damage, not projectiles)
         if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK &&
@@ -182,15 +183,14 @@ public class ArmorPassivesListener implements Listener {
             return;
         }
 
-        // Ignore if attacker is doing a shockwave (prevents infinite loop)
-        if (event.getDamager() instanceof Player) {
-            Player attacker = (Player) event.getDamager();
-            if (shockwaveActive.contains(attacker.getUniqueId())) {
-                return;
-            }
+        Player player = (Player) event.getDamager();
+        LivingEntity target = (LivingEntity) event.getEntity();
+
+        // Ignore if this is lightning damage from the chestplate
+        if (shockwaveActive.contains(player.getUniqueId())) {
+            return;
         }
 
-        Player player = (Player) event.getEntity();
         ItemStack chestplate = player.getInventory().getChestplate();
         String legendaryId = LegendaryItemFactory.getLegendaryId(chestplate);
 
@@ -198,59 +198,38 @@ public class ArmorPassivesListener implements Listener {
             // Increment hit counter
             int hits = hitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
 
-            if (hits >= 20) {
-                // Trigger shockwave
-                electricShockwave(player);
+            if (hits >= 10) {
+                // Trigger lightning strike on target
+                triggerLightningStrike(player, target);
                 hitCounter.put(player.getUniqueId(), 0); // Reset counter
             } else {
                 hitCounter.put(player.getUniqueId(), hits);
-                player.sendMessage(ChatColor.YELLOW + "⚡ " + hits + "/20 hits");
             }
         }
     }
 
-    private void electricShockwave(Player player) {
-        Location loc = player.getLocation();
-        double radius = 5.0;
-
-        // Mark shockwave as active to prevent ion charge counting
+    private void triggerLightningStrike(Player player, LivingEntity target) {
+        // Mark as active to prevent counting lightning damage
         shockwaveActive.add(player.getUniqueId());
 
-        // Particles
-        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc, 200, 2, 1, 2, 0.3);
-        player.getWorld().spawnParticle(Particle.FIREWORK, loc, 100, 2, 1, 2, 0.2);
+        // Spawn visual lightning (no damage from the lightning itself)
+        target.getWorld().strikeLightningEffect(target.getLocation());
 
-        // Sound
-        player.getWorld().playSound(loc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.5f, 1.5f);
+        // Deal 3 hearts (6 damage) true damage
+        double currentHealth = target.getHealth();
+        double newHealth = Math.max(0, currentHealth - 6.0);
+        target.setHealth(newHealth);
 
-        // Damage and knockback
-        for (LivingEntity entity : loc.getWorld().getNearbyLivingEntities(loc, radius)) {
-            if (entity.equals(player)) continue;
-            if (entity instanceof Player) {
-                Player target = (Player) entity;
-                if (plugin.getTrustManager().isTrusted(player, target)) {
-                    continue;
-                }
-            }
+        // Particles for extra effect
+        target.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, target.getLocation().add(0, 1, 0), 50, 0.5, 1, 0.5, 0.2);
 
-            // 2 hearts damage to full prot 4 diamond = ~4 damage total
-            entity.damage(4.0, player);
-
-            // Knockback
-            Vector direction = entity.getLocation().toVector().subtract(loc.toVector()).normalize();
-            direction.multiply(1.5).setY(0.5);
-            entity.setVelocity(direction);
-
-            if (entity instanceof Player) {
-                ((Player) entity).sendMessage(ChatColor.YELLOW + "⚡ Hit by " + ChatColor.GOLD + "Electric Shockwave" +
-                    ChatColor.YELLOW + " from " + player.getName() + "!");
-            }
+        if (target instanceof Player) {
+            ((Player) target).sendMessage(ChatColor.YELLOW + "⚡ Struck by " + ChatColor.GOLD + "Thunderforge Lightning" +
+                ChatColor.YELLOW + " from " + player.getName() + "!");
         }
 
-        // Remove shockwave flag
+        // Remove active flag
         shockwaveActive.remove(player.getUniqueId());
-
-        player.sendMessage(ChatColor.GOLD + "⚡ Electric Shockwave Released!");
     }
 
     // ========== EMBERSTRIDE GREAVES ==========
@@ -293,7 +272,7 @@ public class ArmorPassivesListener implements Listener {
 
         UUID playerId = player.getUniqueId();
 
-        // Flame trail when walking
+        // Flame trail when walking - damages and burns enemies
         Location currentLoc = player.getLocation();
         Location lastLoc = lastFlameLocation.get(playerId);
 
@@ -302,8 +281,23 @@ public class ArmorPassivesListener implements Listener {
             // Only spawn flames if player moved and is on ground
             if (distance > 0.3 && player.isOnGround()) {
                 // Spawn flame particles along path
-                player.getWorld().spawnParticle(Particle.FLAME, currentLoc.clone().add(0, 0.1, 0), 3, 0.2, 0.05, 0.2, 0.01);
-                player.getWorld().spawnParticle(Particle.SMALL_FLAME, currentLoc.clone().add(0, 0.1, 0), 2, 0.1, 0.05, 0.1, 0.01);
+                player.getWorld().spawnParticle(Particle.FLAME, currentLoc.clone().add(0, 0.1, 0), 5, 0.3, 0.1, 0.3, 0.02);
+                player.getWorld().spawnParticle(Particle.SMALL_FLAME, currentLoc.clone().add(0, 0.1, 0), 3, 0.2, 0.05, 0.2, 0.01);
+
+                // Damage enemies standing in the flame trail
+                for (LivingEntity entity : currentLoc.getWorld().getNearbyLivingEntities(currentLoc, 1.0)) {
+                    if (entity.equals(player)) continue;
+                    if (entity instanceof Player) {
+                        Player target = (Player) entity;
+                        if (plugin.getTrustManager().isTrusted(player, target)) {
+                            continue;
+                        }
+                    }
+
+                    // Set on fire and deal small damage
+                    entity.setFireTicks(40); // 2 seconds of fire
+                    entity.damage(2.0, player); // 1 heart damage
+                }
             }
         }
         lastFlameLocation.put(playerId, currentLoc.clone());
@@ -315,10 +309,10 @@ public class ArmorPassivesListener implements Listener {
             player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 15, 0, true, false));
         }
 
-        // +100% movement speed in lava (Speed II = 40%, so we use Speed V for ~100%)
+        // +500% movement speed in lava (Speed 24 gives roughly 500% boost)
         Material blockAtFeet = player.getLocation().getBlock().getType();
         if (blockAtFeet == Material.LAVA) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 15, 4, true, false)); // Speed V
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 15, 24, true, false)); // Speed 25 (~500%)
             player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 15, 0, true, false));
         }
     }
@@ -398,7 +392,6 @@ public class ArmorPassivesListener implements Listener {
                 // Grant 10% speed for 3 seconds (Speed I = 20%, so we use level 0 with amplifier tricks)
                 // Actually Speed I is the minimum, so let's use Speed I
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 0)); // 3 seconds, Speed I
-                player.sendMessage(ChatColor.RED + "Critical Rush! " + ChatColor.YELLOW + "+Speed for 3s");
 
                 // Particles
                 player.getWorld().spawnParticle(Particle.CRIT, event.getEntity().getLocation(), 20, 0.3, 0.5, 0.3, 0);
