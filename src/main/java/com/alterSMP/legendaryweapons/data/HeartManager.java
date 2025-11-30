@@ -135,7 +135,7 @@ public class HeartManager {
         // Maximum of 30 HP (15 hearts = 10 base + 5 stolen)
         newMaxHealth = Math.min(30.0, newMaxHealth);
 
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(newMaxHealth);
+        player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(newMaxHealth);
 
         // Adjust current health if it exceeds new max
         if (player.getHealth() > newMaxHealth) {

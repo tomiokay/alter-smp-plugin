@@ -303,7 +303,7 @@ public class ArmorPassivesListener implements Listener {
         lastFlameLocation.put(playerId, currentLoc.clone());
 
         // +10% attack speed when above 50% HP
-        double maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+        double maxHealth = player.getAttribute(Attribute.MAX_HEALTH).getValue();
         if (player.getHealth() > maxHealth * 0.5) {
             // Apply Haste I for attack speed (10% faster)
             player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 15, 0, true, false));
@@ -338,14 +338,14 @@ public class ArmorPassivesListener implements Listener {
 
             // Store original max health if not already stored
             if (!originalMaxHealth.containsKey(killerId)) {
-                originalMaxHealth.put(killerId, killer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+                originalMaxHealth.put(killerId, killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getBaseValue());
             }
 
             // Cancel any existing health restore task
             if (originalMaxHealth.containsKey(killerId)) {
                 // Set max health to +10 HP (5 hearts)
                 double originalMax = originalMaxHealth.get(killerId);
-                killer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).setBaseValue(originalMax + 10.0);
+                killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).setBaseValue(originalMax + 10.0);
 
                 // Heal the player by 10 HP
                 double newHealth = Math.min(killer.getHealth() + 10.0, originalMax + 10.0);
@@ -364,7 +364,7 @@ public class ArmorPassivesListener implements Listener {
                     double originalMax = originalMaxHealth.get(killerId);
 
                     // Restore original max health
-                    killer.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH).setBaseValue(originalMax);
+                    killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).setBaseValue(originalMax);
 
                     // Adjust current health if it exceeds the new max
                     if (killer.getHealth() > originalMax) {

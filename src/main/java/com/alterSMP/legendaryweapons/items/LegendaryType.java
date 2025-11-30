@@ -3,17 +3,20 @@ package com.alterSMP.legendaryweapons.items;
 import org.bukkit.Material;
 
 public enum LegendaryType {
+    // Weapons with CustomModelData
     HOLY_MOONLIGHT_SWORD("holy_moonlight_sword", "Holy Moonlight Sword", Material.DIAMOND_SWORD, 1),
     PHEONIX_GRACE("pheonix_grace", "Pheonix Grace", Material.DIAMOND_SWORD, 2),
-    TEMPESTBREAKER_SPEAR("tempestbreaker_spear", "Tempestbreaker Spear", Material.TRIDENT, 7),
     THOUSAND_DEMON_DAGGERS("thousand_demon_daggers", "Thousand Demon Daggers", Material.DIAMOND_SWORD, 3),
-    DIVINE_AXE_RHITTA("divine_axe_rhitta", "Divine Axe Rhitta", Material.DIAMOND_AXE, 8),
-    CHAINS_OF_ETERNITY("chains_of_eternity", "Chains of Eternity", Material.WOODEN_SHOVEL, 9),
-    SKYBREAKER_BOOTS("skybreaker_boots", "Skybreaker Boots", Material.DIAMOND_BOOTS, 10),
-    CELESTIAL_AEGIS_SHIELD("celestial_aegis_shield", "Celestial Aegis Shield", Material.SHIELD, 11),
     CHRONO_BLADE("chrono_blade", "Chrono Blade", Material.DIAMOND_SWORD, 4),
     SOUL_DEVOURER("soul_devourer", "Soul Devourer", Material.DIAMOND_SWORD, 5),
     CREATION_SPLITTER("creation_splitter", "Creation Splitter", Material.DIAMOND_SWORD, 6),
+    TEMPESTBREAKER_SPEAR("tempestbreaker_spear", "Tempestbreaker Spear", Material.TRIDENT, 7),
+    DIVINE_AXE_RHITTA("divine_axe_rhitta", "Divine Axe Rhitta", Material.DIAMOND_AXE, 8),
+    CHAINS_OF_ETERNITY("chains_of_eternity", "Chains of Eternity", Material.WOODEN_SHOVEL, 9),
+    
+    // Armor (no custom models, just for completeness)
+    SKYBREAKER_BOOTS("skybreaker_boots", "Skybreaker Boots", Material.DIAMOND_BOOTS, 10),
+    CELESTIAL_AEGIS_SHIELD("celestial_aegis_shield", "Celestial Aegis Shield", Material.SHIELD, 11),
     COPPER_PICKAXE("copper_pickaxe", "Copper Pickaxe", Material.NETHERITE_PICKAXE, 12),
     THUNDERFORGE_CHESTPLATE("thunderforge_chestplate", "Thunderforge Chestplate", Material.DIAMOND_CHESTPLATE, 13),
     EMBERSTRIDE_GREAVES("emberstride_greaves", "Emberstride Greaves", Material.DIAMOND_LEGGINGS, 14),

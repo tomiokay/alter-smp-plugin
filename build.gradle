@@ -16,7 +16,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
+    // Updated to Paper 1.21.4 to support new CustomModelData format
+    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
 }
 
 java {

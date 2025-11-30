@@ -14,6 +14,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class LegendaryItemFactory {
             NamespacedKey key = new NamespacedKey("legendaryweapons", LEGENDARY_KEY);
             meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, type.getId());
 
-            // Set custom model data for resource pack compatibility
+            // Set custom model data
             meta.setCustomModelData(type.getCustomModelData());
 
             // Add max enchantments based on type
@@ -182,14 +183,12 @@ public class LegendaryItemFactory {
         // Add yellow cross pattern
         banner.addPattern(new Pattern(DyeColor.YELLOW, PatternType.CROSS));
 
+        // Apply the banner state back to the shield
         banner.update();
         blockStateMeta.setBlockState(banner);
         shield.setItemMeta(blockStateMeta);
     }
 
-    /**
-     * Add appropriate enchantments to legendaries based on their type.
-     */
     private void addMaxEnchantments(ItemMeta meta, LegendaryType type) {
         switch (type) {
             // Swords
@@ -200,15 +199,15 @@ public class LegendaryItemFactory {
             case SOUL_DEVOURER:
             case CREATION_SPLITTER:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
-                meta.addEnchant(Enchantment.LOOTING, 3, true);
                 meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
-                meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
+                meta.addEnchant(Enchantment.LOOTING, 3, true);
                 break;
 
             // Trident
             case TEMPESTBREAKER_SPEAR:
+                meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 meta.addEnchant(Enchantment.IMPALING, 5, true);
-                meta.addEnchant(Enchantment.RIPTIDE, 3, true);
+                meta.addEnchant(Enchantment.LOYALTY, 3, true);
                 break;
 
             // Axe
@@ -217,7 +216,7 @@ public class LegendaryItemFactory {
                 meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
                 break;
 
-            // Shovel (Chains)
+            // Shovel (Chains of Eternity)
             case CHAINS_OF_ETERNITY:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 break;
@@ -279,10 +278,9 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Heat Shield");
                 lore.add(ChatColor.GRAY + "  Immune to fire and explosions");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Flame Harvest (1m30s)");
-                lore.add(ChatColor.GRAY + "  Fiery explosion, +6 absorption per enemy");
-                lore.add(ChatColor.GRAY + "  Max 18 absorption hearts");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Fire Rebirth (5min)");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Flame Harvest (30s)");
+                lore.add(ChatColor.GRAY + "  Fiery explosion grants absorption");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Fire Rebirth (180s)");
                 lore.add(ChatColor.GRAY + "  Cheat death with flames");
                 break;
 
@@ -293,7 +291,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Gale Throw (25s)");
                 lore.add(ChatColor.GRAY + "  Wind vortex on impact");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Stormcall (50s)");
-                lore.add(ChatColor.GRAY + "  8-block lightning storm radius");
+                lore.add(ChatColor.GRAY + "  Cone of stunning lightning");
                 break;
 
             case THOUSAND_DEMON_DAGGERS:
@@ -304,17 +302,17 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Teleport behind target enemy");
                 lore.add(ChatColor.GRAY + "  Next attack deals +1 heart true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Soul Mark (60s)");
-                lore.add(ChatColor.GRAY + "  Mark target, next hit +4 hearts true dmg");
+                lore.add(ChatColor.GRAY + "  Mark target for true damage");
                 break;
 
             case DIVINE_AXE_RHITTA:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Nature Channel");
-                lore.add(ChatColor.GRAY + "  Regen III on natural blocks");
+                lore.add(ChatColor.GRAY + "  Regeneration on natural blocks");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Nature Grasp (35s)");
                 lore.add(ChatColor.GRAY + "  Root enemies in place");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Verdant Cyclone (70s)");
-                lore.add(ChatColor.GRAY + "  360 spin attack, 2 hearts damage");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Forest Shield (70s)");
+                lore.add(ChatColor.GRAY + "  Axe becomes breach weapon");
                 break;
 
             case CHAINS_OF_ETERNITY:
@@ -322,7 +320,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Every 5th hit immobilizes");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Soul Bind (35s)");
-                lore.add(ChatColor.GRAY + "  Pull target, 4 hearts damage");
+                lore.add(ChatColor.GRAY + "  Pull and slow target");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Prison of the Damned (65s)");
                 lore.add(ChatColor.GRAY + "  Cage target in iron bars");
                 break;
@@ -348,13 +346,13 @@ public class LegendaryItemFactory {
                 break;
 
             case CHRONO_BLADE:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Time Slow");
-                lore.add(ChatColor.GRAY + "  First hit slows target (20s CD)");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Last Second");
+                lore.add(ChatColor.GRAY + "  Buffs when low HP");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Time Distortion (40s)");
-                lore.add(ChatColor.GRAY + "  6-block slow bubble, 4 true dmg on end");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Chrono Shift (120s)");
-                lore.add(ChatColor.GRAY + "  Mark position, re-cast to return");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Echo Strike (40s)");
+                lore.add(ChatColor.GRAY + "  Hits repeat after 1 second");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Time Rewind (120s)");
+                lore.add(ChatColor.GRAY + "  Return to past state");
                 break;
 
             case SOUL_DEVOURER:
@@ -369,14 +367,13 @@ public class LegendaryItemFactory {
                 break;
 
             case CREATION_SPLITTER:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Endbound Soulkeeper");
-                lore.add(ChatColor.GRAY + "  Kill players to steal hearts (+1 max)");
-                lore.add(ChatColor.GRAY + "  Max +5 hearts, death returns all");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Dragon's Gaze");
+                lore.add(ChatColor.GRAY + "  Nearby players glow");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (18s)");
-                lore.add(ChatColor.GRAY + "  7-block cone, 2 true damage");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Genesis Collapse (2min)");
-                lore.add(ChatColor.GRAY + "  Pull enemies, 5 true damage, shield");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Void Rupture (35s)");
+                lore.add(ChatColor.GRAY + "  Void arc with blindness");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Cataclysm Pulse (95s)");
+                lore.add(ChatColor.GRAY + "  Dark explosion with pull");
                 break;
 
             case COPPER_PICKAXE:
@@ -389,17 +386,17 @@ public class LegendaryItemFactory {
                 break;
 
             case THUNDERFORGE_CHESTPLATE:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Thunder Strike");
-                lore.add(ChatColor.GRAY + "  Every 10 melee hits: lightning strike");
-                lore.add(ChatColor.GRAY + "  Deals 3 hearts true damage");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Shockwave Counter");
+                lore.add(ChatColor.GRAY + "  Every 20 hits: electric shockwave");
+                lore.add(ChatColor.GRAY + "  Deals damage and knockback");
                 break;
 
             case EMBERSTRIDE_GREAVES:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flamebound Feet");
                 lore.add(ChatColor.GRAY + "  Immune to fire, lava, and magma");
-                lore.add(ChatColor.GRAY + "  Flame trail damages enemies");
+                lore.add(ChatColor.GRAY + "  Walking leaves flame trails");
                 lore.add(ChatColor.GRAY + "  +10% attack speed above 50% HP");
-                lore.add(ChatColor.GRAY + "  +500% movement speed in lava");
+                lore.add(ChatColor.GRAY + "  +100% movement speed in lava");
                 break;
 
             case BLOODREAPER_HOOD:
