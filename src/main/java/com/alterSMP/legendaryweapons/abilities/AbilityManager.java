@@ -1961,6 +1961,11 @@ public class AbilityManager implements Listener {
         org.bukkit.entity.Trident trident = (org.bukkit.entity.Trident) event.getEntity();
         Player player = (Player) event.getEntity().getShooter();
 
+        // Check if this trident is the Tempestbreaker Spear
+        ItemStack tridentItem = trident.getItemStack();
+        String legendaryId = LegendaryItemFactory.getLegendaryId(tridentItem);
+        boolean isTempestbreaker = legendaryId != null && legendaryId.equals(LegendaryType.TEMPESTBREAKER_SPEAR.getId());
+
         // Check if this is a Gale Throw
         if (nextGaleThrow.contains(player.getUniqueId())) {
             nextGaleThrow.remove(player.getUniqueId());
@@ -2004,6 +2009,32 @@ public class AbilityManager implements Listener {
             }
 
             player.sendMessage(ChatColor.AQUA + "Wind Vortex!");
+        }
+        // Tempestbreaker Spear passive: Lightning strike on hit
+        else if (isTempestbreaker && event.getHitEntity() instanceof LivingEntity) {
+            LivingEntity target = (LivingEntity) event.getHitEntity();
+
+            // Trust check
+            if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
+                return;
+            }
+
+            Location hitLoc = target.getLocation();
+
+            // Strike lightning at the target
+            hitLoc.getWorld().strikeLightningEffect(hitLoc);
+
+            // Deal bonus lightning damage (3 hearts = 6 damage)
+            double currentHealth = target.getHealth();
+            target.setHealth(Math.max(0, currentHealth - 6.0));
+
+            // Electric particles
+            hitLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, hitLoc.add(0, 1, 0), 50, 0.5, 1, 0.5, 0.2);
+
+            // Notify victim
+            if (target instanceof Player) {
+                ((Player) target).sendMessage(ChatColor.RED + "⚔ Struck by " + ChatColor.YELLOW + "Tempestbreaker Lightning" + ChatColor.RED + " from " + player.getName() + "!");
+            }
         }
     }
 

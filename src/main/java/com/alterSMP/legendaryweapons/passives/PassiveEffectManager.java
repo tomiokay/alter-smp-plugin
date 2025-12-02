@@ -64,6 +64,10 @@ public class PassiveEffectManager implements Listener {
         ItemStack offhand = player.getInventory().getItemInOffHand();
         String offhandLegendary = LegendaryItemFactory.getLegendaryId(offhand);
 
+        // Check helmet
+        ItemStack helmet = player.getInventory().getHelmet();
+        String helmetLegendary = LegendaryItemFactory.getLegendaryId(helmet);
+
         // Apply passives based on legendary held/worn
         if (mainLegendary != null) {
             applyMainHandPassive(player, mainLegendary, mainHand);
@@ -75,6 +79,10 @@ public class PassiveEffectManager implements Listener {
 
         if (offhandLegendary != null) {
             applyOffhandPassive(player, offhandLegendary);
+        }
+
+        if (helmetLegendary != null) {
+            applyHelmetPassive(player, helmetLegendary);
         }
 
         // Tick Emberstride Greaves passives (flame trail, attack speed, lava speed)
@@ -89,9 +97,7 @@ public class PassiveEffectManager implements Listener {
 
         switch (type) {
             case TEMPESTBREAKER_SPEAR:
-                // Windwalker - Dolphin's Grace + Conduit Power
-                player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 20, 0, true, false));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 20, 0, true, false));
+                // Passive: Lightning strike on trident hit (handled in AbilityManager)
                 break;
 
             case THOUSAND_DEMON_DAGGERS:
@@ -137,7 +143,19 @@ public class PassiveEffectManager implements Listener {
 
         if (type == LegendaryType.SKYBREAKER_BOOTS) {
             // Featherfall - No fall damage (handled in event listener)
-            // No tick-based passive needed
+            // Permanent Speed II
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20, 1, true, false));
+        }
+    }
+
+    private void applyHelmetPassive(Player player, String legendaryId) {
+        LegendaryType type = LegendaryType.fromId(legendaryId);
+        if (type == null) return;
+
+        if (type == LegendaryType.BLOODREAPER_HOOD) {
+            // Water Mobility - Dolphin's Grace + Conduit Power
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 20, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 20, 0, true, false));
         }
     }
 

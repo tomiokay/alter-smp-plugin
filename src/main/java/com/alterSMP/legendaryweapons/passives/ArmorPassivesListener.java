@@ -212,8 +212,12 @@ public class ArmorPassivesListener implements Listener {
         // Mark as active to prevent counting lightning damage
         shockwaveActive.add(player.getUniqueId());
 
-        // Spawn visual lightning (no damage from the lightning itself)
-        target.getWorld().strikeLightningEffect(target.getLocation());
+        Location targetLoc = target.getLocation();
+
+        // Spawn 3 visual lightning bolts (no damage from the lightning itself)
+        target.getWorld().strikeLightningEffect(targetLoc);
+        target.getWorld().strikeLightningEffect(targetLoc.clone().add(1, 0, 0));
+        target.getWorld().strikeLightningEffect(targetLoc.clone().add(-1, 0, 1));
 
         // Deal 3 hearts (6 damage) true damage
         double currentHealth = target.getHealth();
@@ -221,10 +225,10 @@ public class ArmorPassivesListener implements Listener {
         target.setHealth(newHealth);
 
         // Particles for extra effect
-        target.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, target.getLocation().add(0, 1, 0), 50, 0.5, 1, 0.5, 0.2);
+        target.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, targetLoc.add(0, 1, 0), 100, 1, 1, 1, 0.3);
 
         if (target instanceof Player) {
-            ((Player) target).sendMessage(ChatColor.YELLOW + "⚡ Struck by " + ChatColor.GOLD + "Thunderforge Lightning" +
+            ((Player) target).sendMessage(ChatColor.YELLOW + "⚡ Struck by " + ChatColor.GOLD + "Thunderforge Lightning Storm" +
                 ChatColor.YELLOW + " from " + player.getName() + "!");
         }
 
