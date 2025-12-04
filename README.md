@@ -95,72 +95,78 @@ Transform your SMP with powerful legendary items that players will fight to obta
 
 ## Legendary Weapons Overview
 
-### 🌠 Blade of the Fractured Stars (Sword)
-- **Passive:** Flashburst Counter - Every 20 hits blinds nearby enemies
-- **Ability 1:** Star Rift Slash (25s) - Beam attack through walls
+### 🌠 Blade of the Fractured Stars (Netherite Sword)
+- **Passive:** Flashburst Counter - Every 20 hits blinds nearby enemies with Darkness
+- **Ability 1:** Star Rift Slash (25s) - 30-block beam through walls
 - **Ability 2:** Stargate Blink (45s) - Teleport up to 45 blocks
 
-### 🔥 Emberheart Scythe (Sword)
-- **Passive:** Heat Shield - Immune to fire and explosions
-- **Ability 1:** Flame Harvest (30s) - Fiery explosion grants absorption
-- **Ability 2:** Fire Rebirth (180s) - Cheat death with flames
+### 🔥 Emberheart Scythe (Netherite Sword)
+- **Passive:** Heat Shield - Immune to fire, lava, and explosions
+- **Ability 1:** Flame Harvest (90s) - Deal 40% HP damage to nearby enemies, gain absorption per hit
+- **Ability 2:** Fire Rebirth (300s) - Cheat death for 10 seconds
 
 ### 💨 Tempestbreaker Spear (Trident)
-- **Passive:** Windwalker - Water mobility buffs
-- **Ability 1:** Gale Throw (25s) - Wind vortex on impact
-- **Ability 2:** Stormcall (50s) - Cone of stunning lightning
+- **Passive:** Storm's Fury - Trident hits strike lightning (1 heart damage)
+- **Ability 1:** Gale Throw (25s) - Next throw creates wind vortex
+- **Ability 2:** Stormcall (50s) - 8-block lightning storm for 2 seconds
 
-### 🌑 Umbra Veil Dagger (Sword)
+### 🌑 Umbra Veil Dagger (Netherite Sword)
 - **Passive:** Shadow Presence - Speed III while sneaking
-- **Ability 1:** Shadowstep (20s) - Dash and go invisible
-- **Ability 2:** Soul Mark (60s) - Mark target for true damage
+- **Ability 1:** Shadowstep (20s) - Teleport behind target, next attack deals +1 heart true damage
+- **Ability 2:** Soul Mark (60s) - Mark target for +4 hearts true damage per hit for 15 seconds
 
-### 🌿 Heartroot Guardian Axe (Axe)
-- **Passive:** Nature Channel - Regeneration on natural blocks
-- **Ability 1:** Nature Grasp (35s) - Root enemies in place
-- **Ability 2:** Forest Shield (70s) - Axe becomes breach weapon
+### 🌿 Heartroot Guardian Axe (Netherite Axe)
+- **Passive:** Nature Channel - Regeneration III on grass/logs/leaves
+- **Ability 1:** Nature Grasp (35s) - Root enemies in 6-block radius
+- **Ability 2:** Verdant Cyclone (70s) - 360° spin attack with knockback
 
-### ⛓️ Chains of Eternity (Shovel)
-- **Passive:** Soul Links - Every 5th hit immobilizes
-- **Ability 1:** Soul Bind (35s) - Pull and slow target
-- **Ability 2:** Prison of the Damned (65s) - Cage target in iron bars
+### ⛓️ Chains of Eternity (Wooden Shovel)
+- **Passive:** Soul Links - Every 5th hit immobilizes target
+- **Ability 1:** Soul Bind (35s) - Pull target, deal damage, and slow
+- **Ability 2:** Prison of the Damned (65s) - Cage target in iron bars for 5 seconds
 
 ### ⚡ Skybreaker Boots (Diamond Boots)
-- **Passive:** No fall damage + Meteor Slam - Shift mid-air to slam down dealing area damage based on fall distance (no knockback)
+- **Passive:** Featherfall - No fall damage + permanent Speed II
+- **Ability:** Meteor Slam - Shift mid-air to slam down with mace-like damage in 4-block radius (scales with fall distance, no knockback)
 
 ### ⛏️ Copper Pickaxe (Netherite Pickaxe)
-- **Ability 1:** Toggle 3x3 Mining - Mine in a 3x3 area
-- **Ability 2:** Toggle Silk Touch/Fortune III - Switch between enchantments
+- **Passive:** None
+- **Ability 1:** 3x3 Mining Toggle - Toggle mining in a 3x3 area
+- **Ability 2:** Enchant Switch - Toggle between Silk Touch and Fortune III
 
 ### 🌩️ Thunderforge Chestplate (Diamond Chestplate)
-- **Passive:** Electric Shockwave - Every 7 hits taken, releases a 5-block radius shockwave (4 damage + knockback)
+- **Passive:** Storm Strike - Every 10 melee hits triggers lightning storm on target (deals ~2.5 hearts through Protection IV)
 
-### ⚡ Ionflare Leggings (Diamond Leggings)
-- **Passive:** Ion Charge - Every 5 hits dealt releases chain lightning hitting 3 targets (6 damage each)
+### 🔥 Emberstride Greaves (Diamond Leggings)
+- **Passive:** Flamebound Feet - Immune to fire, lava, and magma damage
+- **Passive:** Flame Trail - Walking leaves damaging flame trails (burns enemies)
+- **Passive:** Haste I when above 50% HP
+- **Passive:** Super speed in lava (+500% movement speed)
 
 ### 💀 Bloodreaper Hood (Diamond Helmet)
-- **Passive:** Blood Harvest - Kills grant +5 hearts for 5 minutes
-- **Passive:** Critical Rush - Crits grant +10% speed for 3 seconds
+- **Passive:** Blood Harvest - Player kills grant +5 hearts for 5 minutes
+- **Passive:** Critical Rush - Critical hits grant Speed I for 3 seconds
+- **Passive:** Water Mobility - Dolphin's Grace + Conduit Power
 
 ### 💎 Celestial Aegis Shield (Shield)
-- **Passive:** Aura of Protection - Allies gain Resistance I
-- **Ability 1:** Radiant Block (40s) - Reflect 75% damage for 5s
-- **Ability 2:** Heaven's Wall (90s) - Summon protective barrier
+- **Passive:** Aura of Protection - You and trusted allies within 5 blocks gain Resistance I
+- **Ability 1:** Radiant Block (40s) - Reflect 75% damage for 5 seconds
+- **Ability 2:** Heaven's Wall (90s) - Summon 16x16 barrier for 32s (only trusted players can pass)
 
-### 🧭 Chrono Edge (Sword)
-- **Passive:** Last Second - Buffs when low HP
-- **Ability 1:** Echo Strike (40s) - Hits repeat after 1 second
-- **Ability 2:** Time Rewind (120s) - Return to past state
+### 🧭 Chrono Edge (Netherite Sword)
+- **Passive:** Time Slow - First hit on each enemy slows them
+- **Ability 1:** Time Distortion (40s) - 6-block bubble freezes enemies for 3s, then deals 4 hearts true damage
+- **Ability 2:** Chrono Shift (120s) - Mark position, re-cast to return (clears debuffs, grants Speed II)
 
-### 💀 Oblivion Harvester (Sword)
-- **Passive:** Soul Collector - Gain damage from kills
-- **Ability 1:** Void Slice (30s) - Sweeping void attack
-- **Ability 2:** Void Rift (85s) - Create damaging black hole
+### 💀 Oblivion Harvester (Netherite Sword)
+- **Passive:** Soul Collector - +2 damage per player kill (max 5 souls, displayed on item)
+- **Ability 1:** Void Slice (30s) - 8-block horizontal purple arc
+- **Ability 2:** Void Rift (85s) - Black hole that pulls and damages enemies
 
-### 🐉 Eclipse Devourer (Sword)
-- **Passive:** Dragon's Gaze - Nearby players glow
-- **Ability 1:** Void Rupture (35s) - Void arc with blindness
-- **Ability 2:** Cataclysm Pulse (95s) - Dark explosion with pull
+### 🐉 Eclipse Devourer (Netherite Sword)
+- **Passive:** Dragon's Gaze - Nearby enemies within 8 blocks glow
+- **Ability 1:** End Sever (18s) - 7-block cone dealing 2 hearts true damage with blindness
+- **Ability 2:** Genesis Collapse (120s) - 10-block explosion dealing 5 hearts true damage
 
 ## Crafting Recipes
 
