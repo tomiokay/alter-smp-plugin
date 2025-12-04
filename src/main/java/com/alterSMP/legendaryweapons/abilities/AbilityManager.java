@@ -733,14 +733,14 @@ public class AbilityManager implements Listener {
                     Location floorLoc = center.clone().add(x, -1, z);
                     if (floorLoc.getBlock().getType() == Material.AIR || floorLoc.getBlock().isPassable()) {
                         floorLoc.getBlock().setType(Material.BARRIER);
-                        cageBlocks.add(floorLoc);
+                        cageBlocks.add(floorLoc.getBlock().getLocation()); // Use block location for proper comparison
                     }
 
                     // Ceiling (y = 3) - use iron bars
                     Location ceilingLoc = center.clone().add(x, 3, z);
                     if (ceilingLoc.getBlock().getType() == Material.AIR || ceilingLoc.getBlock().isPassable()) {
                         ceilingLoc.getBlock().setType(Material.IRON_BARS);
-                        cageBlocks.add(ceilingLoc);
+                        cageBlocks.add(ceilingLoc.getBlock().getLocation()); // Use block location for proper comparison
                     }
 
                     // Walls - only place on the outer edges (not center column, and only edges)
@@ -749,7 +749,7 @@ public class AbilityManager implements Listener {
                             Location loc = center.clone().add(x, y, z);
                             if (loc.getBlock().getType() == Material.AIR || loc.getBlock().isPassable()) {
                                 loc.getBlock().setType(Material.IRON_BARS);
-                                cageBlocks.add(loc);
+                                cageBlocks.add(loc.getBlock().getLocation()); // Use block location for proper comparison
                             }
                         }
                     }
@@ -1808,53 +1808,8 @@ public class AbilityManager implements Listener {
                 }
             }
 
-            // Soul Mark - only mark target if not already marked
-            String legendaryId = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInMainHand());
-            if (legendaryId != null && legendaryId.equals(LegendaryType.THOUSAND_DEMON_DAGGERS.getId())) {
-                if (event.getEntity() instanceof LivingEntity && !soulMarkTargets.containsKey(player.getUniqueId())) {
-                    LivingEntity target = (LivingEntity) event.getEntity();
-
-                    // Trust check
-                    if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
-                        return;
-                    }
-
-                    // Mark this target
-                    soulMarkTargets.put(player.getUniqueId(), target.getUniqueId());
-
-                    player.sendMessage(ChatColor.DARK_PURPLE + "Target marked! They will take true damage in 15 seconds.");
-
-                    // Schedule true damage after 15 seconds
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        UUID markedUUID = soulMarkTargets.remove(player.getUniqueId());
-                        if (markedUUID != null) {
-                            Entity markedEntity = Bukkit.getEntity(markedUUID);
-                            if (markedEntity instanceof LivingEntity && markedEntity.isValid() && !markedEntity.isDead()) {
-                                LivingEntity markedLiving = (LivingEntity) markedEntity;
-
-                                // True damage (ignore armor) - directly reduce health
-                                double currentHealth = markedLiving.getHealth();
-                                markedLiving.setHealth(Math.max(0, currentHealth - 6.0)); // 6 hearts = 3 hearts true damage
-
-                                // Enhanced particles
-                                markedLiving.getWorld().spawnParticle(Particle.SOUL, markedLiving.getLocation(), 200, 0.5, 1, 0.5, 0.1);
-                                markedLiving.getWorld().spawnParticle(Particle.ENCHANT, markedLiving.getLocation(), 150, 0.5, 1, 0.5, 0.1);
-                                markedLiving.getWorld().spawnParticle(Particle.WITCH, markedLiving.getLocation(), 100, 0.5, 1, 0.5, 0.05);
-                                markedLiving.getWorld().playSound(markedLiving.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 0.7f);
-
-                                // Notify victim
-                                if (markedLiving instanceof Player) {
-                                    ((Player) markedLiving).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Soul Mark True Damage" + ChatColor.RED + " from " + player.getName() + "!");
-                                }
-
-                                player.sendMessage(ChatColor.DARK_PURPLE + "Soul Mark triggered! 3 hearts of true damage dealt!");
-                            }
-                        }
-                    }, 300L); // 15 seconds
-                }
-            }
-
             // Chrono Blade - Time Slow passive (first hit applies slow, 20s cooldown per target)
+            String legendaryId = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInMainHand());
             if (legendaryId != null && legendaryId.equals(LegendaryType.CHRONO_BLADE.getId())) {
                 if (event.getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) event.getEntity();
@@ -2024,9 +1979,9 @@ public class AbilityManager implements Listener {
             // Strike lightning at the target
             hitLoc.getWorld().strikeLightningEffect(hitLoc);
 
-            // Deal bonus lightning damage (3 hearts = 6 damage)
+            // Deal bonus lightning damage (1 heart = 2 damage)
             double currentHealth = target.getHealth();
-            target.setHealth(Math.max(0, currentHealth - 6.0));
+            target.setHealth(Math.max(0, currentHealth - 2.0));
 
             // Electric particles
             hitLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, hitLoc.add(0, 1, 0), 50, 0.5, 1, 0.5, 0.2);

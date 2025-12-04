@@ -219,10 +219,8 @@ public class ArmorPassivesListener implements Listener {
         target.getWorld().strikeLightningEffect(targetLoc.clone().add(1, 0, 0));
         target.getWorld().strikeLightningEffect(targetLoc.clone().add(-1, 0, 1));
 
-        // Deal 3 hearts (6 damage) true damage
-        double currentHealth = target.getHealth();
-        double newHealth = Math.max(0, currentHealth - 6.0);
-        target.setHealth(newHealth);
+        // Deal ~2.5 hearts through full prot 4 diamond (12 raw damage)
+        target.damage(12.0, player);
 
         // Particles for extra effect
         target.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, targetLoc.add(0, 1, 0), 100, 1, 1, 1, 0.3);

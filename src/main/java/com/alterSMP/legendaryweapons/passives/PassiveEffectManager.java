@@ -13,6 +13,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -31,11 +35,15 @@ public class PassiveEffectManager implements Listener {
     private Map<UUID, Integer> chainsHitCounter; // Chains of Eternity
     private Map<UUID, Long> lastIceCreateTime; // Skybreaker Boots path cooldown
 
+    // Cache for legendary IDs to avoid repeated PDC lookups (major performance optimization)
+    private Map<UUID, String[]> legendaryCache; // [mainHand, boots, offhand, helmet]
+
     public PassiveEffectManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
         this.bladeHitCounter = new HashMap<>();
         this.chainsHitCounter = new HashMap<>();
         this.lastIceCreateTime = new HashMap<>();
+        this.legendaryCache = new HashMap<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -48,29 +56,44 @@ public class PassiveEffectManager implements Listener {
                     applyPassiveEffects(player);
                 }
             }
-        }.runTaskTimer(plugin, 0L, 10L); // Every 0.5 seconds
+        }.runTaskTimer(plugin, 0L, 20L); // Every 1 second (optimized from 0.5s)
+    }
+
+    /**
+     * Update the legendary cache for a player. Call this when inventory changes.
+     */
+    public void updateCache(Player player) {
+        String[] cached = new String[4];
+        cached[0] = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInMainHand());
+        cached[1] = LegendaryItemFactory.getLegendaryId(player.getInventory().getBoots());
+        cached[2] = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInOffHand());
+        cached[3] = LegendaryItemFactory.getLegendaryId(player.getInventory().getHelmet());
+        legendaryCache.put(player.getUniqueId(), cached);
+    }
+
+    /**
+     * Clear cache when player disconnects.
+     */
+    public void clearCache(UUID playerId) {
+        legendaryCache.remove(playerId);
     }
 
     private void applyPassiveEffects(Player player) {
-        // Check main hand
-        ItemStack mainHand = player.getInventory().getItemInMainHand();
-        String mainLegendary = LegendaryItemFactory.getLegendaryId(mainHand);
+        // Use cached values or update cache if not present
+        String[] cached = legendaryCache.get(player.getUniqueId());
+        if (cached == null) {
+            updateCache(player);
+            cached = legendaryCache.get(player.getUniqueId());
+        }
 
-        // Check boots
-        ItemStack boots = player.getInventory().getBoots();
-        String bootsLegendary = LegendaryItemFactory.getLegendaryId(boots);
-
-        // Check offhand
-        ItemStack offhand = player.getInventory().getItemInOffHand();
-        String offhandLegendary = LegendaryItemFactory.getLegendaryId(offhand);
-
-        // Check helmet
-        ItemStack helmet = player.getInventory().getHelmet();
-        String helmetLegendary = LegendaryItemFactory.getLegendaryId(helmet);
+        String mainLegendary = cached[0];
+        String bootsLegendary = cached[1];
+        String offhandLegendary = cached[2];
+        String helmetLegendary = cached[3];
 
         // Apply passives based on legendary held/worn
         if (mainLegendary != null) {
-            applyMainHandPassive(player, mainLegendary, mainHand);
+            applyMainHandPassive(player, mainLegendary);
         }
 
         if (bootsLegendary != null) {
@@ -91,7 +114,7 @@ public class PassiveEffectManager implements Listener {
         }
     }
 
-    private void applyMainHandPassive(Player player, String legendaryId, ItemStack item) {
+    private void applyMainHandPassive(Player player, String legendaryId) {
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
 
@@ -103,7 +126,7 @@ public class PassiveEffectManager implements Listener {
             case THOUSAND_DEMON_DAGGERS:
                 // Shadow Presence - Speed III while sneaking
                 if (player.isSneaking()) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20, 2, true, false));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 2, true, false));
                 }
                 break;
 
@@ -113,7 +136,7 @@ public class PassiveEffectManager implements Listener {
                 Material belowType = below.getType();
                 if (belowType == Material.GRASS_BLOCK || belowType.name().contains("LOG") ||
                     belowType.name().contains("LEAVES")) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 2, true, false)); // Level 3 = amplifier 2
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 40, 2, true, false));
                 }
                 break;
 
@@ -130,7 +153,7 @@ public class PassiveEffectManager implements Listener {
                         if (plugin.getTrustManager().isTrusted(player, target)) {
                             continue;
                         }
-                        target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 20, 0, true, false));
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 40, 0, true, false));
                     }
                 }
                 break;
@@ -144,7 +167,7 @@ public class PassiveEffectManager implements Listener {
         if (type == LegendaryType.SKYBREAKER_BOOTS) {
             // Featherfall - No fall damage (handled in event listener)
             // Permanent Speed II
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20, 1, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, true, false));
         }
     }
 
@@ -154,8 +177,8 @@ public class PassiveEffectManager implements Listener {
 
         if (type == LegendaryType.BLOODREAPER_HOOD) {
             // Water Mobility - Dolphin's Grace + Conduit Power
-            player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 20, 0, true, false));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 20, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 40, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 40, 0, true, false));
         }
     }
 
@@ -166,7 +189,7 @@ public class PassiveEffectManager implements Listener {
         if (type == LegendaryType.CELESTIAL_AEGIS_SHIELD) {
             // Aura of Protection - Self and trusted allies gain Resistance I
             // Apply to self first
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 40, 0, true, false));
 
             // Apply to nearby trusted players
             for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
@@ -176,7 +199,7 @@ public class PassiveEffectManager implements Listener {
                     if (!plugin.getTrustManager().isTrusted(player, ally)) {
                         continue;
                     }
-                    ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20, 0, true, false));
+                    ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 40, 0, true, false));
                 }
             }
         }
@@ -327,6 +350,34 @@ public class PassiveEffectManager implements Listener {
                 killer.sendMessage(ChatColor.DARK_PURPLE + "Soul collected: " +
                     ChatColor.LIGHT_PURPLE + (currentSouls + 1) + "/5");
             }
+        }
+    }
+
+    // ========== CACHE INVALIDATION EVENTS ==========
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        clearCache(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onItemHeld(PlayerItemHeldEvent event) {
+        // Invalidate cache when player switches hotbar slot
+        Bukkit.getScheduler().runTaskLater(plugin, () -> updateCache(event.getPlayer()), 1L);
+    }
+
+    @EventHandler
+    public void onSwapHands(PlayerSwapHandItemsEvent event) {
+        // Invalidate cache when player swaps main/offhand
+        Bukkit.getScheduler().runTaskLater(plugin, () -> updateCache(event.getPlayer()), 1L);
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        // Invalidate cache when player clicks in inventory (armor/equipment changes)
+        if (event.getWhoClicked() instanceof Player) {
+            Player player = (Player) event.getWhoClicked();
+            Bukkit.getScheduler().runTaskLater(plugin, () -> updateCache(player), 1L);
         }
     }
 }

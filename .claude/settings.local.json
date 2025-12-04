@@ -27,7 +27,12 @@
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar clean build --no-daemon)",
       "Bash(gh repo edit:*)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar shadowJar --no-daemon)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(git pull:*)",
+      "Bash(cmd.exe /c \"rmdir /s /q build 2>nul\")",
+      "Bash(timeout /t 2 /nobreak)",
+      "Bash(gh repo view:*)",
+      "Bash(gh auth login:*)"
     ],
     "deny": [],
     "ask": []
