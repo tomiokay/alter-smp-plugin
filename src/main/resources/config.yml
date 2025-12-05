@@ -61,7 +61,7 @@ cooldowns:
   # Divine Axe Rhitta
   divine_axe_rhitta:
     ability1: 35  # Nature Grasp
-    ability2: 70  # Forest Shield
+    ability2: 70  # Verdant Cyclone
 
   # Chains of Eternity
   chains_of_eternity:
@@ -79,8 +79,8 @@ cooldowns:
 
   # Chrono Blade
   chrono_blade:
-    ability1: 40   # Echo Strike
-    ability2: 120  # Time Rewind
+    ability1: 40   # Time Distortion
+    ability2: 120  # Chrono Shift
 
   # Voidrender
   voidrender:
@@ -89,8 +89,8 @@ cooldowns:
 
   # Creation Splitter
   creation_splitter:
-    ability1: 35  # Void Rupture
-    ability2: 95  # Cataclysm Pulse
+    ability1: 18   # End Sever
+    ability2: 120  # Genesis Collapse
 
   # Rift Key of the Endkeeper
   rift_key_of_endkeeper:
@@ -131,8 +131,8 @@ damage:
   oblivion_damage_per_soul: 2.0  # +2 damage per soul (max +10 at 5 souls)
 
   # Creation Splitter
-  void_rupture_damage: 7.0
-  cataclysm_pulse_damage: 8.0
+  end_sever_damage: 4.0        # 2 hearts true damage
+  genesis_collapse_damage: 10.0  # 5 hearts true damage
 
 # ========================================
 # ABILITY RANGES & DURATIONS
@@ -161,8 +161,8 @@ ranges:
 
   # Divine Axe Rhitta
   nature_grasp_radius: 6
-  nature_grasp_duration: 2  # seconds
-  forest_shield_duration: 10  # seconds
+  nature_grasp_duration: 2      # seconds
+  verdant_cyclone_radius: 5     # spin attack radius
 
   # Chains of Eternity
   soul_bind_range: 20
@@ -177,16 +177,16 @@ ranges:
   heavens_wall_duration: 6  # seconds
 
   # Chrono Blade
-  echo_strike_duration: 6  # seconds
-  echo_strike_delay: 1  # seconds
-  time_rewind_delay: 5  # seconds
-  last_second_hp_threshold: 3.0  # hearts
+  time_distortion_radius: 6     # blocks
+  time_distortion_freeze: 3     # seconds
+  time_distortion_damage: 8.0   # 4 hearts true damage
+  chrono_shift_duration: 30     # seconds to re-cast
 
   # Creation Splitter
-  void_rupture_range: 35
+  end_sever_range: 7            # cone range in blocks
   dragons_gaze_radius: 8
-  cataclysm_pulse_radius: 7
-  cataclysm_explosion_delay: 2  # seconds
+  genesis_collapse_radius: 10   # explosion radius
+  genesis_collapse_delay: 2     # seconds
 
 # ========================================
 # LEGENDARY CRAFTING RECIPES
