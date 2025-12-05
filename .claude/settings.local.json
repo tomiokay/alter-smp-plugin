@@ -32,7 +32,8 @@
       "Bash(cmd.exe /c \"rmdir /s /q build 2>nul\")",
       "Bash(timeout /t 2 /nobreak)",
       "Bash(gh repo view:*)",
-      "Bash(gh auth login:*)"
+      "Bash(gh auth login:*)",
+      "Bash(git show:*)"
     ],
     "deny": [],
     "ask": []

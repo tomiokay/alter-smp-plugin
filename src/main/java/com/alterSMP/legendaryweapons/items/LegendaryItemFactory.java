@@ -56,8 +56,8 @@ public class LegendaryItemFactory {
             meta.setUnbreakable(true);
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
-            // Initialize soul count for Soul Devourer
-            if (type == LegendaryType.SOUL_DEVOURER) {
+            // Initialize soul count for Voidrender
+            if (type == LegendaryType.VOIDRENDER) {
                 NamespacedKey soulKey = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
                 meta.getPersistentDataContainer().set(soulKey, PersistentDataType.INTEGER, 0);
             }
@@ -87,22 +87,22 @@ public class LegendaryItemFactory {
 
     // NEW: Helper method to check if legendary is an armor piece
     private boolean isArmorPiece(LegendaryType type) {
-        return type == LegendaryType.BLOODREAPER_HOOD ||
-               type == LegendaryType.THUNDERFORGE_CHESTPLATE ||
-               type == LegendaryType.EMBERSTRIDE_GREAVES ||
-               type == LegendaryType.SKYBREAKER_BOOTS;
+        return type == LegendaryType.COPPER_HELMET ||
+               type == LegendaryType.COPPER_CHESTPLATE ||
+               type == LegendaryType.COPPER_LEGGINGS ||
+               type == LegendaryType.COPPER_BOOTS;
     }
 
     // NEW: Helper method to get the equipment slot for armor
     private EquipmentSlot getArmorSlot(LegendaryType type) {
         switch (type) {
-            case BLOODREAPER_HOOD:
+            case COPPER_HELMET:
                 return EquipmentSlot.HEAD;
-            case THUNDERFORGE_CHESTPLATE:
+            case COPPER_CHESTPLATE:
                 return EquipmentSlot.CHEST;
-            case EMBERSTRIDE_GREAVES:
+            case COPPER_LEGGINGS:
                 return EquipmentSlot.LEGS;
-            case SKYBREAKER_BOOTS:
+            case COPPER_BOOTS:
                 return EquipmentSlot.FEET;
             default:
                 return null;
@@ -238,7 +238,7 @@ public class LegendaryItemFactory {
             case PHEONIX_GRACE:
             case THOUSAND_DEMON_DAGGERS:
             case CHRONO_BLADE:
-            case SOUL_DEVOURER:
+            case VOIDRENDER:
             case CREATION_SPLITTER:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
@@ -264,25 +264,25 @@ public class LegendaryItemFactory {
                 break;
 
             // Boots
-            case SKYBREAKER_BOOTS:
+            case COPPER_BOOTS:
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
                 meta.addEnchant(Enchantment.FEATHER_FALLING, 4, true);
                 meta.addEnchant(Enchantment.DEPTH_STRIDER, 3, true);
                 break;
 
             // Leggings
-            case EMBERSTRIDE_GREAVES:
+            case COPPER_LEGGINGS:
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
                 meta.addEnchant(Enchantment.FIRE_PROTECTION, 4, true);
                 break;
 
             // Chestplate
-            case THUNDERFORGE_CHESTPLATE:
+            case COPPER_CHESTPLATE:
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
                 break;
 
             // Helmet
-            case BLOODREAPER_HOOD:
+            case COPPER_HELMET:
                 meta.addEnchant(Enchantment.PROTECTION, 4, true);
                 meta.addEnchant(Enchantment.RESPIRATION, 4, true);
                 meta.addEnchant(Enchantment.AQUA_AFFINITY, 1, true);
@@ -369,7 +369,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Cage target in iron bars for 5s");
                 break;
 
-            case SKYBREAKER_BOOTS:
+            case COPPER_BOOTS:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Featherfall");
                 lore.add(ChatColor.GRAY + "  No fall damage + Speed II");
                 lore.add("");
@@ -401,7 +401,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Clears debuffs, grants Speed II");
                 break;
 
-            case SOUL_DEVOURER:
+            case VOIDRENDER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Soul Collector");
                 lore.add(ChatColor.GRAY + "  +2 damage per player kill (max 5)");
                 lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/5");
@@ -432,13 +432,13 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Toggle Silk Touch/Fortune III");
                 break;
 
-            case THUNDERFORGE_CHESTPLATE:
+            case COPPER_CHESTPLATE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Storm Strike");
                 lore.add(ChatColor.GRAY + "  Every 10 hits: lightning storm");
                 lore.add(ChatColor.GRAY + "  Deals 2.5 hearts through prot 4");
                 break;
 
-            case EMBERSTRIDE_GREAVES:
+            case COPPER_LEGGINGS:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flamebound Feet");
                 lore.add(ChatColor.GRAY + "  Immune to fire, lava, and magma");
                 lore.add(ChatColor.GRAY + "  Walking leaves damaging flame trails");
@@ -446,13 +446,43 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Super speed in lava");
                 break;
 
-            case BLOODREAPER_HOOD:
+            case COPPER_HELMET:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Blood Harvest");
                 lore.add(ChatColor.GRAY + "  Player kills grant +5 hearts (5min)");
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Critical Rush");
                 lore.add(ChatColor.GRAY + "  Crits grant Speed I (3s)");
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Water Mobility");
                 lore.add(ChatColor.GRAY + "  Dolphin's Grace + Conduit Power");
+                break;
+
+            case LANTERN_OF_LOST_NAMES:
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Phantom Veil");
+                lore.add(ChatColor.GRAY + "  Invisible to players you've never killed");
+                lore.add(ChatColor.GRAY + "  They cannot see you until you kill them once");
+                lore.add(ChatColor.GRAY + "  Deactivates for 5 min after attacking");
+                lore.add("");
+                lore.add(ChatColor.YELLOW + "Hold in offhand for effect");
+                break;
+
+            case RIFT_KEY_OF_ENDKEEPER:
+                lore.add(ChatColor.GREEN + "Ability: " + ChatColor.WHITE + "End Rift (24h cooldown)");
+                lore.add(ChatColor.GRAY + "  Open a portal to ANY coordinates");
+                lore.add(ChatColor.GRAY + "  Rift stays open for 30 seconds");
+                lore.add(ChatColor.GRAY + "  Teammates can follow through");
+                lore.add("");
+                lore.add(ChatColor.YELLOW + "Usage: /ability 1 <x> <y> <z>");
+                break;
+
+            case CHAOS_DICE_OF_FATE:
+                lore.add(ChatColor.GREEN + "Ability: " + ChatColor.WHITE + "Roll Dice (30min cooldown)");
+                lore.add(ChatColor.GRAY + "  Right-click to roll for a random effect:");
+                lore.add(ChatColor.GRAY + "  - +5 hearts for 15 min");
+                lore.add(ChatColor.GRAY + "  - Summon 5 iron golems");
+                lore.add(ChatColor.GRAY + "  - Speed III + Strength III (10 min)");
+                lore.add(ChatColor.GRAY + "  - Jumble opponent's hotbar");
+                lore.add(ChatColor.GRAY + "  - Player tracker (20 min)");
+                lore.add(ChatColor.GRAY + "  - Insta-crit for 15 min");
+                lore.add(ChatColor.GRAY + "  - Resistance II for 5 min");
                 break;
         }
 

@@ -68,8 +68,8 @@ cooldowns:
     ability1: 35  # Soul Bind
     ability2: 65  # Prison of the Damned
 
-  # Skybreaker Boots
-  skybreaker_boots:
+  # Copper Boots
+  copper_boots:
     ability1: 0  # Meteor Slam (shift-activated)
 
   # Celestial Aegis Shield
@@ -82,8 +82,8 @@ cooldowns:
     ability1: 40   # Echo Strike
     ability2: 120  # Time Rewind
 
-  # Soul Devourer
-  soul_devourer:
+  # Voidrender
+  voidrender:
     ability1: 30  # Void Slice
     ability2: 85  # Void Rift
 
@@ -91,6 +91,16 @@ cooldowns:
   creation_splitter:
     ability1: 35  # Void Rupture
     ability2: 95  # Cataclysm Pulse
+
+  # Rift Key of the Endkeeper
+  rift_key_of_endkeeper:
+    ability1: 86400  # 24 hours - Teleport to any coordinates
+
+  # Chaos Dice of Fate
+  chaos_dice_of_fate:
+    ability1: 1800  # 30 minutes - Roll for random effect
+
+  # Lantern of Lost Names (passive only, no cooldowns)
 
 # ========================================
 # ABILITY DAMAGE VALUES (in half-hearts)
@@ -114,7 +124,7 @@ damage:
   # Chains of Eternity (Prison duration in seconds)
   prison_duration: 5
 
-  # Soul Devourer
+  # Voidrender
   void_slice_damage: 5.0
   void_rift_damage: 3.0  # Per tick
   oblivion_max_souls: 5
@@ -196,15 +206,18 @@ ranges:
 #   thousand_demon_daggers
 #   divine_axe_rhitta
 #   chains_of_eternity
-#   skybreaker_boots
+#   copper_boots
 #   celestial_aegis_shield
 #   chrono_blade
-#   soul_devourer
+#   voidrender
 #   creation_splitter
 #   copper_pickaxe
-#   thunderforge_chestplate
-#   emberstride_greaves
-#   bloodreaper_hood
+#   copper_chestplate
+#   copper_leggings
+#   copper_helmet
+#   lantern_of_lost_names
+#   rift_key_of_endkeeper
+#   chaos_dice_of_fate
 #
 
 recipes:
@@ -430,8 +443,8 @@ recipes:
     - REDSTONE_BLOCK
     - CLOCK
 
-  # Soul Devourer
-  soul_devourer:
+  # Voidrender
+  voidrender:
     - NETHERITE_INGOT
     - WITHER_ROSE
     - WITHER_ROSE
@@ -486,8 +499,8 @@ recipes:
     - DRAGON_BREATH
     - DRAGON_HEAD
 
-  # Skybreaker Boots
-  skybreaker_boots:
+  # Copper Boots
+  copper_boots:
     - ENCHANTED_BOOK:FEATHER_FALLING:4
     - PHANTOM_MEMBRANE
     - FEATHER
@@ -542,8 +555,8 @@ recipes:
     - COPPER_BLOCK
     - COPPER_BLOCK
 
-  # Thunderforge Chestplate
-  thunderforge_chestplate:
+  # Copper Chestplate
+  copper_chestplate:
     - LIGHTNING_ROD
     - COPPER_BLOCK
     - COPPER_BLOCK
@@ -570,8 +583,8 @@ recipes:
     - COPPER_BLOCK
     - LIGHTNING_ROD
 
-  # Emberstride Greaves
-  emberstride_greaves:
+  # Copper Leggings
+  copper_leggings:
     - BLAZE_POWDER
     - MAGMA_CREAM
     - MAGMA_CREAM
@@ -598,8 +611,8 @@ recipes:
     - BLAZE_ROD
     - BLAZE_POWDER
 
-  # Bloodreaper Hood
-  bloodreaper_hood:
+  # Copper Helmet
+  copper_helmet:
     - WITHER_ROSE
     - REDSTONE_BLOCK
     - REDSTONE_BLOCK
@@ -625,6 +638,90 @@ recipes:
     - REDSTONE_BLOCK
     - REDSTONE_BLOCK
     - WITHER_ROSE
+
+  # Lantern of Lost Names
+  lantern_of_lost_names:
+    - SOUL_LANTERN
+    - SOUL_SAND
+    - SOUL_SAND
+    - SOUL_SAND
+    - SOUL_LANTERN
+    - SOUL_SAND
+    - ENDER_EYE
+    - GHAST_TEAR
+    - ENDER_EYE
+    - SOUL_SAND
+    - SOUL_SAND
+    - GHAST_TEAR
+    - SOUL_LANTERN
+    - GHAST_TEAR
+    - SOUL_SAND
+    - SOUL_SAND
+    - ENDER_EYE
+    - GHAST_TEAR
+    - ENDER_EYE
+    - SOUL_SAND
+    - SOUL_LANTERN
+    - SOUL_SAND
+    - SOUL_SAND
+    - SOUL_SAND
+    - SOUL_LANTERN
+
+  # Rift Key of the Endkeeper
+  rift_key_of_endkeeper:
+    - ENDER_EYE
+    - END_CRYSTAL
+    - END_CRYSTAL
+    - END_CRYSTAL
+    - ENDER_EYE
+    - END_CRYSTAL
+    - ENDER_PEARL
+    - DRAGON_BREATH
+    - ENDER_PEARL
+    - END_CRYSTAL
+    - END_CRYSTAL
+    - DRAGON_BREATH
+    - TRIPWIRE_HOOK
+    - DRAGON_BREATH
+    - END_CRYSTAL
+    - END_CRYSTAL
+    - ENDER_PEARL
+    - DRAGON_BREATH
+    - ENDER_PEARL
+    - END_CRYSTAL
+    - ENDER_EYE
+    - END_CRYSTAL
+    - END_CRYSTAL
+    - END_CRYSTAL
+    - ENDER_EYE
+
+  # Chaos Dice of Fate
+  chaos_dice_of_fate:
+    - AMETHYST_SHARD
+    - AMETHYST_BLOCK
+    - AMETHYST_BLOCK
+    - AMETHYST_BLOCK
+    - AMETHYST_SHARD
+    - AMETHYST_BLOCK
+    - LUCK_OF_THE_SEA:ENCHANTED_BOOK:3
+    - NETHER_STAR
+    - LUCK_OF_THE_SEA:ENCHANTED_BOOK:3
+    - AMETHYST_BLOCK
+    - AMETHYST_BLOCK
+    - NETHER_STAR
+    - AMETHYST_SHARD
+    - NETHER_STAR
+    - AMETHYST_BLOCK
+    - AMETHYST_BLOCK
+    - LUCK_OF_THE_SEA:ENCHANTED_BOOK:3
+    - NETHER_STAR
+    - LUCK_OF_THE_SEA:ENCHANTED_BOOK:3
+    - AMETHYST_BLOCK
+    - AMETHYST_SHARD
+    - AMETHYST_BLOCK
+    - AMETHYST_BLOCK
+    - AMETHYST_BLOCK
+    - AMETHYST_SHARD
 
 # ========================================
 # MESSAGES

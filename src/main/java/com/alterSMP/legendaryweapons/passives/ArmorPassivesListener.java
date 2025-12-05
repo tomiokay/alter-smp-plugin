@@ -25,25 +25,34 @@ public class ArmorPassivesListener implements Listener {
 
     private final LegendaryWeaponsPlugin plugin;
 
-    // Thunderforge Chestplate - hit counter
+    // Copper Chestplate - hit counter
     private Map<UUID, Integer> hitCounter = new HashMap<>();
 
-    // Emberstride Greaves - flame trail tracking
+    // Copper Leggings - flame trail tracking
     private Map<UUID, Location> lastFlameLocation = new HashMap<>();
     private Set<UUID> shockwaveActive = new HashSet<>(); // Prevent shockwave damage from counting as hits
 
-    // Skybreaker Boots - falling state
+    // Copper Boots - falling state
     private Set<UUID> isFalling = new HashSet<>();
     private Map<UUID, Double> fallDistance = new HashMap<>();
 
-    // Bloodreaper Hood - health boost tracking
+    // Copper Helmet - health boost tracking
     private Map<UUID, Double> originalMaxHealth = new HashMap<>();
+
+    // Lantern of Lost Names - kill tracking (persistent across sessions via AbilityManager)
+    // Players that holder has killed - they become visible
+    private Map<UUID, Set<UUID>> lanternKillTracker = new HashMap<>();
+    // Players currently hidden from lantern holders
+    private Map<UUID, Set<UUID>> hiddenFromPlayer = new HashMap<>();
 
     public ArmorPassivesListener(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
+
+        // Start lantern visibility update task
+        startLanternVisibilityTask();
     }
 
-    // ========== SKYBREAKER BOOTS ==========
+    // ========== COPPER BOOTS ==========
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onFallDamage(EntityDamageEvent event) {
@@ -54,7 +63,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack boots = player.getInventory().getBoots();
         String legendaryId = LegendaryItemFactory.getLegendaryId(boots);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.SKYBREAKER_BOOTS.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_BOOTS.getId())) {
             // Passive: No fall damage
             event.setCancelled(true);
 
@@ -73,7 +82,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack boots = player.getInventory().getBoots();
         String legendaryId = LegendaryItemFactory.getLegendaryId(boots);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.SKYBREAKER_BOOTS.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_BOOTS.getId())) {
             // Check if player is in the air
             if (!player.isOnGround() && player.getVelocity().getY() < 0) {
                 // Player is falling and pressed shift - METEOR SLAM!
@@ -107,17 +116,17 @@ public class ArmorPassivesListener implements Listener {
             ItemStack boots = player.getInventory().getBoots();
             String legendaryId = LegendaryItemFactory.getLegendaryId(boots);
 
-            if (legendaryId != null && legendaryId.equals(LegendaryType.SKYBREAKER_BOOTS.getId())) {
+            if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_BOOTS.getId())) {
                 event.setCancelled(true); // No fall damage
 
                 double dist = player.getFallDistance();
 
-                // Calculate damage exactly like vanilla mace: base 6 + (fall_distance - 1.5) * 3, capped at 100
+                // Calculate damage like vanilla mace: base 6 + (fall_distance - 1.5) * 3, UNCAPPED
                 double baseDamage = 6.0;
                 if (dist > 1.5) {
                     baseDamage += (dist - 1.5) * 3.0;
                 }
-                baseDamage = Math.min(baseDamage, 100.0); // Cap at 100 damage
+                // No damage cap - fall from high = massive damage
 
                 // Area attack
                 Location loc = player.getLocation();
@@ -169,7 +178,7 @@ public class ArmorPassivesListener implements Listener {
         }
     }
 
-    // ========== THUNDERFORGE CHESTPLATE ==========
+    // ========== COPPER CHESTPLATE ==========
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerMeleeHit(EntityDamageByEntityEvent event) {
@@ -194,7 +203,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack chestplate = player.getInventory().getChestplate();
         String legendaryId = LegendaryItemFactory.getLegendaryId(chestplate);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.THUNDERFORGE_CHESTPLATE.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_CHESTPLATE.getId())) {
             // Increment hit counter
             int hits = hitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
 
@@ -226,7 +235,7 @@ public class ArmorPassivesListener implements Listener {
         target.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, targetLoc.add(0, 1, 0), 100, 1, 1, 1, 0.3);
 
         if (target instanceof Player) {
-            ((Player) target).sendMessage(ChatColor.YELLOW + "⚡ Struck by " + ChatColor.GOLD + "Thunderforge Lightning Storm" +
+            ((Player) target).sendMessage(ChatColor.YELLOW + "⚡ Struck by " + ChatColor.GOLD + "Copper Chestplate Lightning Storm" +
                 ChatColor.YELLOW + " from " + player.getName() + "!");
         }
 
@@ -234,7 +243,7 @@ public class ArmorPassivesListener implements Listener {
         shockwaveActive.remove(player.getUniqueId());
     }
 
-    // ========== EMBERSTRIDE GREAVES ==========
+    // ========== COPPER LEGGINGS ==========
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onFireDamage(EntityDamageEvent event) {
@@ -254,7 +263,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack leggings = player.getInventory().getLeggings();
         String legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.EMBERSTRIDE_GREAVES.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_LEGGINGS.getId())) {
             // Immune to fire, lava, and magma
             event.setCancelled(true);
             player.setFireTicks(0); // Extinguish any fire
@@ -262,13 +271,13 @@ public class ArmorPassivesListener implements Listener {
     }
 
     /**
-     * Called by PassiveEffectManager tick to handle Emberstride Greaves passives
+     * Called by PassiveEffectManager tick to handle Copper Leggings passives
      */
-    public void tickEmberstrideGreaves(Player player) {
+    public void tickCopperLeggings(Player player) {
         ItemStack leggings = player.getInventory().getLeggings();
         String legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
 
-        if (legendaryId == null || !legendaryId.equals(LegendaryType.EMBERSTRIDE_GREAVES.getId())) {
+        if (legendaryId == null || !legendaryId.equals(LegendaryType.COPPER_LEGGINGS.getId())) {
             return;
         }
 
@@ -319,7 +328,7 @@ public class ArmorPassivesListener implements Listener {
         }
     }
 
-    // ========== BLOODREAPER HOOD ==========
+    // ========== COPPER HELMET ==========
 
     @EventHandler
     public void onEntityKill(EntityDeathEvent event) {
@@ -335,7 +344,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack helmet = killer.getInventory().getHelmet();
         String legendaryId = LegendaryItemFactory.getLegendaryId(helmet);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.BLOODREAPER_HOOD.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_HELMET.getId())) {
             UUID killerId = killer.getUniqueId();
 
             // Store original max health if not already stored
@@ -388,7 +397,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack helmet = player.getInventory().getHelmet();
         String legendaryId = LegendaryItemFactory.getLegendaryId(helmet);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.BLOODREAPER_HOOD.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_HELMET.getId())) {
             // Check if it's a critical hit (player must be falling)
             if (player.getFallDistance() > 0 && player.getVelocity().getY() < 0) {
                 // Grant 10% speed for 3 seconds (Speed I = 20%, so we use level 0 with amplifier tricks)
@@ -399,5 +408,156 @@ public class ArmorPassivesListener implements Listener {
                 player.getWorld().spawnParticle(Particle.CRIT, event.getEntity().getLocation(), 20, 0.3, 0.5, 0.3, 0);
             }
         }
+    }
+
+    // ========== LANTERN OF LOST NAMES ==========
+
+    private void startLanternVisibilityTask() {
+        // Run every 10 ticks (0.5 seconds) to update visibility
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Player holder : Bukkit.getOnlinePlayers()) {
+                updateLanternVisibility(holder);
+            }
+        }, 20L, 10L);
+    }
+
+    private void updateLanternVisibility(Player holder) {
+        ItemStack offhand = holder.getInventory().getItemInOffHand();
+        ItemStack mainhand = holder.getInventory().getItemInMainHand();
+
+        String offhandId = LegendaryItemFactory.getLegendaryId(offhand);
+        String mainhandId = LegendaryItemFactory.getLegendaryId(mainhand);
+
+        boolean holdingLantern = (offhandId != null && offhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()))
+                || (mainhandId != null && mainhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()));
+
+        UUID holderId = holder.getUniqueId();
+        Set<UUID> currentlyHidden = hiddenFromPlayer.computeIfAbsent(holderId, k -> new HashSet<>());
+        Set<UUID> killed = lanternKillTracker.computeIfAbsent(holderId, k -> new HashSet<>());
+
+        if (!holdingLantern) {
+            // Not holding lantern - show all hidden players
+            for (UUID hiddenId : new HashSet<>(currentlyHidden)) {
+                Player hidden = Bukkit.getPlayer(hiddenId);
+                if (hidden != null && hidden.isOnline()) {
+                    holder.showPlayer(plugin, hidden);
+                }
+            }
+            currentlyHidden.clear();
+            return;
+        }
+
+        // Holding lantern - update visibility
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            if (other.equals(holder)) continue;
+
+            UUID otherId = other.getUniqueId();
+
+            // Check if holder has killed this player
+            boolean hasKilled = killed.contains(otherId);
+
+            // Check if they're trusted
+            boolean isTrusted = plugin.getTrustManager().isTrusted(holder, other);
+
+            if (hasKilled || isTrusted) {
+                // Player should be visible
+                if (currentlyHidden.contains(otherId)) {
+                    holder.showPlayer(plugin, other);
+                    currentlyHidden.remove(otherId);
+                }
+            } else {
+                // Player should be hidden
+                if (!currentlyHidden.contains(otherId)) {
+                    holder.hidePlayer(plugin, other);
+                    currentlyHidden.add(otherId);
+
+                    // Show soul particle effect on hidden player (only to holder)
+                    Location loc = other.getLocation().add(0, 1, 0);
+                    holder.spawnParticle(Particle.SOUL, loc, 5, 0.3, 0.5, 0.3, 0.02);
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerKillForLantern(EntityDeathEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player victim = (Player) event.getEntity();
+        Player killer = victim.getKiller();
+        if (killer == null) return;
+
+        // Check if killer is holding the Lantern of Lost Names
+        ItemStack offhand = killer.getInventory().getItemInOffHand();
+        ItemStack mainhand = killer.getInventory().getItemInMainHand();
+
+        String offhandId = LegendaryItemFactory.getLegendaryId(offhand);
+        String mainhandId = LegendaryItemFactory.getLegendaryId(mainhand);
+
+        boolean holdingLantern = (offhandId != null && offhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()))
+                || (mainhandId != null && mainhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()));
+
+        if (holdingLantern) {
+            // Record this kill
+            Set<UUID> killed = lanternKillTracker.computeIfAbsent(killer.getUniqueId(), k -> new HashSet<>());
+            killed.add(victim.getUniqueId());
+
+            // Show player to killer now
+            Set<UUID> hidden = hiddenFromPlayer.get(killer.getUniqueId());
+            if (hidden != null && hidden.remove(victim.getUniqueId())) {
+                killer.showPlayer(plugin, victim);
+            }
+
+            // Dramatic effect
+            killer.getWorld().spawnParticle(Particle.SOUL, victim.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.1);
+            killer.playSound(killer.getLocation(), Sound.ENTITY_WARDEN_HEARTBEAT, 1.0f, 0.5f);
+            killer.sendMessage(ChatColor.DARK_AQUA + "✦ " + ChatColor.AQUA + victim.getName() +
+                    ChatColor.GRAY + "'s name has been claimed by the Lantern.");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoinForLantern(org.bukkit.event.player.PlayerJoinEvent event) {
+        // When a player joins, we need to update visibility for all lantern holders
+        Player joiningPlayer = event.getPlayer();
+
+        // Run one tick later to ensure player is fully loaded
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            for (Player holder : Bukkit.getOnlinePlayers()) {
+                if (holder.equals(joiningPlayer)) continue;
+                updateLanternVisibility(holder);
+            }
+            // Also check if the joining player is holding a lantern
+            updateLanternVisibility(joiningPlayer);
+        }, 2L);
+    }
+
+    @EventHandler
+    public void onPlayerQuitForLantern(org.bukkit.event.player.PlayerQuitEvent event) {
+        UUID playerId = event.getPlayer().getUniqueId();
+
+        // Clean up hidden tracking for this player
+        hiddenFromPlayer.remove(playerId);
+
+        // Remove this player from others' hidden lists
+        for (Set<UUID> hidden : hiddenFromPlayer.values()) {
+            hidden.remove(playerId);
+        }
+    }
+
+    /**
+     * Get the set of players that a lantern holder has killed.
+     * Used for persistence if needed.
+     */
+    public Set<UUID> getLanternKills(UUID holderId) {
+        return lanternKillTracker.getOrDefault(holderId, new HashSet<>());
+    }
+
+    /**
+     * Add a kill to a lantern holder's record.
+     * Used for loading persistence if needed.
+     */
+    public void addLanternKill(UUID holderId, UUID victimId) {
+        lanternKillTracker.computeIfAbsent(holderId, k -> new HashSet<>()).add(victimId);
     }
 }

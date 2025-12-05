@@ -50,6 +50,19 @@ public class AbilityManager implements Listener {
     private Set<UUID> timeDistortionActive; // Time Distortion bubble active
     private Set<Location> activePrisonBlocks; // Prison of the Damned blocks (unbreakable)
 
+    // Lantern of Lost Names - tracking kills and attack cooldown
+    private Map<UUID, Set<UUID>> lanternKills; // Player UUID -> Set of players they've killed
+    private Map<UUID, Long> lanternAttackCooldown; // Player UUID -> when cooldown ends
+
+    // Rift Key of the Endkeeper - portal tracking
+    private Map<UUID, Location> activeRiftPortals; // Player UUID -> portal location
+    private Map<UUID, Long> riftKeyLastUse; // Player UUID -> last use timestamp (for 24h cooldown)
+
+    // Chaos Dice of Fate - active effects
+    private Set<UUID> chaosDiceTrackerActive; // Players with tracker effect active
+    private Set<UUID> chaosDiceInstaCrit; // Players with insta-crit active
+    private Map<UUID, UUID> chaosGolemOwners; // Golem UUID -> Owner UUID
+
     public AbilityManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
         this.fireRebirthActive = new HashMap<>();
@@ -69,6 +82,15 @@ public class AbilityManager implements Listener {
         this.timeSlowCooldowns = new HashMap<>();
         this.timeDistortionActive = new HashSet<>();
         this.activePrisonBlocks = new HashSet<>();
+
+        // New legendary items
+        this.lanternKills = new HashMap<>();
+        this.lanternAttackCooldown = new HashMap<>();
+        this.activeRiftPortals = new HashMap<>();
+        this.riftKeyLastUse = new HashMap<>();
+        this.chaosDiceTrackerActive = new HashSet<>();
+        this.chaosDiceInstaCrit = new HashSet<>();
+        this.chaosGolemOwners = new HashMap<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -123,12 +145,16 @@ public class AbilityManager implements Listener {
                 return radiantBlock(player);
             case CHRONO_BLADE:
                 return echoStrike(player);
-            case SOUL_DEVOURER:
+            case VOIDRENDER:
                 return voidSlice(player);
             case CREATION_SPLITTER:
                 return endSever(player);
             case COPPER_PICKAXE:
                 return toggle3x3Mining(player);
+            case RIFT_KEY_OF_ENDKEEPER:
+                return openEndRift(player);
+            case CHAOS_DICE_OF_FATE:
+                return rollChaosDice(player);
         }
         return false;
     }
@@ -151,7 +177,7 @@ public class AbilityManager implements Listener {
                 return heavensWall(player);
             case CHRONO_BLADE:
                 return timeRewind(player);
-            case SOUL_DEVOURER:
+            case VOIDRENDER:
                 return voidRift(player);
             case CREATION_SPLITTER:
                 return cataclysmPulse(player);
@@ -673,13 +699,13 @@ public class AbilityManager implements Listener {
                 return false;
             }
 
-            // Calculate pull velocity - stop 1 block in front of player
+            // Calculate pull velocity - scales with distance to land target in front of player
             double distance = target.getLocation().distance(player.getLocation());
             double pullDistance = Math.max(0, distance - 1.5); // Stop 1.5 blocks away
 
             Vector direction = player.getLocation().toVector().subtract(target.getLocation().toVector()).normalize();
-            // Pull strength based on distance - stronger pull for farther targets
-            double pullStrength = Math.min(pullDistance * 0.5, 2.0);
+            // Pull strength scales with distance - no cap so it works at 20 blocks
+            double pullStrength = pullDistance * 0.15 + 0.5; // Linear scaling for consistent landing
             target.setVelocity(direction.multiply(pullStrength));
 
             // Deal damage (4 hearts through prot 4 = ~20 raw damage)
@@ -813,7 +839,7 @@ public class AbilityManager implements Listener {
         return false;
     }
 
-    // ========== SKYBREAKER BOOTS ==========
+    // ========== COPPER BOOTS ==========
 
     private boolean frostbiteSweep(Player player) {
         Vector direction = player.getLocation().getDirection();
@@ -934,85 +960,56 @@ public class AbilityManager implements Listener {
         Location center = player.getLocation();
         World world = center.getWorld();
 
-        // Create 16x16 barrier centered on player
+        // Save the original world border settings
+        WorldBorder border = world.getWorldBorder();
+        double originalSize = border.getSize();
+        Location originalCenter = border.getCenter();
+        double originalDamageBuffer = border.getDamageBuffer();
+        double originalDamageAmount = border.getDamageAmount();
+        int originalWarningDistance = border.getWarningDistance();
+        int originalWarningTime = border.getWarningTime();
+
+        // Set the world border to 16x16 centered on the player
+        border.setCenter(center);
+        border.setSize(16);
+        border.setDamageAmount(0);
+        border.setDamageBuffer(1000); // High buffer so trusted players can walk through
+        border.setWarningDistance(0);
+        border.setWarningTime(0);
+
+        // Store barrier info for movement blocking
         double minX = center.getX() - 8;
         double maxX = center.getX() + 8;
         double minZ = center.getZ() - 8;
         double maxZ = center.getZ() + 8;
 
-        HeavensWallBarrier barrier = new HeavensWallBarrier(player.getUniqueId(), world, minX, maxX, minZ, maxZ, center.getY());
-        activeBarriers.put(player.getUniqueId(), barrier);
+        HeavensWallBarrier barrierInfo = new HeavensWallBarrier(player.getUniqueId(), world, minX, maxX, minZ, maxZ, center.getY());
+        activeBarriers.put(player.getUniqueId(), barrierInfo);
 
-        // Particle effect task - runs every 3 ticks for 32 seconds (640 ticks)
+        // Schedule border reset after 32 seconds
         new BukkitRunnable() {
-            int ticks = 0;
-
             @Override
             public void run() {
-                if (ticks >= 640) { // 32 seconds
-                    activeBarriers.remove(player.getUniqueId());
-                    player.sendMessage(ChatColor.GOLD + "Heaven's Wall has faded.");
-                    cancel();
-                    return;
-                }
-
-                // Spawn star-like particles along the barrier edges
-                for (Player nearby : world.getPlayers()) {
-                    Location pLoc = nearby.getLocation();
-
-                    // Only render particles if player is within 32 blocks of the barrier
-                    if (pLoc.getX() < minX - 32 || pLoc.getX() > maxX + 32 ||
-                        pLoc.getZ() < minZ - 32 || pLoc.getZ() > maxZ + 32) {
-                        continue;
-                    }
-
-                    double playerY = pLoc.getY();
-
-                    // Render particles at player's Y level ± 8 blocks (taller wall)
-                    for (double y = playerY - 8; y <= playerY + 8; y += 0.8) {
-                        // North wall (minZ)
-                        for (double x = minX; x <= maxX; x += 1.5) {
-                            Location particleLoc = new Location(world, x, y, minZ);
-                            if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
-                            }
-                        }
-                        // South wall (maxZ)
-                        for (double x = minX; x <= maxX; x += 1.5) {
-                            Location particleLoc = new Location(world, x, y, maxZ);
-                            if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
-                            }
-                        }
-                        // West wall (minX)
-                        for (double z = minZ; z <= maxZ; z += 1.5) {
-                            Location particleLoc = new Location(world, minX, y, z);
-                            if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
-                            }
-                        }
-                        // East wall (maxX)
-                        for (double z = minZ; z <= maxZ; z += 1.5) {
-                            Location particleLoc = new Location(world, maxX, y, z);
-                            if (particleLoc.distance(pLoc) < 20) {
-                                world.spawnParticle(Particle.END_ROD, particleLoc, 1, 0.05, 0.05, 0.05, 0);
-                            }
-                        }
-                    }
-                }
-
-                ticks += 3;
+                // Restore original world border
+                border.setCenter(originalCenter);
+                border.setSize(originalSize);
+                border.setDamageAmount(originalDamageAmount);
+                border.setDamageBuffer(originalDamageBuffer);
+                border.setWarningDistance(originalWarningDistance);
+                border.setWarningTime(originalWarningTime);
+                activeBarriers.remove(player.getUniqueId());
+                player.sendMessage(ChatColor.GOLD + "Heaven's Wall has faded.");
             }
-        }.runTaskTimer(plugin, 0L, 3L);
+        }.runTaskLater(plugin, 640L); // 32 seconds
 
-        player.sendMessage(ChatColor.GOLD + "Heaven's Wall activated! 16x16 barrier for 32 seconds.");
+        player.sendMessage(ChatColor.GOLD + "Heaven's Wall activated! World border for 32 seconds.");
+        player.sendMessage(ChatColor.GRAY + "Trusted players can pass through freely.");
         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.0f);
         return true;
     }
 
     @EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
-    public void onPlayerMove(PlayerMoveEvent event) {
-        // Check if player is trying to cross a Heaven's Wall barrier
+    public void onHeavensWallMove(PlayerMoveEvent event) {
         if (activeBarriers.isEmpty()) return;
 
         Player player = event.getPlayer();
@@ -1020,7 +1017,7 @@ public class AbilityManager implements Listener {
         Location to = event.getTo();
         if (to == null) return;
 
-        // Check if player actually moved position (not just looking around)
+        // Check if player actually moved position
         if (from.getX() == to.getX() && from.getY() == to.getY() && from.getZ() == to.getZ()) {
             return;
         }
@@ -1029,126 +1026,31 @@ public class AbilityManager implements Listener {
             HeavensWallBarrier barrier = entry.getValue();
             UUID ownerUUID = entry.getKey();
 
-            // Skip if different world
             if (!barrier.world.equals(player.getWorld())) continue;
 
-            // Check if player is trying to cross the barrier
             boolean wasInside = barrier.isInside(from.getX(), from.getZ());
             boolean willBeInside = barrier.isInside(to.getX(), to.getZ());
 
-            // Owner cannot leave the barrier (but can move inside)
+            // Owner is always blocked from leaving
             if (player.getUniqueId().equals(ownerUUID)) {
-                // Block if trying to leave (was inside, now outside)
                 if (wasInside && !willBeInside) {
                     event.setTo(from);
-                    Vector pushBack = from.toVector().subtract(to.toVector()).normalize().multiply(0.3);
-                    pushBack.setY(0);
-                    player.setVelocity(pushBack);
-                    player.getWorld().spawnParticle(Particle.END_ROD, to.clone(), 30, 0.3, 0.5, 0.3, 0.05);
-                    player.playSound(to, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
+                    player.setVelocity(from.toVector().subtract(to.toVector()).normalize().multiply(0.5));
                     return;
                 }
-                continue; // Owner can move freely inside
+                continue;
             }
 
-            // Trusted players can pass freely
+            // Trusted players can pass through freely
             Player owner = Bukkit.getPlayer(ownerUUID);
             if (owner != null && plugin.getTrustManager().isTrusted(owner, player)) {
                 continue;
             }
 
-            // Check if player is on the wall edge (trying to stand on the barrier)
-            if (barrier.isOnWallEdge(to.getX(), to.getY(), to.getZ())) {
-                // Push player away from the wall
-                event.setTo(from);
-
-                // Calculate push direction - away from nearest wall edge
-                double pushX = 0, pushZ = 0;
-                if (Math.abs(to.getX() - barrier.minX) < 0.5) pushX = -0.5;
-                else if (Math.abs(to.getX() - barrier.maxX) < 0.5) pushX = 0.5;
-                if (Math.abs(to.getZ() - barrier.minZ) < 0.5) pushZ = -0.5;
-                else if (Math.abs(to.getZ() - barrier.maxZ) < 0.5) pushZ = 0.5;
-
-                Vector pushAway = new Vector(pushX, -0.2, pushZ); // Push away and slightly down
-                player.setVelocity(pushAway);
-
-                // Visual/audio feedback
-                player.getWorld().spawnParticle(Particle.END_ROD, to.clone(), 20, 0.2, 0.3, 0.2, 0.05);
-                player.playSound(to, Sound.BLOCK_AMETHYST_BLOCK_HIT, 0.8f, 1.5f);
-                return;
-            }
-
-            // If crossing the barrier boundary (either direction) - for non-trusted players
+            // Non-trusted players are blocked from crossing
             if (wasInside != willBeInside) {
-                // Block the movement by setting destination to origin
                 event.setTo(from);
-
-                // Push player back and slightly down (to prevent floating)
-                Vector pushBack = from.toVector().subtract(to.toVector()).normalize().multiply(0.3);
-                pushBack.setY(-0.1); // Slight downward push
-                player.setVelocity(pushBack);
-
-                // Visual/audio feedback - star barrier effect
-                Location barrierHit = to.clone();
-                player.getWorld().spawnParticle(Particle.END_ROD, barrierHit, 30, 0.3, 0.5, 0.3, 0.05);
-                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, barrierHit, 20, 0.3, 0.5, 0.3, 0.1);
-                player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, barrierHit, 15, 0.3, 0.5, 0.3, 0);
-                player.playSound(barrierHit, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
-                return;
-            }
-        }
-    }
-
-    @EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
-    public void onEnderPearlLand(ProjectileHitEvent event) {
-        // Block ender pearls from crossing Heaven's Wall
-        if (!(event.getEntity() instanceof org.bukkit.entity.EnderPearl)) return;
-        if (activeBarriers.isEmpty()) return;
-
-        org.bukkit.entity.EnderPearl pearl = (org.bukkit.entity.EnderPearl) event.getEntity();
-        if (!(pearl.getShooter() instanceof Player)) return;
-
-        Player player = (Player) pearl.getShooter();
-        Location pearlLoc = pearl.getLocation();
-
-        for (Map.Entry<UUID, HeavensWallBarrier> entry : activeBarriers.entrySet()) {
-            HeavensWallBarrier barrier = entry.getValue();
-            UUID ownerUUID = entry.getKey();
-
-            // Skip if different world
-            if (!barrier.world.equals(pearlLoc.getWorld())) continue;
-
-            // Owner can't pearl out
-            if (player.getUniqueId().equals(ownerUUID)) {
-                boolean playerInside = barrier.isInside(player.getLocation().getX(), player.getLocation().getZ());
-                boolean pearlInside = barrier.isInside(pearlLoc.getX(), pearlLoc.getZ());
-                if (playerInside && !pearlInside) {
-                    event.setCancelled(true);
-                    pearl.remove();
-                    player.sendMessage(ChatColor.GOLD + "Your ender pearl hit Heaven's Wall!");
-                    player.getWorld().spawnParticle(Particle.END_ROD, pearlLoc, 30, 0.3, 0.3, 0.3, 0.05);
-                    player.playSound(pearlLoc, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
-                    return;
-                }
-                continue;
-            }
-
-            // Trusted players can pearl through
-            Player owner = Bukkit.getPlayer(ownerUUID);
-            if (owner != null && plugin.getTrustManager().isTrusted(owner, player)) {
-                continue;
-            }
-
-            // Check if pearl is crossing or landing on the barrier
-            boolean playerInside = barrier.isInside(player.getLocation().getX(), player.getLocation().getZ());
-            boolean pearlInside = barrier.isInside(pearlLoc.getX(), pearlLoc.getZ());
-
-            if (playerInside != pearlInside || barrier.isOnWallEdge(pearlLoc.getX(), pearlLoc.getY(), pearlLoc.getZ())) {
-                event.setCancelled(true);
-                pearl.remove();
-                player.sendMessage(ChatColor.GOLD + "Your ender pearl hit Heaven's Wall!");
-                player.getWorld().spawnParticle(Particle.END_ROD, pearlLoc, 30, 0.3, 0.3, 0.3, 0.05);
-                player.playSound(pearlLoc, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.5f);
+                player.setVelocity(from.toVector().subtract(to.toVector()).normalize().multiply(0.5));
                 return;
             }
         }
@@ -1678,7 +1580,7 @@ public class AbilityManager implements Listener {
         cooldowns.put("chains_of_eternity", new int[]{35, 65});
         cooldowns.put("celestial_aegis_shield", new int[]{40, 90});
         cooldowns.put("chrono_blade", new int[]{40, 120});
-        cooldowns.put("soul_devourer", new int[]{30, 85});
+        cooldowns.put("voidrender", new int[]{30, 85});
         cooldowns.put("creation_splitter", new int[]{18, 120}); // End Sever 18s, Genesis Collapse 2min
         cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
 
@@ -1847,8 +1749,8 @@ public class AbilityManager implements Listener {
                 }
             }
 
-            // Soul Devourer - bonus damage based on soul count (+2 damage per soul)
-            if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
+            // Voidrender - bonus damage based on soul count (+2 damage per soul)
+            if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
                 int soulCount = LegendaryItemFactory.getSoulCount(player.getInventory().getItemInMainHand());
                 if (soulCount > 0 && event.getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) event.getEntity();
@@ -2034,6 +1936,368 @@ public class AbilityManager implements Listener {
             event.setCancelled(true);
             event.getPlayer().sendMessage(ChatColor.DARK_GRAY + "This block is bound by dark magic!");
         }
+    }
+
+    // ========== RIFT KEY OF THE ENDKEEPER ==========
+
+    private boolean openEndRift(Player player) {
+        // 24-hour cooldown check (handled externally, but double check here)
+        long now = System.currentTimeMillis();
+        Long lastUse = riftKeyLastUse.get(player.getUniqueId());
+        long cooldownMs = 24 * 60 * 60 * 1000L; // 24 hours in milliseconds
+
+        if (lastUse != null && (now - lastUse) < cooldownMs) {
+            long remaining = cooldownMs - (now - lastUse);
+            long hours = remaining / (60 * 60 * 1000);
+            long minutes = (remaining % (60 * 60 * 1000)) / (60 * 1000);
+            player.sendMessage(ChatColor.DARK_PURPLE + "The Rift Key is recharging. Time remaining: " +
+                    ChatColor.LIGHT_PURPLE + hours + "h " + minutes + "m");
+            return false;
+        }
+
+        // Prompt player to enter coordinates
+        player.sendMessage(ChatColor.DARK_PURPLE + "═══════════════════════════════════");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "✦ " + ChatColor.BOLD + "RIFT KEY OF THE ENDKEEPER" + ChatColor.LIGHT_PURPLE + " ✦");
+        player.sendMessage(ChatColor.GRAY + "Type coordinates in chat: " + ChatColor.WHITE + "X Y Z");
+        player.sendMessage(ChatColor.GRAY + "Example: " + ChatColor.WHITE + "100 64 -200");
+        player.sendMessage(ChatColor.GRAY + "Type " + ChatColor.RED + "cancel" + ChatColor.GRAY + " to abort.");
+        player.sendMessage(ChatColor.DARK_PURPLE + "═══════════════════════════════════");
+
+        // Register this player as awaiting coordinate input
+        awaitingRiftCoordinates.add(player.getUniqueId());
+
+        // Start a timeout task - cancel after 30 seconds if no input
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (awaitingRiftCoordinates.remove(player.getUniqueId())) {
+                    player.sendMessage(ChatColor.RED + "Rift Key activation timed out.");
+                }
+            }
+        }.runTaskLater(plugin, 20 * 30); // 30 seconds
+
+        return false; // Don't trigger cooldown yet - wait for coords
+    }
+
+    // Set to track players awaiting coordinate input
+    private Set<UUID> awaitingRiftCoordinates = new HashSet<>();
+
+    @EventHandler
+    public void onPlayerChat(org.bukkit.event.player.AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        if (!awaitingRiftCoordinates.contains(player.getUniqueId())) {
+            return;
+        }
+
+        String message = event.getMessage().trim();
+        event.setCancelled(true);
+
+        // Handle cancellation
+        if (message.equalsIgnoreCase("cancel")) {
+            awaitingRiftCoordinates.remove(player.getUniqueId());
+            player.sendMessage(ChatColor.RED + "Rift Key activation cancelled.");
+            return;
+        }
+
+        // Parse coordinates
+        String[] parts = message.split("\\s+");
+        if (parts.length < 3) {
+            player.sendMessage(ChatColor.RED + "Invalid format. Use: X Y Z (e.g., 100 64 -200)");
+            return;
+        }
+
+        try {
+            double x = Double.parseDouble(parts[0]);
+            double y = Double.parseDouble(parts[1]);
+            double z = Double.parseDouble(parts[2]);
+
+            awaitingRiftCoordinates.remove(player.getUniqueId());
+
+            // Execute teleport on main thread
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    executeRiftTeleport(player, x, y, z);
+                }
+            }.runTask(plugin);
+
+        } catch (NumberFormatException e) {
+            player.sendMessage(ChatColor.RED + "Invalid coordinates. Use numbers only: X Y Z");
+        }
+    }
+
+    private void executeRiftTeleport(Player player, double x, double y, double z) {
+        Location destination = new Location(player.getWorld(), x, y, z);
+
+        // Validate Y coordinate
+        if (y < player.getWorld().getMinHeight() || y > player.getWorld().getMaxHeight()) {
+            player.sendMessage(ChatColor.RED + "Invalid Y coordinate. Must be between " +
+                    player.getWorld().getMinHeight() + " and " + player.getWorld().getMaxHeight());
+            return;
+        }
+
+        // Create dramatic effect at origin
+        Location origin = player.getLocation();
+        player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, origin, 100, 0.5, 1, 0.5, 0.1);
+        player.getWorld().spawnParticle(Particle.END_ROD, origin, 50, 0.5, 1, 0.5, 0.05);
+        player.getWorld().playSound(origin, Sound.ENTITY_ENDERMAN_TELEPORT, 2.0f, 0.5f);
+        player.getWorld().playSound(origin, Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 1.5f);
+
+        // Teleport after short delay
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Set destination yaw/pitch to player's current
+                destination.setYaw(player.getLocation().getYaw());
+                destination.setPitch(player.getLocation().getPitch());
+
+                player.teleport(destination);
+
+                // Effects at destination
+                player.getWorld().spawnParticle(Particle.REVERSE_PORTAL, destination, 100, 0.5, 1, 0.5, 0.1);
+                player.getWorld().spawnParticle(Particle.END_ROD, destination, 50, 0.5, 1, 0.5, 0.05);
+                player.getWorld().playSound(destination, Sound.ENTITY_ENDERMAN_TELEPORT, 2.0f, 0.5f);
+                player.getWorld().playSound(destination, Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.0f);
+
+                player.sendMessage(ChatColor.DARK_PURPLE + "✦ " + ChatColor.LIGHT_PURPLE +
+                        "The Rift Key tears through reality, delivering you to " +
+                        ChatColor.WHITE + String.format("%.1f, %.1f, %.1f", x, y, z));
+
+                // Record usage time for 24h cooldown
+                riftKeyLastUse.put(player.getUniqueId(), System.currentTimeMillis());
+
+                // Set cooldown via cooldown manager
+                plugin.getCooldownManager().setCooldown(player.getUniqueId(), "rift_key_of_endkeeper", 1, 86400); // 24 hours
+            }
+        }.runTaskLater(plugin, 10); // 0.5 second delay
+    }
+
+    // ========== CHAOS DICE OF FATE ==========
+
+    private boolean rollChaosDice(Player player) {
+        // Create dice rolling animation
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "✦ " + ChatColor.BOLD + "ROLLING THE CHAOS DICE..." + ChatColor.LIGHT_PURPLE + " ✦");
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 1.5f);
+
+        // Visual effect - spinning particles
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 30) { // 1.5 seconds of rolling
+                    cancel();
+                    // Determine outcome
+                    int roll = new Random().nextInt(7) + 1; // 1-7
+                    applyChaosDiceEffect(player, roll);
+                    return;
+                }
+
+                // Spinning particle effect
+                double angle = (ticks * 30) * Math.PI / 180;
+                double x = Math.cos(angle) * 1.5;
+                double z = Math.sin(angle) * 1.5;
+                Location particleLoc = player.getLocation().add(x, 1.5, z);
+
+                Particle.DustOptions purple = new Particle.DustOptions(Color.fromRGB(138, 43, 226), 1.5f);
+                player.getWorld().spawnParticle(Particle.DUST, particleLoc, 5, 0.1, 0.1, 0.1, 0, purple);
+
+                if (ticks % 5 == 0) {
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 0.5f + (ticks * 0.05f));
+                }
+
+                ticks++;
+            }
+        }.runTaskTimer(plugin, 0, 1);
+
+        return true;
+    }
+
+    private void applyChaosDiceEffect(Player player, int roll) {
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.8f);
+
+        switch (roll) {
+            case 1: // Full heal
+                player.setHealth(player.getMaxHealth());
+                player.setFoodLevel(20);
+                player.setSaturation(20f);
+                player.sendMessage(ChatColor.GREEN + "✦ FATE #1: " + ChatColor.WHITE + "Full Restoration! " +
+                        ChatColor.GRAY + "Health and hunger restored.");
+                player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0, 2, 0), 20, 0.5, 0.5, 0.5, 0);
+                break;
+
+            case 2: // 30s invis + speed
+                player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 20 * 30, 0));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 30, 1));
+                player.sendMessage(ChatColor.AQUA + "✦ FATE #2: " + ChatColor.WHITE + "Shadow Walker! " +
+                        ChatColor.GRAY + "30s of invisibility and speed.");
+                player.getWorld().spawnParticle(Particle.SNEEZE, player.getLocation(), 30, 0.5, 1, 0.5, 0.05);
+                break;
+
+            case 3: // Summon iron golem ally (5 min)
+                org.bukkit.entity.IronGolem golem = player.getWorld().spawn(
+                        player.getLocation().add(2, 0, 0), org.bukkit.entity.IronGolem.class);
+                golem.setPlayerCreated(true);
+                golem.setCustomName(ChatColor.GOLD + player.getName() + "'s Guardian");
+                golem.setCustomNameVisible(true);
+                chaosGolemOwners.put(golem.getUniqueId(), player.getUniqueId());
+
+                player.sendMessage(ChatColor.GOLD + "✦ FATE #3: " + ChatColor.WHITE + "Guardian Summoned! " +
+                        ChatColor.GRAY + "An Iron Golem fights for you for 5 minutes.");
+
+                // Remove golem after 5 minutes
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (golem.isValid() && !golem.isDead()) {
+                            golem.getWorld().spawnParticle(Particle.CLOUD, golem.getLocation(), 30, 0.5, 1, 0.5, 0.1);
+                            golem.remove();
+                            chaosGolemOwners.remove(golem.getUniqueId());
+                        }
+                    }
+                }.runTaskLater(plugin, 20 * 60 * 5); // 5 minutes
+                break;
+
+            case 4: // Insta-crit next 5 hits
+                chaosDiceInstaCrit.add(player.getUniqueId());
+                instaCritHitsRemaining.put(player.getUniqueId(), 5);
+                player.sendMessage(ChatColor.RED + "✦ FATE #4: " + ChatColor.WHITE + "Critical Fortune! " +
+                        ChatColor.GRAY + "Your next 5 hits are guaranteed critical strikes.");
+                player.getWorld().spawnParticle(Particle.CRIT, player.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.3);
+                break;
+
+            case 5: // Player tracker (nearest enemy for 1 min)
+                activatePlayerTracker(player);
+                break;
+
+            case 6: // 1-minute damage boost
+                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20 * 60, 1));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 60, 0));
+                player.sendMessage(ChatColor.DARK_RED + "✦ FATE #6: " + ChatColor.WHITE + "Warrior's Might! " +
+                        ChatColor.GRAY + "Strength II and Resistance for 1 minute.");
+                player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 50, 0.5, 1, 0.5, 0.1);
+                break;
+
+            case 7: // Double drop rate (2 min) - tracked passively
+                chaosDoubleDropActive.put(player.getUniqueId(), System.currentTimeMillis() + (2 * 60 * 1000));
+                player.sendMessage(ChatColor.YELLOW + "✦ FATE #7: " + ChatColor.WHITE + "Fortune's Favor! " +
+                        ChatColor.GRAY + "Double mob drops for 2 minutes.");
+                player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 30, 0.5, 1, 0.5, 0);
+                break;
+        }
+    }
+
+    // Tracking for insta-crit hits remaining
+    private Map<UUID, Integer> instaCritHitsRemaining = new HashMap<>();
+
+    // Tracking for double drops
+    private Map<UUID, Long> chaosDoubleDropActive = new HashMap<>();
+
+    @EventHandler
+    public void onDamageForInstaCrit(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player)) return;
+        Player attacker = (Player) event.getDamager();
+
+        // Check for insta-crit
+        if (chaosDiceInstaCrit.contains(attacker.getUniqueId())) {
+            Integer remaining = instaCritHitsRemaining.get(attacker.getUniqueId());
+            if (remaining != null && remaining > 0) {
+                // Apply critical hit bonus (50% extra damage)
+                event.setDamage(event.getDamage() * 1.5);
+                attacker.getWorld().spawnParticle(Particle.CRIT, event.getEntity().getLocation().add(0, 1, 0),
+                        15, 0.3, 0.3, 0.3, 0.2);
+                attacker.getWorld().playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.2f);
+
+                remaining--;
+                if (remaining <= 0) {
+                    chaosDiceInstaCrit.remove(attacker.getUniqueId());
+                    instaCritHitsRemaining.remove(attacker.getUniqueId());
+                    attacker.sendMessage(ChatColor.GRAY + "Critical Fortune has ended.");
+                } else {
+                    instaCritHitsRemaining.put(attacker.getUniqueId(), remaining);
+                    attacker.sendMessage(ChatColor.RED + "Critical hit! " + ChatColor.GRAY + remaining + " crits remaining.");
+                }
+            }
+        }
+    }
+
+    private void activatePlayerTracker(Player player) {
+        chaosDiceTrackerActive.add(player.getUniqueId());
+        player.sendMessage(ChatColor.DARK_AQUA + "✦ FATE #5: " + ChatColor.WHITE + "Hunter's Instinct! " +
+                ChatColor.GRAY + "Tracking nearest player for 1 minute.");
+
+        // Particle trail to nearest enemy every 2 seconds
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 60 || !player.isOnline()) { // 1 minute
+                    chaosDiceTrackerActive.remove(player.getUniqueId());
+                    if (player.isOnline()) {
+                        player.sendMessage(ChatColor.GRAY + "Hunter's Instinct has faded.");
+                    }
+                    cancel();
+                    return;
+                }
+
+                // Find nearest player (enemy)
+                Player nearest = null;
+                double nearestDist = Double.MAX_VALUE;
+
+                for (Player p : player.getWorld().getPlayers()) {
+                    if (p.equals(player)) continue;
+                    if (p.getGameMode() == org.bukkit.GameMode.SPECTATOR) continue;
+                    if (p.getGameMode() == org.bukkit.GameMode.CREATIVE) continue;
+
+                    double dist = p.getLocation().distance(player.getLocation());
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearest = p;
+                    }
+                }
+
+                if (nearest != null && nearestDist <= 100) {
+                    // Show direction particles
+                    Vector direction = nearest.getLocation().toVector().subtract(player.getLocation().toVector()).normalize();
+                    for (int i = 1; i <= 5; i++) {
+                        Location particleLoc = player.getLocation().add(direction.clone().multiply(i)).add(0, 1, 0);
+                        player.spawnParticle(Particle.SOUL_FIRE_FLAME, particleLoc, 3, 0.1, 0.1, 0.1, 0);
+                    }
+                    player.sendMessage(ChatColor.DARK_AQUA + "Target: " + ChatColor.WHITE + nearest.getName() +
+                            ChatColor.GRAY + " (" + String.format("%.0f", nearestDist) + " blocks " + getCardinalDirection(direction) + ")");
+                } else {
+                    player.sendMessage(ChatColor.GRAY + "No players within 100 blocks.");
+                }
+
+                ticks++;
+            }
+        }.runTaskTimer(plugin, 0, 40); // Every 2 seconds
+    }
+
+    private String getCardinalDirection(Vector dir) {
+        double angle = Math.atan2(dir.getX(), dir.getZ()) * 180 / Math.PI;
+        if (angle < 0) angle += 360;
+
+        if (angle >= 337.5 || angle < 22.5) return "N";
+        if (angle >= 22.5 && angle < 67.5) return "NE";
+        if (angle >= 67.5 && angle < 112.5) return "E";
+        if (angle >= 112.5 && angle < 157.5) return "SE";
+        if (angle >= 157.5 && angle < 202.5) return "S";
+        if (angle >= 202.5 && angle < 247.5) return "SW";
+        if (angle >= 247.5 && angle < 292.5) return "W";
+        if (angle >= 292.5 && angle < 337.5) return "NW";
+        return "";
+    }
+
+    public boolean hasDoubleDrops(UUID playerId) {
+        Long endTime = chaosDoubleDropActive.get(playerId);
+        if (endTime == null) return false;
+        if (System.currentTimeMillis() > endTime) {
+            chaosDoubleDropActive.remove(playerId);
+            return false;
+        }
+        return true;
     }
 
     // Helper class for Time Rewind

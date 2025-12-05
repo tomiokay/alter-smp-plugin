@@ -33,7 +33,7 @@ public class PassiveEffectManager implements Listener {
     // Track hit counters for various passives
     private Map<UUID, Integer> bladeHitCounter; // Holy Moonlight Sword
     private Map<UUID, Integer> chainsHitCounter; // Chains of Eternity
-    private Map<UUID, Long> lastIceCreateTime; // Skybreaker Boots path cooldown
+    private Map<UUID, Long> lastIceCreateTime; // Copper Boots path cooldown
 
     // Cache for legendary IDs to avoid repeated PDC lookups (major performance optimization)
     private Map<UUID, String[]> legendaryCache; // [mainHand, boots, offhand, helmet]
@@ -108,9 +108,9 @@ public class PassiveEffectManager implements Listener {
             applyHelmetPassive(player, helmetLegendary);
         }
 
-        // Tick Emberstride Greaves passives (flame trail, attack speed, lava speed)
+        // Tick Copper Leggings passives (flame trail, attack speed, lava speed)
         if (plugin.getArmorPassivesListener() != null) {
-            plugin.getArmorPassivesListener().tickEmberstrideGreaves(player);
+            plugin.getArmorPassivesListener().tickCopperLeggings(player);
         }
     }
 
@@ -164,7 +164,7 @@ public class PassiveEffectManager implements Listener {
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
 
-        if (type == LegendaryType.SKYBREAKER_BOOTS) {
+        if (type == LegendaryType.COPPER_BOOTS) {
             // Featherfall - No fall damage (handled in event listener)
             // Permanent Speed II
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, true, false));
@@ -175,7 +175,7 @@ public class PassiveEffectManager implements Listener {
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
 
-        if (type == LegendaryType.BLOODREAPER_HOOD) {
+        if (type == LegendaryType.COPPER_HELMET) {
             // Water Mobility - Dolphin's Grace + Conduit Power
             player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 40, 0, true, false));
             player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 40, 0, true, false));
@@ -340,7 +340,7 @@ public class PassiveEffectManager implements Listener {
         ItemStack mainHand = killer.getInventory().getItemInMainHand();
         String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
             // Soul Collector - Increase soul count (max 5 souls)
             int currentSouls = LegendaryItemFactory.getSoulCount(mainHand);
             if (currentSouls < 5) {
