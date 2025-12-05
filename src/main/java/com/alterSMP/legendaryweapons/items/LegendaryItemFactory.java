@@ -474,15 +474,11 @@ public class LegendaryItemFactory {
                 break;
 
             case CHAOS_DICE_OF_FATE:
-                lore.add(ChatColor.GREEN + "Ability: " + ChatColor.WHITE + "Roll Dice (30min cooldown)");
-                lore.add(ChatColor.GRAY + "  Right-click to roll for a random effect:");
-                lore.add(ChatColor.GRAY + "  - +5 hearts for 15 min");
-                lore.add(ChatColor.GRAY + "  - Summon 5 iron golems");
-                lore.add(ChatColor.GRAY + "  - Speed III + Strength III (10 min)");
-                lore.add(ChatColor.GRAY + "  - Jumble opponent's hotbar");
-                lore.add(ChatColor.GRAY + "  - Player tracker (20 min)");
-                lore.add(ChatColor.GRAY + "  - Insta-crit for 15 min");
-                lore.add(ChatColor.GRAY + "  - Resistance II for 5 min");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Roll Dice (30min)");
+                lore.add(ChatColor.GRAY + "  Roll for a random powerful effect");
+                lore.add("");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Player Scan (10s)");
+                lore.add(ChatColor.GRAY + "  Show all player locations + coords");
                 break;
         }
 

@@ -192,14 +192,8 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - **Usage:** `/ability 1 <x> <y> <z>`
 
 #### Chaos Dice of Fate (Amethyst Shard)
-- **Ability:** Roll Dice (30min cooldown) - Random powerful effect:
-  - +5 hearts for 15 minutes
-  - Summon 5 iron golems
-  - Speed III + Strength III for 10 minutes
-  - Jumble opponent's hotbar
-  - Player tracker for 20 minutes
-  - Insta-crit for 15 minutes
-  - Resistance II for 5 minutes
+- **Ability 1:** Roll Dice (30min cooldown) - Random powerful effect (heal, invis, golem, crits, buffs, etc.)
+- **Ability 2:** Player Scan (10s cooldown) - Shows all player locations with coordinates and distance
 
 ## Important Notes
 

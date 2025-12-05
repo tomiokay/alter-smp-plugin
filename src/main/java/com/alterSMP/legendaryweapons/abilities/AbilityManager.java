@@ -183,6 +183,8 @@ public class AbilityManager implements Listener {
                 return cataclysmPulse(player);
             case COPPER_PICKAXE:
                 return toggleEnchantMode(player);
+            case CHAOS_DICE_OF_FATE:
+                return scanForPlayers(player);
         }
         return false;
     }
@@ -2288,6 +2290,53 @@ public class AbilityManager implements Listener {
         if (angle >= 247.5 && angle < 292.5) return "W";
         if (angle >= 292.5 && angle < 337.5) return "NW";
         return "";
+    }
+
+    // Chaos Dice Ability 2 - One-time player scan (10s cooldown)
+    private boolean scanForPlayers(Player player) {
+        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.5f, 1.5f);
+
+        // Find all players in the world, sorted by distance
+        java.util.List<Player> nearbyPlayers = new java.util.ArrayList<>();
+        for (Player p : player.getWorld().getPlayers()) {
+            if (p.equals(player)) continue;
+            if (p.getGameMode() == org.bukkit.GameMode.SPECTATOR) continue;
+            if (p.getGameMode() == org.bukkit.GameMode.CREATIVE) continue;
+            nearbyPlayers.add(p);
+        }
+
+        if (nearbyPlayers.isEmpty()) {
+            player.sendMessage(ChatColor.GRAY + "No players found in this world.");
+            return true;
+        }
+
+        // Sort by distance
+        Location playerLoc = player.getLocation();
+        nearbyPlayers.sort((a, b) -> {
+            double distA = a.getLocation().distance(playerLoc);
+            double distB = b.getLocation().distance(playerLoc);
+            return Double.compare(distA, distB);
+        });
+
+        player.sendMessage(ChatColor.DARK_AQUA + "═══════ " + ChatColor.WHITE + "Player Scan" + ChatColor.DARK_AQUA + " ═══════");
+
+        for (Player target : nearbyPlayers) {
+            Location targetLoc = target.getLocation();
+            double distance = targetLoc.distance(playerLoc);
+            Vector direction = targetLoc.toVector().subtract(playerLoc.toVector()).normalize();
+            String cardinal = getCardinalDirection(direction);
+
+            player.sendMessage(ChatColor.AQUA + target.getName() + ChatColor.GRAY + " - " +
+                    ChatColor.WHITE + String.format("%.0f", distance) + " blocks " + cardinal +
+                    ChatColor.DARK_GRAY + " (" + (int)targetLoc.getX() + ", " + (int)targetLoc.getY() + ", " + (int)targetLoc.getZ() + ")");
+        }
+
+        player.sendMessage(ChatColor.DARK_AQUA + "═══════════════════════════");
+
+        // Particles
+        player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.05);
+
+        return true;
     }
 
     public boolean hasDoubleDrops(UUID playerId) {

@@ -99,6 +99,7 @@ cooldowns:
   # Chaos Dice of Fate
   chaos_dice_of_fate:
     ability1: 1800  # 30 minutes - Roll for random effect
+    ability2: 10    # 10 seconds - Player scan
 
   # Lantern of Lost Names (passive only, no cooldowns)
 
