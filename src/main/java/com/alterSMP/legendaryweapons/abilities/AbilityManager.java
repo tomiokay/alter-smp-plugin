@@ -145,9 +145,9 @@ public class AbilityManager implements Listener {
                 return radiantBlock(player);
             case CHRONO_BLADE:
                 return echoStrike(player);
-            case VOIDRENDER:
+            case SOUL_DEVOURER:
                 return voidSlice(player);
-            case CREATION_SPLITTER:
+            case VOIDRENDER:
                 return endSever(player);
             case COPPER_PICKAXE:
                 return toggle3x3Mining(player);
@@ -177,9 +177,9 @@ public class AbilityManager implements Listener {
                 return heavensWall(player);
             case CHRONO_BLADE:
                 return timeRewind(player);
-            case VOIDRENDER:
+            case SOUL_DEVOURER:
                 return voidRift(player);
-            case CREATION_SPLITTER:
+            case VOIDRENDER:
                 return cataclysmPulse(player);
             case COPPER_PICKAXE:
                 return toggleEnchantMode(player);
@@ -1752,7 +1752,7 @@ public class AbilityManager implements Listener {
             }
 
             // Voidrender - bonus damage based on soul count (+2 damage per soul)
-            if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
+            if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
                 int soulCount = LegendaryItemFactory.getSoulCount(player.getInventory().getItemInMainHand());
                 if (soulCount > 0 && event.getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) event.getEntity();
@@ -1805,7 +1805,7 @@ public class AbilityManager implements Listener {
             ItemStack mainHand = player.getInventory().getItemInMainHand();
             String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
-            if (legendaryId != null && legendaryId.equals(LegendaryType.CREATION_SPLITTER.getId())) {
+            if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 200, 1));
                 player.sendMessage(ChatColor.DARK_PURPLE + "Dragon's power absorbed! +2 Absorption hearts");
             }
@@ -2119,74 +2119,149 @@ public class AbilityManager implements Listener {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.8f);
 
         switch (roll) {
-            case 1: // Full heal
-                player.setHealth(player.getMaxHealth());
-                player.setFoodLevel(20);
-                player.setSaturation(20f);
-                player.sendMessage(ChatColor.GREEN + "✦ FATE #1: " + ChatColor.WHITE + "Full Restoration! " +
-                        ChatColor.GRAY + "Health and hunger restored.");
-                player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0, 2, 0), 20, 0.5, 0.5, 0.5, 0);
+            case 1: // +5 hearts for 15 minutes
+                player.addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, 20 * 60 * 15, 4)); // 5 extra hearts
+                player.setHealth(Math.min(player.getHealth() + 10, player.getMaxHealth() + 10)); // Heal the bonus hearts
+                player.sendMessage(ChatColor.RED + "✦ FATE #1: " + ChatColor.WHITE + "Heart Surge! " +
+                        ChatColor.GRAY + "+5 hearts for 15 minutes.");
+                player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0, 2, 0), 30, 0.5, 0.5, 0.5, 0);
                 break;
 
-            case 2: // 30s invis + speed
-                player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 20 * 30, 0));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 30, 1));
-                player.sendMessage(ChatColor.AQUA + "✦ FATE #2: " + ChatColor.WHITE + "Shadow Walker! " +
-                        ChatColor.GRAY + "30s of invisibility and speed.");
-                player.getWorld().spawnParticle(Particle.SNEEZE, player.getLocation(), 30, 0.5, 1, 0.5, 0.05);
-                break;
+            case 2: // Summon 5 iron golems
+                player.sendMessage(ChatColor.GOLD + "✦ FATE #2: " + ChatColor.WHITE + "Guardian Army! " +
+                        ChatColor.GRAY + "5 Iron Golems fight for you for 5 minutes.");
+                for (int i = 0; i < 5; i++) {
+                    double angle = (i * 72) * Math.PI / 180; // Spread around player
+                    Location spawnLoc = player.getLocation().add(Math.cos(angle) * 3, 0, Math.sin(angle) * 3);
+                    org.bukkit.entity.IronGolem golem = player.getWorld().spawn(spawnLoc, org.bukkit.entity.IronGolem.class);
+                    golem.setPlayerCreated(true);
+                    golem.setCustomName(ChatColor.GOLD + player.getName() + "'s Guardian");
+                    golem.setCustomNameVisible(true);
+                    chaosGolemOwners.put(golem.getUniqueId(), player.getUniqueId());
 
-            case 3: // Summon iron golem ally (5 min)
-                org.bukkit.entity.IronGolem golem = player.getWorld().spawn(
-                        player.getLocation().add(2, 0, 0), org.bukkit.entity.IronGolem.class);
-                golem.setPlayerCreated(true);
-                golem.setCustomName(ChatColor.GOLD + player.getName() + "'s Guardian");
-                golem.setCustomNameVisible(true);
-                chaosGolemOwners.put(golem.getUniqueId(), player.getUniqueId());
-
-                player.sendMessage(ChatColor.GOLD + "✦ FATE #3: " + ChatColor.WHITE + "Guardian Summoned! " +
-                        ChatColor.GRAY + "An Iron Golem fights for you for 5 minutes.");
-
-                // Remove golem after 5 minutes
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (golem.isValid() && !golem.isDead()) {
-                            golem.getWorld().spawnParticle(Particle.CLOUD, golem.getLocation(), 30, 0.5, 1, 0.5, 0.1);
-                            golem.remove();
-                            chaosGolemOwners.remove(golem.getUniqueId());
+                    // Remove golem after 5 minutes
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (golem.isValid() && !golem.isDead()) {
+                                golem.getWorld().spawnParticle(Particle.CLOUD, golem.getLocation(), 30, 0.5, 1, 0.5, 0.1);
+                                golem.remove();
+                                chaosGolemOwners.remove(golem.getUniqueId());
+                            }
                         }
-                    }
-                }.runTaskLater(plugin, 20 * 60 * 5); // 5 minutes
+                    }.runTaskLater(plugin, 20 * 60 * 5); // 5 minutes
+                }
                 break;
 
-            case 4: // Insta-crit next 5 hits
-                chaosDiceInstaCrit.add(player.getUniqueId());
-                instaCritHitsRemaining.put(player.getUniqueId(), 5);
-                player.sendMessage(ChatColor.RED + "✦ FATE #4: " + ChatColor.WHITE + "Critical Fortune! " +
-                        ChatColor.GRAY + "Your next 5 hits are guaranteed critical strikes.");
-                player.getWorld().spawnParticle(Particle.CRIT, player.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.3);
-                break;
-
-            case 5: // Player tracker (nearest enemy for 1 min)
-                activatePlayerTracker(player);
-                break;
-
-            case 6: // 1-minute damage boost
-                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20 * 60, 1));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 60, 0));
-                player.sendMessage(ChatColor.DARK_RED + "✦ FATE #6: " + ChatColor.WHITE + "Warrior's Might! " +
-                        ChatColor.GRAY + "Strength II and Resistance for 1 minute.");
+            case 3: // Speed III + Strength III for 10 minutes
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 60 * 10, 2)); // Speed III
+                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20 * 60 * 10, 2)); // Strength III
+                player.sendMessage(ChatColor.LIGHT_PURPLE + "✦ FATE #3: " + ChatColor.WHITE + "Berserker Rage! " +
+                        ChatColor.GRAY + "Speed III + Strength III for 10 minutes.");
                 player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 50, 0.5, 1, 0.5, 0.1);
+                player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 30, 0.5, 1, 0.5, 0.05);
                 break;
 
-            case 7: // Double drop rate (2 min) - tracked passively
-                chaosDoubleDropActive.put(player.getUniqueId(), System.currentTimeMillis() + (2 * 60 * 1000));
-                player.sendMessage(ChatColor.YELLOW + "✦ FATE #7: " + ChatColor.WHITE + "Fortune's Favor! " +
-                        ChatColor.GRAY + "Double mob drops for 2 minutes.");
-                player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 30, 0.5, 1, 0.5, 0);
+            case 4: // Jumble opponent's hotbar
+                Player nearest = getNearestPlayer(player, 50);
+                if (nearest != null) {
+                    // Shuffle their hotbar
+                    org.bukkit.inventory.ItemStack[] hotbar = new org.bukkit.inventory.ItemStack[9];
+                    for (int i = 0; i < 9; i++) {
+                        hotbar[i] = nearest.getInventory().getItem(i);
+                    }
+                    java.util.List<org.bukkit.inventory.ItemStack> hotbarList = java.util.Arrays.asList(hotbar);
+                    java.util.Collections.shuffle(hotbarList);
+                    for (int i = 0; i < 9; i++) {
+                        nearest.getInventory().setItem(i, hotbarList.get(i));
+                    }
+                    nearest.sendMessage(ChatColor.DARK_PURPLE + "Your hotbar has been scrambled by " + player.getName() + "!");
+                    player.sendMessage(ChatColor.DARK_PURPLE + "✦ FATE #4: " + ChatColor.WHITE + "Chaos Scramble! " +
+                            ChatColor.GRAY + "Jumbled " + nearest.getName() + "'s hotbar!");
+                } else {
+                    player.sendMessage(ChatColor.DARK_PURPLE + "✦ FATE #4: " + ChatColor.WHITE + "Chaos Scramble! " +
+                            ChatColor.GRAY + "No nearby players to scramble.");
+                }
+                player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 40, 0.5, 1, 0.5, 0.1);
+                break;
+
+            case 5: // Player tracker for 20 minutes
+                activatePlayerTrackerLong(player);
+                break;
+
+            case 6: // Insta-crit for 15 minutes
+                long endTime = System.currentTimeMillis() + (15 * 60 * 1000);
+                chaosDiceInstaCritTimed.put(player.getUniqueId(), endTime);
+                player.sendMessage(ChatColor.RED + "✦ FATE #6: " + ChatColor.WHITE + "Critical Master! " +
+                        ChatColor.GRAY + "All hits are critical for 15 minutes.");
+                player.getWorld().spawnParticle(Particle.CRIT, player.getLocation().add(0, 1, 0), 50, 0.5, 0.5, 0.5, 0.3);
+                break;
+
+            case 7: // Resistance II for 5 minutes
+                player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 60 * 5, 1)); // Resistance II
+                player.sendMessage(ChatColor.AQUA + "✦ FATE #7: " + ChatColor.WHITE + "Iron Will! " +
+                        ChatColor.GRAY + "Resistance II for 5 minutes.");
+                player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 40, 0.5, 1, 0.5, 0.05);
                 break;
         }
+    }
+
+    // Timed insta-crit tracking (for 15 min duration)
+    private Map<UUID, Long> chaosDiceInstaCritTimed = new HashMap<>();
+
+    private Player getNearestPlayer(Player player, double maxRange) {
+        Player nearest = null;
+        double nearestDist = Double.MAX_VALUE;
+        for (Player p : player.getWorld().getPlayers()) {
+            if (p.equals(player)) continue;
+            if (p.getGameMode() == org.bukkit.GameMode.SPECTATOR) continue;
+            if (p.getGameMode() == org.bukkit.GameMode.CREATIVE) continue;
+            double dist = p.getLocation().distance(player.getLocation());
+            if (dist < nearestDist && dist <= maxRange) {
+                nearestDist = dist;
+                nearest = p;
+            }
+        }
+        return nearest;
+    }
+
+    private void activatePlayerTrackerLong(Player player) {
+        player.sendMessage(ChatColor.DARK_AQUA + "✦ FATE #5: " + ChatColor.WHITE + "Hunter's Instinct! " +
+                ChatColor.GRAY + "Tracking nearest player for 20 minutes.");
+
+        // Particle trail to nearest enemy every 10 seconds (less spam)
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 120 || !player.isOnline()) { // 20 minutes (120 x 10 seconds)
+                    if (player.isOnline()) {
+                        player.sendMessage(ChatColor.GRAY + "Hunter's Instinct has faded.");
+                    }
+                    cancel();
+                    return;
+                }
+
+                // Find nearest player (enemy)
+                Player nearest = getNearestPlayer(player, Double.MAX_VALUE);
+
+                if (nearest != null) {
+                    double dist = nearest.getLocation().distance(player.getLocation());
+                    Vector direction = nearest.getLocation().toVector().subtract(player.getLocation().toVector()).normalize();
+
+                    // Show direction particles
+                    for (int i = 1; i <= 5; i++) {
+                        Location particleLoc = player.getLocation().add(direction.clone().multiply(i)).add(0, 1, 0);
+                        player.spawnParticle(Particle.SOUL_FIRE_FLAME, particleLoc, 3, 0.1, 0.1, 0.1, 0);
+                    }
+                    player.sendMessage(ChatColor.DARK_AQUA + "Target: " + ChatColor.WHITE + nearest.getName() +
+                            ChatColor.GRAY + " (" + String.format("%.0f", dist) + " blocks " + getCardinalDirection(direction) + ")");
+                }
+
+                ticks++;
+            }
+        }.runTaskTimer(plugin, 0, 200); // Every 10 seconds
     }
 
     // Tracking for insta-crit hits remaining
@@ -2200,25 +2275,18 @@ public class AbilityManager implements Listener {
         if (!(event.getDamager() instanceof Player)) return;
         Player attacker = (Player) event.getDamager();
 
-        // Check for insta-crit
-        if (chaosDiceInstaCrit.contains(attacker.getUniqueId())) {
-            Integer remaining = instaCritHitsRemaining.get(attacker.getUniqueId());
-            if (remaining != null && remaining > 0) {
+        // Check for timed insta-crit (15 min duration)
+        Long endTime = chaosDiceInstaCritTimed.get(attacker.getUniqueId());
+        if (endTime != null) {
+            if (System.currentTimeMillis() > endTime) {
+                chaosDiceInstaCritTimed.remove(attacker.getUniqueId());
+                attacker.sendMessage(ChatColor.GRAY + "Critical Master has ended.");
+            } else {
                 // Apply critical hit bonus (50% extra damage)
                 event.setDamage(event.getDamage() * 1.5);
                 attacker.getWorld().spawnParticle(Particle.CRIT, event.getEntity().getLocation().add(0, 1, 0),
                         15, 0.3, 0.3, 0.3, 0.2);
                 attacker.getWorld().playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.2f);
-
-                remaining--;
-                if (remaining <= 0) {
-                    chaosDiceInstaCrit.remove(attacker.getUniqueId());
-                    instaCritHitsRemaining.remove(attacker.getUniqueId());
-                    attacker.sendMessage(ChatColor.GRAY + "Critical Fortune has ended.");
-                } else {
-                    instaCritHitsRemaining.put(attacker.getUniqueId(), remaining);
-                    attacker.sendMessage(ChatColor.RED + "Critical hit! " + ChatColor.GRAY + remaining + " crits remaining.");
-                }
             }
         }
     }

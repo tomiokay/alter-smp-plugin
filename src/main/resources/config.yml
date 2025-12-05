@@ -82,13 +82,13 @@ cooldowns:
     ability1: 40   # Time Distortion
     ability2: 120  # Chrono Shift
 
-  # Voidrender
-  voidrender:
+  # Soul Devourer
+  soul_devourer:
     ability1: 30  # Void Slice
     ability2: 85  # Void Rift
 
-  # Creation Splitter
-  creation_splitter:
+  # Voidrender
+  voidrender:
     ability1: 18   # End Sever
     ability2: 120  # Genesis Collapse
 
@@ -210,8 +210,8 @@ ranges:
 #   copper_boots
 #   celestial_aegis_shield
 #   chrono_blade
+#   soul_devourer
 #   voidrender
-#   creation_splitter
 #   copper_pickaxe
 #   copper_chestplate
 #   copper_leggings
@@ -444,8 +444,8 @@ recipes:
     - REDSTONE_BLOCK
     - CLOCK
 
-  # Voidrender
-  voidrender:
+  # Soul Devourer
+  soul_devourer:
     - NETHERITE_INGOT
     - WITHER_ROSE
     - WITHER_ROSE
@@ -472,8 +472,8 @@ recipes:
     - WITHER_ROSE
     - NETHERITE_INGOT
 
-  # Creation Splitter
-  creation_splitter:
+  # Voidrender
+  voidrender:
     - DRAGON_HEAD
     - DRAGON_BREATH
     - END_STONE

@@ -116,12 +116,12 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - **Ability 1:** Time Distortion (40s) - 6-block bubble freezes enemies for 3s, then deals 4 hearts true damage
 - **Ability 2:** Chrono Shift (120s) - Mark position, re-cast to return (clears debuffs, grants Speed II)
 
-#### Voidrender (Diamond Sword)
+#### Soul Devourer (Diamond Sword)
 - **Passive:** Soul Collector - +2 damage per player kill (max 5 souls, displayed on item)
 - **Ability 1:** Void Slice (30s) - 8-block horizontal purple arc
 - **Ability 2:** Void Rift (85s) - Black hole that pulls and damages enemies
 
-#### Creation Splitter (Diamond Sword)
+#### Voidrender (Diamond Sword)
 - **Passive:** Dragon's Gaze - Nearby enemies within 8 blocks glow
 - **Ability 1:** End Sever (18s) - 7-block cone dealing 2 hearts true damage with blindness
 - **Ability 2:** Genesis Collapse (120s) - 10-block explosion dealing 5 hearts true damage
@@ -192,7 +192,14 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - **Usage:** `/ability 1 <x> <y> <z>`
 
 #### Chaos Dice of Fate (Amethyst Shard)
-- **Ability 1:** Roll Dice (30min cooldown) - Random powerful effect (heal, invis, golem, crits, buffs, etc.)
+- **Ability 1:** Roll Dice (30min cooldown) - Random effect:
+  - +5 hearts for 15 minutes
+  - Summon 5 iron golems
+  - Speed III + Strength III for 10 minutes
+  - Jumble opponent's hotbar
+  - Player tracker for 20 minutes
+  - Insta-crit for 15 minutes
+  - Resistance II for 5 minutes
 - **Ability 2:** Player Scan (10s cooldown) - Shows all player locations with coordinates and distance
 
 ## Important Notes

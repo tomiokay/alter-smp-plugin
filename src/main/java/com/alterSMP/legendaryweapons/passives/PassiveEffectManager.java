@@ -144,7 +144,7 @@ public class PassiveEffectManager implements Listener {
                 // Time Slow passive is handled on-hit in AbilityManager
                 break;
 
-            case CREATION_SPLITTER:
+            case VOIDRENDER:
                 // Dragon's Gaze - Nearby players glow
                 for (Entity entity : player.getNearbyEntities(8, 8, 8)) {
                     if (entity instanceof Player) {
@@ -340,7 +340,7 @@ public class PassiveEffectManager implements Listener {
         ItemStack mainHand = killer.getInventory().getItemInMainHand();
         String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
             // Soul Collector - Increase soul count (max 5 souls)
             int currentSouls = LegendaryItemFactory.getSoulCount(mainHand);
             if (currentSouls < 5) {

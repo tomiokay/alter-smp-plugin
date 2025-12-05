@@ -57,7 +57,7 @@ public class LegendaryItemFactory {
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
             // Initialize soul count for Voidrender
-            if (type == LegendaryType.VOIDRENDER) {
+            if (type == LegendaryType.SOUL_DEVOURER) {
                 NamespacedKey soulKey = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
                 meta.getPersistentDataContainer().set(soulKey, PersistentDataType.INTEGER, 0);
             }
@@ -238,8 +238,8 @@ public class LegendaryItemFactory {
             case PHEONIX_GRACE:
             case THOUSAND_DEMON_DAGGERS:
             case CHRONO_BLADE:
+            case SOUL_DEVOURER:
             case VOIDRENDER:
-            case CREATION_SPLITTER:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
                 meta.addEnchant(Enchantment.LOOTING, 3, true);
@@ -401,7 +401,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Clears debuffs, grants Speed II");
                 break;
 
-            case VOIDRENDER:
+            case SOUL_DEVOURER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Soul Collector");
                 lore.add(ChatColor.GRAY + "  +2 damage per player kill (max 5)");
                 lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/5");
@@ -412,7 +412,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Black hole that pulls and damages");
                 break;
 
-            case CREATION_SPLITTER:
+            case VOIDRENDER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Dragon's Gaze");
                 lore.add(ChatColor.GRAY + "  Nearby enemies glow");
                 lore.add("");
@@ -475,7 +475,14 @@ public class LegendaryItemFactory {
 
             case CHAOS_DICE_OF_FATE:
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Roll Dice (30min)");
-                lore.add(ChatColor.GRAY + "  Roll for a random powerful effect");
+                lore.add(ChatColor.GRAY + "  Random effect:");
+                lore.add(ChatColor.GRAY + "  - +5 hearts (15 min)");
+                lore.add(ChatColor.GRAY + "  - Summon 5 iron golems");
+                lore.add(ChatColor.GRAY + "  - Speed III + Strength III (10 min)");
+                lore.add(ChatColor.GRAY + "  - Jumble opponent's hotbar");
+                lore.add(ChatColor.GRAY + "  - Player tracker (20 min)");
+                lore.add(ChatColor.GRAY + "  - Insta-crit (15 min)");
+                lore.add(ChatColor.GRAY + "  - Resistance II (5 min)");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Player Scan (10s)");
                 lore.add(ChatColor.GRAY + "  Show all player locations + coords");
