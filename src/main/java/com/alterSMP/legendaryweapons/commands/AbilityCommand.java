@@ -60,8 +60,11 @@ public class AbilityCommand implements CommandExecutor {
         }
 
         // Check cooldown - but skip for Chrono Blade ability 2 if position is already marked
+        // Also skip for Chaos Dice ability 2 if player has free scans active
         boolean skipCooldownCheck = (type == LegendaryType.CHRONO_BLADE && abilityNum == 2
-            && plugin.getAbilityManager().hasChronoShiftMarked(player.getUniqueId()));
+            && plugin.getAbilityManager().hasChronoShiftMarked(player.getUniqueId()))
+            || (type == LegendaryType.CHAOS_DICE_OF_FATE && abilityNum == 2
+            && plugin.getAbilityManager().hasFreeScan(player.getUniqueId()));
 
         if (!skipCooldownCheck && plugin.getCooldownManager().isOnCooldown(player.getUniqueId(), legendaryId, abilityNum)) {
             int remaining = plugin.getCooldownManager().getRemainingCooldown(

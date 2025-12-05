@@ -480,7 +480,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  - Summon 5 iron golems");
                 lore.add(ChatColor.GRAY + "  - Speed III + Strength III (10 min)");
                 lore.add(ChatColor.GRAY + "  - Jumble opponent's hotbar");
-                lore.add(ChatColor.GRAY + "  - Player tracker (20 min)");
+                lore.add(ChatColor.GRAY + "  - Free player scans (20 min)");
                 lore.add(ChatColor.GRAY + "  - Insta-crit (15 min)");
                 lore.add(ChatColor.GRAY + "  - Resistance II (5 min)");
                 lore.add("");

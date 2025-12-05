@@ -119,9 +119,13 @@ public class AbilityManager implements Listener {
             success = executeAbility2(player, type);
         }
 
-        // Set cooldown if successful
+        // Set cooldown if successful (skip for Chaos Dice ability 2 if free scans active)
         if (success) {
-            plugin.getCooldownManager().setCooldown(player.getUniqueId(), legendaryId, abilityNum, cooldown);
+            boolean skipCooldown = (type == LegendaryType.CHAOS_DICE_OF_FATE && abilityNum == 2
+                && hasFreeScan(player.getUniqueId()));
+            if (!skipCooldown) {
+                plugin.getCooldownManager().setCooldown(player.getUniqueId(), legendaryId, abilityNum, cooldown);
+            }
         }
 
         return success;
@@ -2185,8 +2189,12 @@ public class AbilityManager implements Listener {
                 player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 40, 0.5, 1, 0.5, 0.1);
                 break;
 
-            case 5: // Player tracker for 20 minutes
-                activatePlayerTrackerLong(player);
+            case 5: // Player tracker - free scans for 20 minutes
+                long trackerEndTime = System.currentTimeMillis() + (20 * 60 * 1000);
+                chaosDiceFreeScans.put(player.getUniqueId(), trackerEndTime);
+                player.sendMessage(ChatColor.DARK_AQUA + "✦ FATE #5: " + ChatColor.WHITE + "Hunter's Instinct! " +
+                        ChatColor.GRAY + "Free player scans (/ability 2) for 20 minutes.");
+                player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5, 0.1);
                 break;
 
             case 6: // Insta-crit for 15 minutes
@@ -2208,6 +2216,22 @@ public class AbilityManager implements Listener {
 
     // Timed insta-crit tracking (for 15 min duration)
     private Map<UUID, Long> chaosDiceInstaCritTimed = new HashMap<>();
+
+    // Free player scans tracking (for 20 min duration)
+    private Map<UUID, Long> chaosDiceFreeScans = new HashMap<>();
+
+    /**
+     * Check if player has free scans active (from Chaos Dice roll).
+     */
+    public boolean hasFreeScan(UUID playerId) {
+        Long endTime = chaosDiceFreeScans.get(playerId);
+        if (endTime == null) return false;
+        if (System.currentTimeMillis() > endTime) {
+            chaosDiceFreeScans.remove(playerId);
+            return false;
+        }
+        return true;
+    }
 
     private Player getNearestPlayer(Player player, double maxRange) {
         Player nearest = null;
