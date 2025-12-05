@@ -1586,9 +1586,11 @@ public class AbilityManager implements Listener {
         cooldowns.put("chains_of_eternity", new int[]{35, 65});
         cooldowns.put("celestial_aegis_shield", new int[]{40, 90});
         cooldowns.put("chrono_blade", new int[]{40, 120});
-        cooldowns.put("voidrender", new int[]{30, 85});
-        cooldowns.put("creation_splitter", new int[]{18, 120}); // End Sever 18s, Genesis Collapse 2min
+        cooldowns.put("soul_devourer", new int[]{30, 85}); // Void Slice, Void Rift
+        cooldowns.put("voidrender", new int[]{18, 120}); // End Sever, Genesis Collapse
         cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
+        cooldowns.put("chaos_dice_of_fate", new int[]{1800, 10}); // Roll Dice 30min, Player Scan 10s
+        cooldowns.put("rift_key_of_endkeeper", new int[]{86400, 86400}); // 24 hours
 
         int[] cd = cooldowns.get(type.getId());
         return cd != null ? cd[abilityNum - 1] : 30;
