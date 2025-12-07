@@ -1,0 +1,17 @@
+# Combat Logger Configuration
+
+# How long players stay in combat (in seconds)
+combat-duration: 30
+
+# Riptide cooldown in combat (in seconds)
+riptide-cooldown: 15
+
+# Messages
+messages:
+  combat-start: "&c&l⚔ You are now in combat! Don't log out for %time% seconds."
+  combat-end: "&a✓ You are no longer in combat."
+  combat-log-death: "&c☠ &f%player% &ccombat logged and was killed!"
+  ender-pearl-blocked: "&c✗ You cannot use ender pearls while in combat!"
+  elytra-blocked: "&c✗ You cannot use elytra while in combat!"
+  riptide-cooldown: "&c✗ Riptide on cooldown! %remaining%s remaining"
+  riptide-used: "&e⚠ Riptide used! %cooldown%s cooldown in combat."

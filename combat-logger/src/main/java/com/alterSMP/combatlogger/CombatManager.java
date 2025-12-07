@@ -26,12 +26,20 @@ public class CombatManager implements Listener {
     private final CombatLoggerPlugin plugin;
     private final Map<UUID, Long> combatTagged = new HashMap<>();
     private final Map<UUID, Long> riptideCooldown = new HashMap<>();
-    private static final long COMBAT_TAG_DURATION = 20000; // 20 seconds
-    private static final long RIPTIDE_COOLDOWN = 15000; // 15 seconds
+
+    // Config values
+    private long combatTagDuration;
+    private long riptideCooldownTime;
 
     public CombatManager(CombatLoggerPlugin plugin) {
         this.plugin = plugin;
+        loadConfig();
         startActionBarTask();
+    }
+
+    private void loadConfig() {
+        combatTagDuration = plugin.getConfig().getLong("combat-duration", 30) * 1000;
+        riptideCooldownTime = plugin.getConfig().getLong("riptide-cooldown", 15) * 1000;
     }
 
     /**
@@ -64,7 +72,7 @@ public class CombatManager implements Listener {
         Long tagTime = combatTagged.get(playerId);
         if (tagTime == null) return false;
 
-        if (System.currentTimeMillis() - tagTime > COMBAT_TAG_DURATION) {
+        if (System.currentTimeMillis() - tagTime > combatTagDuration) {
             combatTagged.remove(playerId);
             // Notify player combat ended
             Player player = Bukkit.getPlayer(playerId);
@@ -83,7 +91,7 @@ public class CombatManager implements Listener {
         Long tagTime = combatTagged.get(playerId);
         if (tagTime == null) return 0;
 
-        long remaining = COMBAT_TAG_DURATION - (System.currentTimeMillis() - tagTime);
+        long remaining = combatTagDuration - (System.currentTimeMillis() - tagTime);
         return remaining > 0 ? (int) Math.ceil(remaining / 1000.0) : 0;
     }
 
@@ -95,7 +103,8 @@ public class CombatManager implements Listener {
         combatTagged.put(player.getUniqueId(), System.currentTimeMillis());
 
         if (!wasTagged) {
-            player.sendMessage(ChatColor.RED + "⚔ You are now in combat! Don't log out for 20 seconds.");
+            int seconds = (int) (combatTagDuration / 1000);
+            player.sendMessage(ChatColor.RED + "⚔ You are now in combat! Don't log out for " + seconds + " seconds.");
         }
     }
 
@@ -208,9 +217,9 @@ public class CombatManager implements Listener {
         Long lastRiptide = riptideCooldown.get(playerId);
         long now = System.currentTimeMillis();
 
-        if (lastRiptide != null && (now - lastRiptide) < RIPTIDE_COOLDOWN) {
+        if (lastRiptide != null && (now - lastRiptide) < riptideCooldownTime) {
             // Still on cooldown - cancel the riptide by stopping velocity multiple times
-            long remaining = (RIPTIDE_COOLDOWN - (now - lastRiptide)) / 1000;
+            long remaining = (riptideCooldownTime - (now - lastRiptide)) / 1000;
             player.sendMessage(ChatColor.RED + "✗ Riptide on cooldown! " + remaining + "s remaining");
 
             // Cancel velocity for several ticks to fully stop riptide
@@ -231,6 +240,7 @@ public class CombatManager implements Listener {
 
         // Set cooldown
         riptideCooldown.put(playerId, now);
-        player.sendMessage(ChatColor.YELLOW + "⚠ Riptide used! 15s cooldown in combat.");
+        int cooldownSeconds = (int) (riptideCooldownTime / 1000);
+        player.sendMessage(ChatColor.YELLOW + "⚠ Riptide used! " + cooldownSeconds + "s cooldown in combat.");
     }
 }

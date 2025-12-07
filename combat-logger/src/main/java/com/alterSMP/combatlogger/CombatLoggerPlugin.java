@@ -10,6 +10,10 @@ public class CombatLoggerPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+
+        // Save default config
+        saveDefaultConfig();
+
         combatManager = new CombatManager(this);
 
         getServer().getPluginManager().registerEvents(combatManager, this);
