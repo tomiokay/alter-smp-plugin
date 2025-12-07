@@ -2226,9 +2226,20 @@ public class AbilityManager implements Listener {
             case 5: // Player tracker - free scans for 20 minutes
                 long trackerEndTime = System.currentTimeMillis() + (20 * 60 * 1000);
                 chaosDiceFreeScans.put(player.getUniqueId(), trackerEndTime);
+                chaosDiceTrackerActive.add(player.getUniqueId()); // Enable ability 2
                 player.sendMessage(ChatColor.DARK_AQUA + "✦ FATE #5: " + ChatColor.WHITE + "Hunter's Instinct! " +
                         ChatColor.GRAY + "Free player scans (/ability 2) for 20 minutes.");
                 player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5, 0.1);
+                // Schedule removal of tracker access after 20 minutes
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        chaosDiceTrackerActive.remove(player.getUniqueId());
+                        if (player.isOnline()) {
+                            player.sendMessage(ChatColor.GRAY + "Hunter's Instinct has faded.");
+                        }
+                    }
+                }.runTaskLater(plugin, 20 * 60 * 20); // 20 minutes in ticks
                 break;
 
             case 6: // Insta-crit for 15 minutes

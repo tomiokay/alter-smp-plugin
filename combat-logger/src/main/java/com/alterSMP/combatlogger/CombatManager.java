@@ -174,7 +174,7 @@ public class CombatManager implements Listener {
 
     // ========== ELYTRA BLOCKING ==========
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onElytraGlide(EntityToggleGlideEvent event) {
         if (!(event.getEntity() instanceof Player)) return;
         if (!event.isGliding()) return; // Only block starting to glide
@@ -183,12 +183,22 @@ public class CombatManager implements Listener {
         if (isInCombat(player)) {
             event.setCancelled(true);
             player.sendMessage(ChatColor.RED + "✗ You cannot use elytra while in combat!");
+
+            // Force stop gliding after a tick (backup)
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (player.isGliding()) {
+                        player.setGliding(false);
+                    }
+                }
+            }.runTaskLater(plugin, 1L);
         }
     }
 
     // ========== RIPTIDE COOLDOWN ==========
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onRiptide(PlayerRiptideEvent event) {
         Player player = event.getPlayer();
 
@@ -199,10 +209,23 @@ public class CombatManager implements Listener {
         long now = System.currentTimeMillis();
 
         if (lastRiptide != null && (now - lastRiptide) < RIPTIDE_COOLDOWN) {
-            // Still on cooldown - cancel the riptide by stopping velocity
+            // Still on cooldown - cancel the riptide by stopping velocity multiple times
             long remaining = (RIPTIDE_COOLDOWN - (now - lastRiptide)) / 1000;
             player.sendMessage(ChatColor.RED + "✗ Riptide on cooldown! " + remaining + "s remaining");
-            player.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+
+            // Cancel velocity for several ticks to fully stop riptide
+            new BukkitRunnable() {
+                int ticks = 0;
+                @Override
+                public void run() {
+                    if (ticks >= 10 || !player.isOnline()) {
+                        cancel();
+                        return;
+                    }
+                    player.setVelocity(new org.bukkit.util.Vector(0, -0.0784, 0)); // Slight gravity
+                    ticks++;
+                }
+            }.runTaskTimer(plugin, 0L, 1L);
             return;
         }
 

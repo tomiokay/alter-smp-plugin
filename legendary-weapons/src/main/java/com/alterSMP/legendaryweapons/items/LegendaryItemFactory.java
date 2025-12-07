@@ -186,7 +186,7 @@ public class LegendaryItemFactory {
 
         ItemMeta meta = item.getItemMeta();
         NamespacedKey key = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
-        meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, Math.min(count, 20));
+        meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, Math.min(count, 5));
 
         // Update lore
         List<String> lore = meta.getLore();
@@ -194,7 +194,7 @@ public class LegendaryItemFactory {
             // Find and update soul count line
             for (int i = 0; i < lore.size(); i++) {
                 if (lore.get(i).contains("Souls:")) {
-                    lore.set(i, ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + count + "/20");
+                    lore.set(i, ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + count + "/5");
                     break;
                 }
             }
@@ -258,9 +258,9 @@ public class LegendaryItemFactory {
                 meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
                 break;
 
-            // Shovel (Chains of Eternity)
+            // Shovel (Chains of Eternity) - No sharpness, utility weapon
             case CHAINS_OF_ETERNITY:
-                meta.addEnchant(Enchantment.SHARPNESS, 5, true);
+                // No enchantments for this ability-focused weapon
                 break;
 
             // Boots
@@ -324,7 +324,7 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Immune to fire and explosions");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Flame Harvest (90s)");
-                lore.add(ChatColor.GRAY + "  Deal 40% HP damage to nearby enemies");
+                lore.add(ChatColor.GRAY + "  Deal 1.5 hearts true damage to nearby enemies");
                 lore.add(ChatColor.GRAY + "  Gain absorption hearts per enemy hit");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Fire Rebirth (300s)");
                 lore.add(ChatColor.GRAY + "  Cheat death for 10 seconds");
@@ -419,6 +419,10 @@ public class LegendaryItemFactory {
             case DRAGONBORN_BLADE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Dragon's Gaze");
                 lore.add(ChatColor.GRAY + "  Enemies within 30 blocks glow");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Endbound Soulkeeper");
+                lore.add(ChatColor.GRAY + "  Steal 1 heart on player kill (max 5)");
+                lore.add(ChatColor.GRAY + "  One heart per unique player");
+                lore.add(ChatColor.GRAY + "  All hearts return on your death");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (30s)");
                 lore.add(ChatColor.GRAY + "  7-block cone, 2 hearts true damage");
@@ -459,9 +463,9 @@ public class LegendaryItemFactory {
 
             case LANTERN_OF_LOST_NAMES:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Phantom Veil");
-                lore.add(ChatColor.GRAY + "  Invisible to players you've never killed");
-                lore.add(ChatColor.GRAY + "  They cannot see you until you kill them once");
-                lore.add(ChatColor.GRAY + "  Deactivates for 5 min after attacking");
+                lore.add(ChatColor.GRAY + "  You are invisible to players you");
+                lore.add(ChatColor.GRAY + "  haven't killed yet");
+                lore.add(ChatColor.GRAY + "  Attacking reveals you for 5 min");
                 lore.add("");
                 lore.add(ChatColor.YELLOW + "Hold in offhand for effect");
                 break;

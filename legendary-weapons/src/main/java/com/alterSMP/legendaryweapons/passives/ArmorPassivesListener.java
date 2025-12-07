@@ -368,6 +368,13 @@ public class ArmorPassivesListener implements Listener {
     }
 
     // ========== LANTERN OF LOST NAMES ==========
+    // NEW LOGIC: Holder is invisible to OTHER players (not the other way around)
+    // - Holder is invisible to players they HAVEN'T killed
+    // - Attacking reveals holder to that player for 5 minutes
+    // - After killing a player, that player can always see the holder
+
+    // Track when holder last attacked each player (for 5 min reveal timer)
+    private Map<UUID, Map<UUID, Long>> lanternAttackTimers = new HashMap<>();
 
     private void startLanternVisibilityTask() {
         // Run every 10 ticks (0.5 seconds) to update visibility
@@ -378,62 +385,94 @@ public class ArmorPassivesListener implements Listener {
         }, 20L, 10L);
     }
 
-    private void updateLanternVisibility(Player holder) {
-        ItemStack offhand = holder.getInventory().getItemInOffHand();
-        ItemStack mainhand = holder.getInventory().getItemInMainHand();
-
+    private boolean isHoldingLantern(Player player) {
+        ItemStack offhand = player.getInventory().getItemInOffHand();
+        ItemStack mainhand = player.getInventory().getItemInMainHand();
         String offhandId = LegendaryItemFactory.getLegendaryId(offhand);
         String mainhandId = LegendaryItemFactory.getLegendaryId(mainhand);
-
-        boolean holdingLantern = (offhandId != null && offhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()))
+        return (offhandId != null && offhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()))
                 || (mainhandId != null && mainhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()));
+    }
 
+    private void updateLanternVisibility(Player holder) {
         UUID holderId = holder.getUniqueId();
-        Set<UUID> currentlyHidden = hiddenFromPlayer.computeIfAbsent(holderId, k -> new HashSet<>());
+        boolean holdingLantern = isHoldingLantern(holder);
+
         Set<UUID> killed = lanternKillTracker.computeIfAbsent(holderId, k -> new HashSet<>());
+        Map<UUID, Long> attackTimers = lanternAttackTimers.computeIfAbsent(holderId, k -> new HashMap<>());
+        Set<UUID> currentlyHiddenFrom = hiddenFromPlayer.computeIfAbsent(holderId, k -> new HashSet<>());
 
         if (!holdingLantern) {
-            // Not holding lantern - show all hidden players
-            for (UUID hiddenId : new HashSet<>(currentlyHidden)) {
-                Player hidden = Bukkit.getPlayer(hiddenId);
-                if (hidden != null && hidden.isOnline()) {
-                    holder.showPlayer(plugin, hidden);
+            // Not holding lantern - show holder to everyone
+            for (UUID viewerId : new HashSet<>(currentlyHiddenFrom)) {
+                Player viewer = Bukkit.getPlayer(viewerId);
+                if (viewer != null && viewer.isOnline()) {
+                    viewer.showPlayer(plugin, holder);
                 }
             }
-            currentlyHidden.clear();
+            currentlyHiddenFrom.clear();
             return;
         }
 
-        // Holding lantern - update visibility
-        for (Player other : Bukkit.getOnlinePlayers()) {
-            if (other.equals(holder)) continue;
+        // Holding lantern - hide holder from players who haven't been killed by holder
+        long now = System.currentTimeMillis();
 
-            UUID otherId = other.getUniqueId();
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (viewer.equals(holder)) continue;
 
-            // Check if holder has killed this player
-            boolean hasKilled = killed.contains(otherId);
+            UUID viewerId = viewer.getUniqueId();
+
+            // Check if holder has killed this viewer (permanent visibility)
+            boolean hasKilledViewer = killed.contains(viewerId);
+
+            // Check if holder recently attacked this viewer (5 min reveal)
+            Long attackTime = attackTimers.get(viewerId);
+            boolean recentlyAttacked = attackTime != null && (now - attackTime) < 5 * 60 * 1000;
 
             // Check if they're trusted
-            boolean isTrusted = plugin.getTrustManager().isTrusted(holder, other);
+            boolean isTrusted = plugin.getTrustManager().isTrusted(holder, viewer);
 
-            if (hasKilled || isTrusted) {
-                // Player should be visible
-                if (currentlyHidden.contains(otherId)) {
-                    holder.showPlayer(plugin, other);
-                    currentlyHidden.remove(otherId);
+            if (hasKilledViewer || recentlyAttacked || isTrusted) {
+                // Viewer CAN see holder
+                if (currentlyHiddenFrom.contains(viewerId)) {
+                    viewer.showPlayer(plugin, holder);
+                    currentlyHiddenFrom.remove(viewerId);
                 }
             } else {
-                // Player should be hidden
-                if (!currentlyHidden.contains(otherId)) {
-                    holder.hidePlayer(plugin, other);
-                    currentlyHidden.add(otherId);
-
-                    // Show soul particle effect on hidden player (only to holder)
-                    Location loc = other.getLocation().add(0, 1, 0);
-                    holder.spawnParticle(Particle.SOUL, loc, 5, 0.3, 0.5, 0.3, 0.02);
+                // Viewer CANNOT see holder (holder is invisible to them)
+                if (!currentlyHiddenFrom.contains(viewerId)) {
+                    viewer.hidePlayer(plugin, holder);
+                    currentlyHiddenFrom.add(viewerId);
                 }
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onLanternHolderAttack(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player)) return;
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player attacker = (Player) event.getDamager();
+        Player victim = (Player) event.getEntity();
+
+        // Check if attacker is holding the Lantern
+        if (!isHoldingLantern(attacker)) return;
+
+        // Record attack time - victim can now see attacker for 5 minutes
+        UUID attackerId = attacker.getUniqueId();
+        UUID victimId = victim.getUniqueId();
+
+        Map<UUID, Long> attackTimers = lanternAttackTimers.computeIfAbsent(attackerId, k -> new HashMap<>());
+        attackTimers.put(victimId, System.currentTimeMillis());
+
+        // Immediately reveal to victim
+        Set<UUID> hiddenFrom = hiddenFromPlayer.get(attackerId);
+        if (hiddenFrom != null && hiddenFrom.remove(victimId)) {
+            victim.showPlayer(plugin, attacker);
+        }
+
+        attacker.sendMessage(ChatColor.GRAY + "You've revealed yourself to " + victim.getName() + " for 5 minutes!");
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -445,46 +484,37 @@ public class ArmorPassivesListener implements Listener {
         if (killer == null) return;
 
         // Check if killer is holding the Lantern of Lost Names
-        ItemStack offhand = killer.getInventory().getItemInOffHand();
-        ItemStack mainhand = killer.getInventory().getItemInMainHand();
+        if (!isHoldingLantern(killer)) return;
 
-        String offhandId = LegendaryItemFactory.getLegendaryId(offhand);
-        String mainhandId = LegendaryItemFactory.getLegendaryId(mainhand);
+        // Record this kill - victim can now ALWAYS see the killer
+        Set<UUID> killed = lanternKillTracker.computeIfAbsent(killer.getUniqueId(), k -> new HashSet<>());
+        killed.add(victim.getUniqueId());
 
-        boolean holdingLantern = (offhandId != null && offhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()))
-                || (mainhandId != null && mainhandId.equals(LegendaryType.LANTERN_OF_LOST_NAMES.getId()));
-
-        if (holdingLantern) {
-            // Record this kill
-            Set<UUID> killed = lanternKillTracker.computeIfAbsent(killer.getUniqueId(), k -> new HashSet<>());
-            killed.add(victim.getUniqueId());
-
-            // Show player to killer now
-            Set<UUID> hidden = hiddenFromPlayer.get(killer.getUniqueId());
-            if (hidden != null && hidden.remove(victim.getUniqueId())) {
-                killer.showPlayer(plugin, victim);
-            }
-
-            // Dramatic effect
-            killer.getWorld().spawnParticle(Particle.SOUL, victim.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.1);
-            killer.playSound(killer.getLocation(), Sound.ENTITY_WARDEN_HEARTBEAT, 1.0f, 0.5f);
-            killer.sendMessage(ChatColor.DARK_AQUA + "✦ " + ChatColor.AQUA + victim.getName() +
-                    ChatColor.GRAY + "'s name has been claimed by the Lantern.");
+        // Clear any attack timer since it's now permanent
+        Map<UUID, Long> attackTimers = lanternAttackTimers.get(killer.getUniqueId());
+        if (attackTimers != null) {
+            attackTimers.remove(victim.getUniqueId());
         }
+
+        // Dramatic effect
+        killer.getWorld().spawnParticle(Particle.SOUL, victim.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.1);
+        killer.playSound(killer.getLocation(), Sound.ENTITY_WARDEN_HEARTBEAT, 1.0f, 0.5f);
+        killer.sendMessage(ChatColor.DARK_AQUA + "✦ " + ChatColor.AQUA + victim.getName() +
+                ChatColor.GRAY + " can now always see you.");
     }
 
     @EventHandler
     public void onPlayerJoinForLantern(org.bukkit.event.player.PlayerJoinEvent event) {
-        // When a player joins, we need to update visibility for all lantern holders
         Player joiningPlayer = event.getPlayer();
 
         // Run one tick later to ensure player is fully loaded
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            // Update visibility for all lantern holders
             for (Player holder : Bukkit.getOnlinePlayers()) {
                 if (holder.equals(joiningPlayer)) continue;
                 updateLanternVisibility(holder);
             }
-            // Also check if the joining player is holding a lantern
+            // Also update if the joining player is holding a lantern
             updateLanternVisibility(joiningPlayer);
         }, 2L);
     }
@@ -495,16 +525,19 @@ public class ArmorPassivesListener implements Listener {
 
         // Clean up hidden tracking for this player
         hiddenFromPlayer.remove(playerId);
+        lanternAttackTimers.remove(playerId);
 
-        // Remove this player from others' hidden lists
+        // Remove this player from others' hidden lists and attack timers
         for (Set<UUID> hidden : hiddenFromPlayer.values()) {
             hidden.remove(playerId);
+        }
+        for (Map<UUID, Long> timers : lanternAttackTimers.values()) {
+            timers.remove(playerId);
         }
     }
 
     /**
      * Get the set of players that a lantern holder has killed.
-     * Used for persistence if needed.
      */
     public Set<UUID> getLanternKills(UUID holderId) {
         return lanternKillTracker.getOrDefault(holderId, new HashSet<>());
@@ -512,7 +545,6 @@ public class ArmorPassivesListener implements Listener {
 
     /**
      * Add a kill to a lantern holder's record.
-     * Used for loading persistence if needed.
      */
     public void addLanternKill(UUID holderId, UUID victimId) {
         lanternKillTracker.computeIfAbsent(holderId, k -> new HashSet<>()).add(victimId);
