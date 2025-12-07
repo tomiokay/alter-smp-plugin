@@ -156,7 +156,7 @@ public class AbilityManager implements Listener {
                 return echoStrike(player);
             case SOUL_DEVOURER:
                 return voidSlice(player);
-            case VOIDRENDER:
+            case DRAGONBORN_BLADE:
                 return endSever(player);
             case COPPER_PICKAXE:
                 return toggle3x3Mining(player);
@@ -188,7 +188,7 @@ public class AbilityManager implements Listener {
                 return timeRewind(player);
             case SOUL_DEVOURER:
                 return voidRift(player);
-            case VOIDRENDER:
+            case DRAGONBORN_BLADE:
                 return cataclysmPulse(player);
             case COPPER_PICKAXE:
                 return toggleEnchantMode(player);
@@ -1599,7 +1599,7 @@ public class AbilityManager implements Listener {
         cooldowns.put("celestial_aegis_shield", new int[]{40, 90});
         cooldowns.put("chrono_blade", new int[]{40, 120});
         cooldowns.put("soul_devourer", new int[]{30, 85}); // Void Slice, Void Rift
-        cooldowns.put("voidrender", new int[]{30, 120}); // End Sever (30s), Genesis Collapse
+        cooldowns.put("dragonborn_blade", new int[]{30, 120}); // End Sever (30s), Genesis Collapse
         cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
         cooldowns.put("chaos_dice_of_fate", new int[]{1800, 10}); // Roll Dice 30min, Player Scan 10s
         cooldowns.put("rift_key_of_endkeeper", new int[]{86400, 86400}); // 24 hours
@@ -1823,7 +1823,7 @@ public class AbilityManager implements Listener {
             ItemStack mainHand = player.getInventory().getItemInMainHand();
             String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
-            if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
+            if (legendaryId != null && legendaryId.equals(LegendaryType.DRAGONBORN_BLADE.getId())) {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 200, 1));
                 player.sendMessage(ChatColor.DARK_PURPLE + "Dragon's power absorbed! +2 Absorption hearts");
             }

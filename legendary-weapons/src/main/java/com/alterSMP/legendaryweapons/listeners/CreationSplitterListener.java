@@ -37,7 +37,7 @@ public class CreationSplitterListener implements Listener {
         for (ItemStack item : player.getInventory().getContents()) {
             if (item != null) {
                 String legendaryId = LegendaryItemFactory.getLegendaryId(item);
-                if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
+                if (legendaryId != null && legendaryId.equals(LegendaryType.DRAGONBORN_BLADE.getId())) {
                     return true;
                 }
             }
@@ -51,7 +51,7 @@ public class CreationSplitterListener implements Listener {
     private boolean isHoldingCreationSplitter(Player player) {
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
-        return legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId());
+        return legendaryId != null && legendaryId.equals(LegendaryType.DRAGONBORN_BLADE.getId());
     }
 
     /**

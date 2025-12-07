@@ -87,9 +87,9 @@ cooldowns:
     ability1: 30  # Void Slice
     ability2: 85  # Void Rift
 
-  # Voidrender
-  voidrender:
-    ability1: 18   # End Sever
+  # Dragonborn Blade
+  dragonborn_blade:
+    ability1: 30   # End Sever
     ability2: 120  # Genesis Collapse
 
   # Rift Key of the Endkeeper
@@ -211,7 +211,7 @@ ranges:
 #   celestial_aegis_shield
 #   chrono_blade
 #   soul_devourer
-#   voidrender
+#   dragonborn_blade
 #   copper_pickaxe
 #   copper_chestplate
 #   copper_leggings
@@ -472,8 +472,8 @@ recipes:
     - WITHER_ROSE
     - NETHERITE_INGOT
 
-  # Voidrender
-  voidrender:
+  # Dragonborn Blade
+  dragonborn_blade:
     - DRAGON_HEAD
     - DRAGON_BREATH
     - END_STONE

@@ -146,7 +146,7 @@ public class PassiveEffectManager implements Listener {
                 // Time Slow passive is handled on-hit in AbilityManager
                 break;
 
-            case VOIDRENDER:
+            case DRAGONBORN_BLADE:
                 // Dragon's Gaze - Nearby enemies glow (30 block radius)
                 for (Entity entity : player.getNearbyEntities(30, 30, 30)) {
                     if (entity instanceof Player) {
@@ -361,13 +361,6 @@ public class PassiveEffectManager implements Listener {
             }
         }
 
-        // Dragonborn Blade (Voidrender) - Heal 2 hearts on player kill
-        if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
-            double newHealth = Math.min(killer.getHealth() + 4.0, killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue());
-            killer.setHealth(newHealth);
-            killer.getWorld().spawnParticle(Particle.HEART, killer.getLocation().add(0, 2, 0), 5, 0.3, 0.3, 0.3, 0);
-            killer.sendMessage(ChatColor.DARK_PURPLE + "Dragon's Gaze healed you for 2 hearts!");
-        }
     }
 
     // ========== CACHE INVALIDATION EVENTS ==========

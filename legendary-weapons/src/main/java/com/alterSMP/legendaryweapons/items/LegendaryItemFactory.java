@@ -239,7 +239,7 @@ public class LegendaryItemFactory {
             case THOUSAND_DEMON_DAGGERS:
             case CHRONO_BLADE:
             case SOUL_DEVOURER:
-            case VOIDRENDER:
+            case DRAGONBORN_BLADE:
                 meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
                 meta.addEnchant(Enchantment.LOOTING, 3, true);
@@ -416,10 +416,9 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Black hole that pulls and damages");
                 break;
 
-            case VOIDRENDER:
+            case DRAGONBORN_BLADE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Dragon's Gaze");
                 lore.add(ChatColor.GRAY + "  Enemies within 30 blocks glow");
-                lore.add(ChatColor.GRAY + "  Heal 2 hearts on player kill");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (30s)");
                 lore.add(ChatColor.GRAY + "  7-block cone, 2 hearts true damage");

@@ -9,7 +9,7 @@ public enum LegendaryType {
     THOUSAND_DEMON_DAGGERS("thousand_demon_daggers", "Thousand Demon Daggers", Material.DIAMOND_SWORD, 3),
     CHRONO_BLADE("chrono_blade", "Chrono Blade", Material.DIAMOND_SWORD, 4),
     SOUL_DEVOURER("soul_devourer", "Soul Devourer", Material.DIAMOND_SWORD, 5),
-    VOIDRENDER("voidrender", "Dragonborn Blade", Material.DIAMOND_SWORD, 6),
+    DRAGONBORN_BLADE("dragonborn_blade", "Dragonborn Blade", Material.DIAMOND_SWORD, 6),
     TEMPESTBREAKER_SPEAR("tempestbreaker_spear", "Tempestbreaker Spear", Material.TRIDENT, 7),
     DIVINE_AXE_RHITTA("divine_axe_rhitta", "Divine Axe Rhitta", Material.DIAMOND_AXE, 8),
     CHAINS_OF_ETERNITY("chains_of_eternity", "Chains of Eternity", Material.WOODEN_SHOVEL, 9),
