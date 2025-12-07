@@ -159,6 +159,11 @@ public class PassiveEffectManager implements Listener {
                     }
                 }
                 break;
+
+            case PHEONIX_GRACE:
+                // Heat Shield - Permanent Fire Resistance
+                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 40, 0, true, false));
+                break;
         }
     }
 

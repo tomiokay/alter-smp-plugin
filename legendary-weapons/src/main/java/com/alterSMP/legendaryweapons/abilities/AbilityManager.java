@@ -158,7 +158,7 @@ public class AbilityManager implements Listener {
                 return voidSlice(player);
             case DRAGONBORN_BLADE:
                 return endSever(player);
-            case COPPER_PICKAXE:
+            case FORGE_PICKAXE:
                 return toggle3x3Mining(player);
             case RIFT_KEY_OF_ENDKEEPER:
                 return openEndRift(player);
@@ -190,7 +190,7 @@ public class AbilityManager implements Listener {
                 return voidRift(player);
             case DRAGONBORN_BLADE:
                 return cataclysmPulse(player);
-            case COPPER_PICKAXE:
+            case FORGE_PICKAXE:
                 return toggleEnchantMode(player);
             case CHAOS_DICE_OF_FATE:
                 if (!chaosDiceTrackerActive.contains(player.getUniqueId())) {
@@ -1600,7 +1600,7 @@ public class AbilityManager implements Listener {
         cooldowns.put("chrono_blade", new int[]{40, 120});
         cooldowns.put("soul_devourer", new int[]{30, 85}); // Void Slice, Void Rift
         cooldowns.put("dragonborn_blade", new int[]{30, 120}); // End Sever (30s), Genesis Collapse
-        cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
+        cooldowns.put("forge_pickaxe", new int[]{1, 1}); // Instant toggles
         cooldowns.put("chaos_dice_of_fate", new int[]{1800, 10}); // Roll Dice 30min, Player Scan 10s
         cooldowns.put("rift_key_of_endkeeper", new int[]{86400, 86400}); // 24 hours
 

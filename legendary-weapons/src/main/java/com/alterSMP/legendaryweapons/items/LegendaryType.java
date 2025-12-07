@@ -17,7 +17,7 @@ public enum LegendaryType {
     // Armor (no custom models, just for completeness)
     COPPER_BOOTS("copper_boots", "Copper Boots", Material.DIAMOND_BOOTS, 10),
     CELESTIAL_AEGIS_SHIELD("celestial_aegis_shield", "Celestial Aegis Shield", Material.SHIELD, 11),
-    COPPER_PICKAXE("copper_pickaxe", "Copper Pickaxe", Material.NETHERITE_PICKAXE, 12),
+    FORGE_PICKAXE("forge_pickaxe", "Forge Pickaxe", Material.NETHERITE_PICKAXE, 12),
     COPPER_CHESTPLATE("copper_chestplate", "Copper Chestplate", Material.DIAMOND_CHESTPLATE, 13),
     COPPER_LEGGINGS("copper_leggings", "Copper Leggings", Material.DIAMOND_LEGGINGS, 14),
     COPPER_HELMET("copper_helmet", "Copper Helmet", Material.DIAMOND_HELMET, 15),

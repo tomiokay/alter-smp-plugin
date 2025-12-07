@@ -212,7 +212,7 @@ ranges:
 #   chrono_blade
 #   soul_devourer
 #   dragonborn_blade
-#   copper_pickaxe
+#   forge_pickaxe
 #   copper_chestplate
 #   copper_leggings
 #   copper_helmet
@@ -530,8 +530,8 @@ recipes:
     - COPPER_BLOCK
     - ENCHANTED_BOOK:FEATHER_FALLING:4
 
-  # Copper Pickaxe
-  copper_pickaxe:
+  # Forge Pickaxe
+  forge_pickaxe:
     - COPPER_BLOCK
     - COPPER_BLOCK
     - COPPER_BLOCK

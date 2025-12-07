@@ -49,30 +49,15 @@ public class LegendaryItemFactory {
             addMaxEnchantments(meta, type);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
-            // Disable enchantment glint to improve FPS (glint shader is expensive on ARM/lower-end hardware)
-            meta.setEnchantmentGlintOverride(false);
-
             // Make unbreakable
             meta.setUnbreakable(true);
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
-            // Initialize soul count for Voidrender
+            // Initialize soul count for Soul Devourer
             if (type == LegendaryType.SOUL_DEVOURER) {
                 NamespacedKey soulKey = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
                 meta.getPersistentDataContainer().set(soulKey, PersistentDataType.INTEGER, 0);
             }
-
-            // Custom armor model requires Paper 1.21.5+ data component API
-            // Commenting out for now until Paper version is updated
-            // if (isArmorPiece(type)) {
-            //     EquipmentSlot slot = getArmorSlot(type);
-            //     if (slot != null) {
-            //         Equippable equippable = Equippable.equippable(slot)
-            //             .setModel(NamespacedKey.minecraft("legendary"))
-            //             .build();
-            //         meta.setData(DataComponentTypes.EQUIPPABLE, equippable);
-            //     }
-            // }
 
             item.setItemMeta(meta);
 
@@ -83,30 +68,6 @@ public class LegendaryItemFactory {
         }
 
         return item;
-    }
-
-    // NEW: Helper method to check if legendary is an armor piece
-    private boolean isArmorPiece(LegendaryType type) {
-        return type == LegendaryType.COPPER_HELMET ||
-               type == LegendaryType.COPPER_CHESTPLATE ||
-               type == LegendaryType.COPPER_LEGGINGS ||
-               type == LegendaryType.COPPER_BOOTS;
-    }
-
-    // NEW: Helper method to get the equipment slot for armor
-    private EquipmentSlot getArmorSlot(LegendaryType type) {
-        switch (type) {
-            case COPPER_HELMET:
-                return EquipmentSlot.HEAD;
-            case COPPER_CHESTPLATE:
-                return EquipmentSlot.CHEST;
-            case COPPER_LEGGINGS:
-                return EquipmentSlot.LEGS;
-            case COPPER_BOOTS:
-                return EquipmentSlot.FEET;
-            default:
-                return null;
-        }
     }
 
     public ItemStack createForgeItem() {
@@ -258,9 +219,9 @@ public class LegendaryItemFactory {
                 meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
                 break;
 
-            // Shovel (Chains of Eternity) - No sharpness, utility weapon
+            // Shovel (Chains of Eternity)
             case CHAINS_OF_ETERNITY:
-                // No enchantments for this ability-focused weapon
+                meta.addEnchant(Enchantment.SHARPNESS, 5, true);
                 break;
 
             // Boots
@@ -289,7 +250,7 @@ public class LegendaryItemFactory {
                 break;
 
             // Pickaxe
-            case COPPER_PICKAXE:
+            case FORGE_PICKAXE:
                 meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
                 // Silk Touch/Fortune toggle handled by ability
                 break;
@@ -307,14 +268,11 @@ public class LegendaryItemFactory {
 
         switch (type) {
             case HOLY_MOONLIGHT_SWORD:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Lunar Blessing");
-                lore.add(ChatColor.GRAY + "  Buffs based on moon phase:");
-                lore.add(ChatColor.GRAY + "  Full Moon: Strength III + white effects");
-                lore.add(ChatColor.GRAY + "  Gibbous: Strength I");
-                lore.add(ChatColor.GRAY + "  Quarter: Speed I");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flashburst Counter");
+                lore.add(ChatColor.GRAY + "  Every 20 hits blinds nearby enemies");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Star Rift Slash (25s)");
-                lore.add(ChatColor.GRAY + "  30-block beam through walls");
+                lore.add(ChatColor.GRAY + "  Beam attack through walls");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Stargate Blink (45s)");
                 lore.add(ChatColor.GRAY + "  Teleport up to 45 blocks");
                 break;
@@ -323,21 +281,20 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Heat Shield");
                 lore.add(ChatColor.GRAY + "  Immune to fire and explosions");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Flame Harvest (90s)");
-                lore.add(ChatColor.GRAY + "  Deal 1.5 hearts true damage to nearby enemies");
-                lore.add(ChatColor.GRAY + "  Gain absorption hearts per enemy hit");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Fire Rebirth (300s)");
-                lore.add(ChatColor.GRAY + "  Cheat death for 10 seconds");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Flame Harvest (30s)");
+                lore.add(ChatColor.GRAY + "  Fiery explosion grants absorption");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Fire Rebirth (180s)");
+                lore.add(ChatColor.GRAY + "  Cheat death with flames");
                 break;
 
             case TEMPESTBREAKER_SPEAR:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Storm's Fury");
-                lore.add(ChatColor.GRAY + "  Trident hits strike lightning (1 heart)");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Windwalker");
+                lore.add(ChatColor.GRAY + "  Water mobility buffs");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Gale Throw (25s)");
-                lore.add(ChatColor.GRAY + "  Next throw creates wind vortex");
+                lore.add(ChatColor.GRAY + "  Wind vortex on impact");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Stormcall (50s)");
-                lore.add(ChatColor.GRAY + "  8-block lightning storm for 2s");
+                lore.add(ChatColor.GRAY + "  Cone of stunning lightning");
                 break;
 
             case THOUSAND_DEMON_DAGGERS:
@@ -348,44 +305,43 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Teleport behind target enemy");
                 lore.add(ChatColor.GRAY + "  Next attack deals +1 heart true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Soul Mark (60s)");
-                lore.add(ChatColor.GRAY + "  Mark target for +4 hearts true damage");
-                lore.add(ChatColor.GRAY + "  on each hit for 15 seconds");
+                lore.add(ChatColor.GRAY + "  Mark target for true damage");
                 break;
 
             case DIVINE_AXE_RHITTA:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Nature Channel");
-                lore.add(ChatColor.GRAY + "  Regen III on grass/logs/leaves");
+                lore.add(ChatColor.GRAY + "  Regeneration on natural blocks");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Nature Grasp (35s)");
-                lore.add(ChatColor.GRAY + "  Root enemies in 6-block radius");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Verdant Cyclone (70s)");
-                lore.add(ChatColor.GRAY + "  360° spin attack with knockback");
+                lore.add(ChatColor.GRAY + "  Root enemies in place");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Forest Shield (70s)");
+                lore.add(ChatColor.GRAY + "  Axe becomes breach weapon");
                 break;
 
             case CHAINS_OF_ETERNITY:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "None");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Soul Links");
+                lore.add(ChatColor.GRAY + "  Every 5th hit immobilizes");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Soul Bind (35s)");
-                lore.add(ChatColor.GRAY + "  Teleport target to your face");
-                lore.add(ChatColor.GRAY + "  Deal damage and slow");
+                lore.add(ChatColor.GRAY + "  Pull and slow target");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Prison of the Damned (65s)");
-                lore.add(ChatColor.GRAY + "  Cage target in iron bars for 5s");
+                lore.add(ChatColor.GRAY + "  Cage target in iron bars");
                 break;
 
             case COPPER_BOOTS:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Featherfall");
-                lore.add(ChatColor.GRAY + "  No fall damage + Speed II");
+                lore.add(ChatColor.GRAY + "  No fall damage");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability: " + ChatColor.WHITE + "Meteor Slam");
                 lore.add(ChatColor.GRAY + "  Shift mid-air to slam down");
-                lore.add(ChatColor.GRAY + "  Mace-like damage in 4-block radius");
+                lore.add(ChatColor.GRAY + "  Damage based on fall distance");
                 break;
 
             case CELESTIAL_AEGIS_SHIELD:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Aura of Protection");
                 lore.add(ChatColor.GRAY + "  You and trusted allies gain Resistance I");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Radiant Block (40s)");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Radiant Block (35s)");
                 lore.add(ChatColor.GRAY + "  Reflect 75% damage for 5s");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Heaven's Wall (90s)");
                 lore.add(ChatColor.GRAY + "  16x16 barrier for 32s");
@@ -393,16 +349,13 @@ public class LegendaryItemFactory {
                 break;
 
             case CHRONO_BLADE:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Time Freeze");
-                lore.add(ChatColor.GRAY + "  Every 20th hit freezes target for 3s");
-                lore.add(ChatColor.GRAY + "  Frozen enemies can't move or attack");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Last Second");
+                lore.add(ChatColor.GRAY + "  Buffs when low HP");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Time Distortion (40s)");
-                lore.add(ChatColor.GRAY + "  6-block bubble freezes enemies for 3s");
-                lore.add(ChatColor.GRAY + "  Then deals 4 hearts true damage");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Chrono Shift (120s)");
-                lore.add(ChatColor.GRAY + "  Mark position, re-cast to return");
-                lore.add(ChatColor.GRAY + "  Clears debuffs, grants Speed II");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Echo Strike (40s)");
+                lore.add(ChatColor.GRAY + "  Hits repeat after 1 second");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Time Rewind (120s)");
+                lore.add(ChatColor.GRAY + "  Return to past state");
                 break;
 
             case SOUL_DEVOURER:
@@ -411,27 +364,22 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/5");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Void Slice (30s)");
-                lore.add(ChatColor.GRAY + "  8-block horizontal purple arc");
+                lore.add(ChatColor.GRAY + "  Sweeping void attack");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Void Rift (85s)");
-                lore.add(ChatColor.GRAY + "  Black hole that pulls and damages");
+                lore.add(ChatColor.GRAY + "  Create damaging black hole");
                 break;
 
             case DRAGONBORN_BLADE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Dragon's Gaze");
-                lore.add(ChatColor.GRAY + "  Enemies within 30 blocks glow");
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Endbound Soulkeeper");
-                lore.add(ChatColor.GRAY + "  Steal 1 heart on player kill (max 5)");
-                lore.add(ChatColor.GRAY + "  One heart per unique player");
-                lore.add(ChatColor.GRAY + "  All hearts return on your death");
+                lore.add(ChatColor.GRAY + "  Nearby players glow");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (30s)");
-                lore.add(ChatColor.GRAY + "  7-block cone, 2 hearts true damage");
-                lore.add(ChatColor.GRAY + "  Applies blindness");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Genesis Collapse (120s)");
-                lore.add(ChatColor.GRAY + "  10-block explosion, 5 hearts true damage");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Void Rupture (35s)");
+                lore.add(ChatColor.GRAY + "  Void arc with blindness");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Cataclysm Pulse (95s)");
+                lore.add(ChatColor.GRAY + "  Dark explosion with pull");
                 break;
 
-            case COPPER_PICKAXE:
+            case FORGE_PICKAXE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "None");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "3x3 Mining Toggle");
@@ -441,57 +389,24 @@ public class LegendaryItemFactory {
                 break;
 
             case COPPER_CHESTPLATE:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Storm Strike");
-                lore.add(ChatColor.GRAY + "  Every 10 hits: lightning storm");
-                lore.add(ChatColor.GRAY + "  Deals 2.5 hearts through prot 4");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Shockwave Counter");
+                lore.add(ChatColor.GRAY + "  Every 20 hits: electric shockwave");
+                lore.add(ChatColor.GRAY + "  Deals damage and knockback");
                 break;
 
             case COPPER_LEGGINGS:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flamebound");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flamebound Feet");
                 lore.add(ChatColor.GRAY + "  Immune to fire, lava, and magma");
-                lore.add(ChatColor.GRAY + "  Permanent Haste II");
+                lore.add(ChatColor.GRAY + "  Walking leaves flame trails");
+                lore.add(ChatColor.GRAY + "  +10% attack speed above 50% HP");
+                lore.add(ChatColor.GRAY + "  +100% movement speed in lava");
                 break;
 
             case COPPER_HELMET:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Blood Harvest");
-                lore.add(ChatColor.GRAY + "  Player kills grant +5 hearts (5min)");
+                lore.add(ChatColor.GRAY + "  Kills grant +5 hearts (5min)");
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Critical Rush");
-                lore.add(ChatColor.GRAY + "  Crits grant Speed I (3s)");
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Water Mobility");
-                lore.add(ChatColor.GRAY + "  Dolphin's Grace + Conduit Power");
-                break;
-
-            case LANTERN_OF_LOST_NAMES:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Phantom Veil");
-                lore.add(ChatColor.GRAY + "  You are invisible to players you");
-                lore.add(ChatColor.GRAY + "  haven't killed yet");
-                lore.add(ChatColor.GRAY + "  Attacking reveals you for 5 min");
-                lore.add("");
-                lore.add(ChatColor.YELLOW + "Hold in offhand for effect");
-                break;
-
-            case RIFT_KEY_OF_ENDKEEPER:
-                lore.add(ChatColor.GREEN + "Ability: " + ChatColor.WHITE + "End Rift (24h cooldown)");
-                lore.add(ChatColor.GRAY + "  Open a portal to ANY coordinates");
-                lore.add(ChatColor.GRAY + "  Rift stays open for 30 seconds");
-                lore.add(ChatColor.GRAY + "  Teammates can follow through");
-                lore.add("");
-                lore.add(ChatColor.YELLOW + "Usage: /ability 1 <x> <y> <z>");
-                break;
-
-            case CHAOS_DICE_OF_FATE:
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Roll Dice (30min)");
-                lore.add(ChatColor.GRAY + "  Random effect:");
-                lore.add(ChatColor.GRAY + "  - +5 hearts (15 min)");
-                lore.add(ChatColor.GRAY + "  - Summon 5 iron golems");
-                lore.add(ChatColor.GRAY + "  - Speed III + Strength III (10 min)");
-                lore.add(ChatColor.GRAY + "  - Jumble opponent's hotbar");
-                lore.add(ChatColor.GRAY + "  - Free player scans (20 min)");
-                lore.add(ChatColor.GRAY + "  - Insta-crit (15 min)");
-                lore.add(ChatColor.GRAY + "  - Resistance II (5 min)");
-                lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Player Scan (10s)");
-                lore.add(ChatColor.GRAY + "  Show all player locations + coords");
+                lore.add(ChatColor.GRAY + "  Crits grant +10% speed (3s)");
                 break;
         }
 

@@ -212,7 +212,7 @@ ranges:
 #   chrono_blade
 #   soul_devourer
 #   dragonborn_blade
-#   copper_pickaxe
+#   forge_pickaxe
 #   copper_chestplate
 #   copper_leggings
 #   copper_helmet
@@ -505,33 +505,33 @@ recipes:
   # Copper Boots
   copper_boots:
     - ENCHANTED_BOOK:FEATHER_FALLING:4
-    - PHANTOM_MEMBRANE
-    - FEATHER
-    - PHANTOM_MEMBRANE
+    - COPPER_BLOCK
+    - COPPER_BLOCK
+    - COPPER_BLOCK
     - ENCHANTED_BOOK:FEATHER_FALLING:4
-    - PHANTOM_MEMBRANE
+    - COPPER_BLOCK
     - DIAMOND_BLOCK
     - DIAMOND_BOOTS
     - DIAMOND_BLOCK
-    - PHANTOM_MEMBRANE
-    - FEATHER
+    - COPPER_BLOCK
+    - COPPER_BLOCK
     - DIAMOND_BOOTS
     - MACE
     - DIAMOND_BOOTS
-    - FEATHER
-    - PHANTOM_MEMBRANE
+    - COPPER_BLOCK
+    - COPPER_BLOCK
     - DIAMOND_BLOCK
     - DIAMOND_BOOTS
     - DIAMOND_BLOCK
-    - PHANTOM_MEMBRANE
+    - COPPER_BLOCK
     - ENCHANTED_BOOK:FEATHER_FALLING:4
-    - PHANTOM_MEMBRANE
-    - FEATHER
-    - PHANTOM_MEMBRANE
+    - COPPER_BLOCK
+    - COPPER_BLOCK
+    - COPPER_BLOCK
     - ENCHANTED_BOOK:FEATHER_FALLING:4
 
-  # Copper Pickaxe
-  copper_pickaxe:
+  # Forge Pickaxe
+  forge_pickaxe:
     - COPPER_BLOCK
     - COPPER_BLOCK
     - COPPER_BLOCK

@@ -35,7 +35,7 @@ public class GiveLegendaryCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(ChatColor.GRAY + "  holy_moonlight_sword, pheonix_grace, tempestbreaker_spear,");
             sender.sendMessage(ChatColor.GRAY + "  thousand_demon_daggers, divine_axe_rhitta, chains_of_eternity,");
             sender.sendMessage(ChatColor.GRAY + "  copper_boots, celestial_aegis_shield, chrono_blade,");
-            sender.sendMessage(ChatColor.GRAY + "  dragonborn_blade, creation_splitter, copper_pickaxe,");
+            sender.sendMessage(ChatColor.GRAY + "  dragonborn_blade, creation_splitter, forge_pickaxe,");
             sender.sendMessage(ChatColor.GRAY + "  copper_chestplate, copper_leggings, copper_helmet,");
             sender.sendMessage(ChatColor.GRAY + "  lantern_of_lost_names, rift_key_of_endkeeper, chaos_dice_of_fate");
             return true;

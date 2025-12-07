@@ -283,6 +283,8 @@ public class ArmorPassivesListener implements Listener {
 
         // Haste II always
         player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 40, 1, true, false));
+        // Fire Resistance always
+        player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 40, 0, true, false));
     }
 
     // ========== COPPER HELMET ==========

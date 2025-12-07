@@ -36,7 +36,7 @@ public class CopperPickaxeListener implements Listener {
 
         // Check if using Copper Pickaxe
         String legendaryId = LegendaryItemFactory.getLegendaryId(tool);
-        if (legendaryId == null || !legendaryId.equals(LegendaryType.COPPER_PICKAXE.getId())) {
+        if (legendaryId == null || !legendaryId.equals(LegendaryType.FORGE_PICKAXE.getId())) {
             return;
         }
 
