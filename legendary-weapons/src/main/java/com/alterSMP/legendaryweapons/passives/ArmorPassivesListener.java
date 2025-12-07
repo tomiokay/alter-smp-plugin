@@ -281,51 +281,8 @@ public class ArmorPassivesListener implements Listener {
             return;
         }
 
-        UUID playerId = player.getUniqueId();
-
-        // Flame trail when walking - damages and burns enemies
-        Location currentLoc = player.getLocation();
-        Location lastLoc = lastFlameLocation.get(playerId);
-
-        if (lastLoc != null && lastLoc.getWorld().equals(currentLoc.getWorld())) {
-            double distance = lastLoc.distance(currentLoc);
-            // Only spawn flames if player moved and is on ground
-            if (distance > 0.3 && player.isOnGround()) {
-                // Spawn flame particles along path
-                player.getWorld().spawnParticle(Particle.FLAME, currentLoc.clone().add(0, 0.1, 0), 5, 0.3, 0.1, 0.3, 0.02);
-                player.getWorld().spawnParticle(Particle.SMALL_FLAME, currentLoc.clone().add(0, 0.1, 0), 3, 0.2, 0.05, 0.2, 0.01);
-
-                // Damage enemies standing in the flame trail
-                for (LivingEntity entity : currentLoc.getWorld().getNearbyLivingEntities(currentLoc, 1.0)) {
-                    if (entity.equals(player)) continue;
-                    if (entity instanceof Player) {
-                        Player target = (Player) entity;
-                        if (plugin.getTrustManager().isTrusted(player, target)) {
-                            continue;
-                        }
-                    }
-
-                    // Set on fire and deal small damage
-                    entity.setFireTicks(40); // 2 seconds of fire
-                    entity.damage(2.0, player); // 1 heart damage
-                }
-            }
-        }
-        lastFlameLocation.put(playerId, currentLoc.clone());
-
-        // +10% attack speed when above 50% HP
-        double maxHealth = player.getAttribute(Attribute.MAX_HEALTH).getValue();
-        if (player.getHealth() > maxHealth * 0.5) {
-            // Apply Haste I for attack speed (10% faster)
-            player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 15, 0, true, false));
-        }
-
-        // +500% movement speed in lava (Speed 24 gives roughly 500% boost)
-        Material blockAtFeet = player.getLocation().getBlock().getType();
-        if (blockAtFeet == Material.LAVA) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 15, 24, true, false)); // Speed 25 (~500%)
-            player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 15, 0, true, false));
-        }
+        // Haste II always
+        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 40, 1, true, false));
     }
 
     // ========== COPPER HELMET ==========

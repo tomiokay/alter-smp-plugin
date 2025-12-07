@@ -33,7 +33,11 @@
       "Bash(timeout /t 2 /nobreak)",
       "Bash(gh repo view:*)",
       "Bash(gh auth login:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar build --no-daemon --rerun-tasks)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:build --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :combat-logger:build --no-daemon)"
     ],
     "deny": [],
     "ask": []

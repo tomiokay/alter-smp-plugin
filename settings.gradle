@@ -1,1 +1,4 @@
-rootProject.name = 'LegendaryWeaponsSMP'
+rootProject.name = 'AlterSMP'
+
+include 'legendary-weapons'
+include 'combat-logger'

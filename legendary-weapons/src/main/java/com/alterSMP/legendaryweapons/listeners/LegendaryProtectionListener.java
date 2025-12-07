@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -187,6 +188,18 @@ public class LegendaryProtectionListener implements Listener {
 
         // Make sure fire is extinguished
         itemEntity.setFireTicks(0);
+    }
+
+    /**
+     * Prevent placing legendary items as blocks (Lantern, Rift Key, etc.)
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        ItemStack item = event.getItemInHand();
+        if (isLegendary(item)) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ChatColor.RED + "Legendary items cannot be placed as blocks!");
+        }
     }
 
 }

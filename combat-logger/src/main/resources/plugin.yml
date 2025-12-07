@@ -1,0 +1,6 @@
+name: CombatLogger
+version: '1.0.0'
+main: com.alterSMP.combatlogger.CombatLoggerPlugin
+api-version: '1.21'
+description: Combat logging prevention plugin
+author: AlterSMP

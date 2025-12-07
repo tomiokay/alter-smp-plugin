@@ -63,6 +63,10 @@ public class AbilityManager implements Listener {
     private Set<UUID> chaosDiceInstaCrit; // Players with insta-crit active
     private Map<UUID, UUID> chaosGolemOwners; // Golem UUID -> Owner UUID
 
+    // Combat tracking for Rift Key
+    private Map<UUID, Long> combatTagTime; // Player UUID -> last combat time
+    private static final long COMBAT_TAG_DURATION = 20000; // 20 seconds
+
     public AbilityManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
         this.fireRebirthActive = new HashMap<>();
@@ -91,6 +95,7 @@ public class AbilityManager implements Listener {
         this.chaosDiceTrackerActive = new HashSet<>();
         this.chaosDiceInstaCrit = new HashSet<>();
         this.chaosGolemOwners = new HashMap<>();
+        this.combatTagTime = new HashMap<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -188,6 +193,10 @@ public class AbilityManager implements Listener {
             case COPPER_PICKAXE:
                 return toggleEnchantMode(player);
             case CHAOS_DICE_OF_FATE:
+                if (!chaosDiceTrackerActive.contains(player.getUniqueId())) {
+                    player.sendMessage(ChatColor.RED + "You need the Hunter's Instinct buff to use Player Scan!");
+                    return false;
+                }
                 return scanForPlayers(player);
         }
         return false;
@@ -281,10 +290,14 @@ public class AbilityManager implements Listener {
 
                 LivingEntity living = (LivingEntity) entity;
 
-                // Calculate 40% of current HP
-                double damage = living.getHealth() * 0.4;
-
-                living.damage(damage, player);
+                // Deal 1.5 hearts (3 HP) as true damage - bypasses armor
+                double damage = 3.0;
+                double newHealth = living.getHealth() - damage;
+                if (newHealth <= 0) {
+                    living.damage(1000, player); // Kill them
+                } else {
+                    living.setHealth(newHealth);
+                }
                 living.setFireTicks(100); // 5 seconds of fire
                 entitiesHit++;
 
@@ -705,14 +718,13 @@ public class AbilityManager implements Listener {
                 return false;
             }
 
-            // Calculate pull velocity - scales with distance to land target in front of player
-            double distance = target.getLocation().distance(player.getLocation());
-            double pullDistance = Math.max(0, distance - 1.5); // Stop 1.5 blocks away
-
-            Vector direction = player.getLocation().toVector().subtract(target.getLocation().toVector()).normalize();
-            // Pull strength scales with distance - no cap so it works at 20 blocks
-            double pullStrength = pullDistance * 0.15 + 0.5; // Linear scaling for consistent landing
-            target.setVelocity(direction.multiply(pullStrength));
+            // Teleport target directly to player's face
+            Location playerLoc = player.getLocation();
+            Vector direction = playerLoc.getDirection().normalize();
+            Location targetLoc = playerLoc.clone().add(direction.multiply(1.0)); // 1 block in front
+            targetLoc.setY(playerLoc.getY()); // Same Y level
+            target.teleport(targetLoc);
+            target.setVelocity(new Vector(0, 0, 0)); // Stop their momentum
 
             // Deal damage (4 hearts through prot 4 = ~20 raw damage)
             target.damage(20.0, player);
@@ -1587,7 +1599,7 @@ public class AbilityManager implements Listener {
         cooldowns.put("celestial_aegis_shield", new int[]{40, 90});
         cooldowns.put("chrono_blade", new int[]{40, 120});
         cooldowns.put("soul_devourer", new int[]{30, 85}); // Void Slice, Void Rift
-        cooldowns.put("voidrender", new int[]{18, 120}); // End Sever, Genesis Collapse
+        cooldowns.put("voidrender", new int[]{30, 120}); // End Sever (30s), Genesis Collapse
         cooldowns.put("copper_pickaxe", new int[]{1, 1}); // Instant toggles
         cooldowns.put("chaos_dice_of_fate", new int[]{1800, 10}); // Roll Dice 30min, Player Scan 10s
         cooldowns.put("rift_key_of_endkeeper", new int[]{86400, 86400}); // 24 hours
@@ -1949,15 +1961,21 @@ public class AbilityManager implements Listener {
     // ========== RIFT KEY OF THE ENDKEEPER ==========
 
     private boolean openEndRift(Player player) {
-        // 24-hour cooldown check (handled externally, but double check here)
-        long now = System.currentTimeMillis();
-        Long lastUse = riftKeyLastUse.get(player.getUniqueId());
-        long cooldownMs = 24 * 60 * 60 * 1000L; // 24 hours in milliseconds
+        // Combat check - can't teleport while in combat
+        Long lastCombat = combatTagTime.get(player.getUniqueId());
+        if (lastCombat != null && (System.currentTimeMillis() - lastCombat) < COMBAT_TAG_DURATION) {
+            long remaining = (COMBAT_TAG_DURATION - (System.currentTimeMillis() - lastCombat)) / 1000;
+            player.sendMessage(ChatColor.RED + "Cannot use Rift Key while in combat! Wait " + remaining + "s");
+            return false;
+        }
 
-        if (lastUse != null && (now - lastUse) < cooldownMs) {
-            long remaining = cooldownMs - (now - lastUse);
-            long hours = remaining / (60 * 60 * 1000);
-            long minutes = (remaining % (60 * 60 * 1000)) / (60 * 1000);
+        // 4-hour cooldown check using CooldownManager
+        int cooldownSeconds = 4 * 60 * 60; // 4 hours in seconds
+
+        if (plugin.getCooldownManager().isOnCooldown(player.getUniqueId(), "rift_key_of_endkeeper", 1)) {
+            int remaining = plugin.getCooldownManager().getRemainingCooldown(player.getUniqueId(), "rift_key_of_endkeeper", 1);
+            int hours = remaining / 3600;
+            int minutes = (remaining % 3600) / 60;
             player.sendMessage(ChatColor.DARK_PURPLE + "The Rift Key is recharging. Time remaining: " +
                     ChatColor.LIGHT_PURPLE + hours + "h " + minutes + "m");
             return false;
@@ -2071,11 +2089,8 @@ public class AbilityManager implements Listener {
                         "The Rift Key tears through reality, delivering you to " +
                         ChatColor.WHITE + String.format("%.1f, %.1f, %.1f", x, y, z));
 
-                // Record usage time for 24h cooldown
-                riftKeyLastUse.put(player.getUniqueId(), System.currentTimeMillis());
-
-                // Set cooldown via cooldown manager
-                plugin.getCooldownManager().setCooldown(player.getUniqueId(), "rift_key_of_endkeeper", 1, 86400); // 24 hours
+                // Set 4-hour cooldown via cooldown manager
+                plugin.getCooldownManager().setCooldown(player.getUniqueId(), "rift_key_of_endkeeper", 1, 4 * 60 * 60); // 4 hours
             }
         }.runTaskLater(plugin, 10); // 0.5 second delay
     }
@@ -2126,8 +2141,8 @@ public class AbilityManager implements Listener {
 
         switch (roll) {
             case 1: // +5 hearts for 15 minutes
-                player.addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, 20 * 60 * 15, 4)); // 5 extra hearts
-                player.setHealth(Math.min(player.getHealth() + 10, player.getMaxHealth() + 10)); // Heal the bonus hearts
+                player.addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, 20 * 60 * 15, 2)); // +5 hearts (amplifier 2)
+                player.setHealth(Math.min(player.getHealth() + 10, player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue() + 10)); // Heal the bonus hearts
                 player.sendMessage(ChatColor.RED + "✦ FATE #1: " + ChatColor.WHITE + "Heart Surge! " +
                         ChatColor.GRAY + "+5 hearts for 15 minutes.");
                 player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0, 2, 0), 30, 0.5, 0.5, 0.5, 0);
@@ -2144,6 +2159,23 @@ public class AbilityManager implements Listener {
                     golem.setCustomName(ChatColor.GOLD + player.getName() + "'s Guardian");
                     golem.setCustomNameVisible(true);
                     chaosGolemOwners.put(golem.getUniqueId(), player.getUniqueId());
+
+                    // Make golem attack nearest non-owner player
+                    Player nearestEnemy = null;
+                    double nearestDist = Double.MAX_VALUE;
+                    for (Player p : golem.getWorld().getPlayers()) {
+                        if (p.equals(player)) continue;
+                        if (p.getGameMode() == org.bukkit.GameMode.SPECTATOR) continue;
+                        if (p.getGameMode() == org.bukkit.GameMode.CREATIVE) continue;
+                        double dist = p.getLocation().distance(golem.getLocation());
+                        if (dist < nearestDist) {
+                            nearestDist = dist;
+                            nearestEnemy = p;
+                        }
+                    }
+                    if (nearestEnemy != null) {
+                        golem.setTarget(nearestEnemy);
+                    }
 
                     // Remove golem after 5 minutes
                     new BukkitRunnable() {
@@ -2509,6 +2541,36 @@ public class AbilityManager implements Listener {
             if (from.getY() > maxY && to.getY() > maxY) return false;
 
             return fromInside != toInside;
+        }
+    }
+
+    // ========== COMBAT TRACKING FOR RIFT KEY ==========
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onCombatDamage(EntityDamageByEntityEvent event) {
+        Player attacker = null;
+        Player victim = null;
+
+        // Get attacker
+        if (event.getDamager() instanceof Player) {
+            attacker = (Player) event.getDamager();
+        } else if (event.getDamager() instanceof org.bukkit.entity.Projectile) {
+            org.bukkit.entity.Projectile proj = (org.bukkit.entity.Projectile) event.getDamager();
+            if (proj.getShooter() instanceof Player) {
+                attacker = (Player) proj.getShooter();
+            }
+        }
+
+        // Get victim
+        if (event.getEntity() instanceof Player) {
+            victim = (Player) event.getEntity();
+        }
+
+        // Tag both players
+        long now = System.currentTimeMillis();
+        if (attacker != null && victim != null && !attacker.equals(victim)) {
+            combatTagTime.put(attacker.getUniqueId(), now);
+            combatTagTime.put(victim.getUniqueId(), now);
         }
     }
 }

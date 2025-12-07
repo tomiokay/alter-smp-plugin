@@ -1,38 +1,41 @@
+// Root build file for multi-module project
 plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
-group = 'com.alterSMP'
-version = '1.0.0'
-description = 'Legendary Weapons SMP Plugin'
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.github.johnrengelman.shadow'
 
-repositories {
-    mavenCentral()
-    maven {
-        name = 'papermc'
-        url = 'https://repo.papermc.io/repository/maven-public/'
+    group = 'com.alterSMP'
+    version = '1.0.0'
+
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'papermc'
+            url = 'https://repo.papermc.io/repository/maven-public/'
+        }
     }
-}
 
-dependencies {
-    // Updated to Paper 1.21.4 to support new CustomModelData format
-    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    dependencies {
+        compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
     }
-}
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
-shadowJar {
-    archiveClassifier.set('')
-    archiveFileName.set("${project.name}-${project.version}.jar")
-}
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
 
-build.dependsOn shadowJar
+    shadowJar {
+        archiveClassifier.set('')
+        archiveFileName.set("${project.name}-${project.version}.jar")
+    }
+
+    build.dependsOn shadowJar
+}

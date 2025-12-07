@@ -31,7 +31,8 @@ public class PassiveEffectManager implements Listener {
     private final LegendaryWeaponsPlugin plugin;
 
     // Track hit counters for various passives
-    private Map<UUID, Integer> bladeHitCounter; // Holy Moonlight Sword
+    private Map<UUID, Integer> bladeHitCounter; // Holy Moonlight Sword (unused - now moon phase)
+    private Map<UUID, Integer> chronoHitCounter; // Chrono Blade freeze
     private Map<UUID, Integer> chainsHitCounter; // Chains of Eternity
     private Map<UUID, Long> lastIceCreateTime; // Copper Boots path cooldown
 
@@ -41,6 +42,7 @@ public class PassiveEffectManager implements Listener {
     public PassiveEffectManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
         this.bladeHitCounter = new HashMap<>();
+        this.chronoHitCounter = new HashMap<>();
         this.chainsHitCounter = new HashMap<>();
         this.lastIceCreateTime = new HashMap<>();
         this.legendaryCache = new HashMap<>();
@@ -145,8 +147,8 @@ public class PassiveEffectManager implements Listener {
                 break;
 
             case VOIDRENDER:
-                // Dragon's Gaze - Nearby players glow
-                for (Entity entity : player.getNearbyEntities(8, 8, 8)) {
+                // Dragon's Gaze - Nearby enemies glow (30 block radius)
+                for (Entity entity : player.getNearbyEntities(30, 30, 30)) {
                     if (entity instanceof Player) {
                         Player target = (Player) entity;
                         // Trust check
@@ -268,42 +270,40 @@ public class PassiveEffectManager implements Listener {
             }
         }
 
-        // Holy Moonlight Sword - Flashburst Counter
+        // Holy Moonlight Sword - Moon Phase Buffs
         if (type == LegendaryType.HOLY_MOONLIGHT_SWORD) {
-            int count = bladeHitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
-            bladeHitCounter.put(player.getUniqueId(), count);
+            // Get moon phase (0 = full moon, 4 = new moon)
+            long time = player.getWorld().getFullTime();
+            int moonPhase = (int) ((time / 24000) % 8);
 
-            if (count >= 20) {
-                // Trigger flashburst
-                bladeHitCounter.put(player.getUniqueId(), 0);
+            // Apply effects based on moon phase
+            if (moonPhase == 0) {
+                // Full Moon - Strength III + white hit effect
+                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, 2, true, false));
 
-                for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
-                    if (entity instanceof LivingEntity) {
-                        // Trust check
-                        if (entity instanceof Player) {
-                            if (plugin.getTrustManager().isTrusted(player, (Player) entity)) {
-                                continue;
-                            }
-                        }
-                        LivingEntity living = (LivingEntity) entity;
-                        // Use DARKNESS with max amplifier instead of BLINDNESS
-                        living.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 50, 255));
-                        living.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 20, 0));
-                    }
+                // White particle effect on hit
+                if (event.getEntity() instanceof LivingEntity) {
+                    Location hitLoc = event.getEntity().getLocation().add(0, 1, 0);
+                    player.getWorld().spawnParticle(Particle.END_ROD, hitLoc, 15, 0.3, 0.3, 0.3, 0.1);
+                    player.getWorld().spawnParticle(Particle.FIREWORK, hitLoc, 8, 0.2, 0.2, 0.2, 0.05);
                 }
-
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_SCREAM, 1.0f, 1.0f);
-                player.sendMessage(ChatColor.AQUA + "Flashburst triggered!");
+            } else if (moonPhase == 1 || moonPhase == 7) {
+                // Waxing/Waning Gibbous - Strength I
+                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, 0, true, false));
+            } else if (moonPhase == 2 || moonPhase == 6) {
+                // First/Last Quarter - Speed I
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 0, true, false));
             }
+            // Crescent (3, 5) and New Moon (4) - no buff
         }
 
-        // Chains of Eternity - Soul Links
-        if (type == LegendaryType.CHAINS_OF_ETERNITY) {
-            int count = chainsHitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
-            chainsHitCounter.put(player.getUniqueId(), count);
+        // Chrono Blade - Freeze every 20th hit
+        if (type == LegendaryType.CHRONO_BLADE) {
+            int count = chronoHitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
+            chronoHitCounter.put(player.getUniqueId(), count);
 
-            if (count >= 5) {
-                chainsHitCounter.put(player.getUniqueId(), 0);
+            if (count >= 20) {
+                chronoHitCounter.put(player.getUniqueId(), 0);
 
                 if (event.getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) event.getEntity();
@@ -313,17 +313,26 @@ public class PassiveEffectManager implements Listener {
                         return;
                     }
 
-                    // Immobilize
-                    target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 255));
-                    target.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 30, 128));
+                    // Freeze for 3 seconds - complete immobilization
+                    target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 255)); // Can't move
+                    target.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 60, 128)); // Can't jump (negative)
+                    target.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 60, 255)); // Can't mine/attack
+                    target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 60, 255)); // No damage
 
-                    // Visual effect
-                    target.getWorld().spawnParticle(Particle.SOUL, target.getLocation(), 30, 0.5, 1, 0.5, 0);
+                    // Visual time freeze effect
+                    target.getWorld().spawnParticle(Particle.END_ROD, target.getLocation().add(0, 1, 0), 40, 0.5, 1, 0.5, 0.02);
+                    target.getWorld().spawnParticle(Particle.PORTAL, target.getLocation().add(0, 1, 0), 60, 0.4, 0.8, 0.4, 0.1);
+                    target.getWorld().spawnParticle(Particle.REVERSE_PORTAL, target.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.05);
+                    player.getWorld().playSound(target.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 1.0f, 0.5f);
 
-                    player.sendMessage(ChatColor.DARK_GRAY + "Soul Link activated!");
+                    player.sendMessage(ChatColor.AQUA + "Time Freeze triggered!");
+                    if (target instanceof Player) {
+                        ((Player) target).sendMessage(ChatColor.AQUA + "You have been frozen in time!");
+                    }
                 }
             }
         }
+
     }
 
     @EventHandler
@@ -350,6 +359,14 @@ public class PassiveEffectManager implements Listener {
                 killer.sendMessage(ChatColor.DARK_PURPLE + "Soul collected: " +
                     ChatColor.LIGHT_PURPLE + (currentSouls + 1) + "/5");
             }
+        }
+
+        // Dragonborn Blade (Voidrender) - Heal 2 hearts on player kill
+        if (legendaryId != null && legendaryId.equals(LegendaryType.VOIDRENDER.getId())) {
+            double newHealth = Math.min(killer.getHealth() + 4.0, killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue());
+            killer.setHealth(newHealth);
+            killer.getWorld().spawnParticle(Particle.HEART, killer.getLocation().add(0, 2, 0), 5, 0.3, 0.3, 0.3, 0);
+            killer.sendMessage(ChatColor.DARK_PURPLE + "Dragon's Gaze healed you for 2 hearts!");
         }
     }
 
