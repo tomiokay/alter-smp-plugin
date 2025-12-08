@@ -702,51 +702,83 @@ public class AbilityManager implements Listener {
     // ========== CHAINS OF ETERNITY ==========
 
     private boolean soulBind(Player player) {
-        RayTraceResult result = player.getWorld().rayTraceEntities(
-            player.getEyeLocation(),
-            player.getLocation().getDirection(),
-            20,
-            entity -> entity instanceof LivingEntity && entity != player
-        );
+        // Find target using a forgiving cone-based search (easier to aim)
+        Location eyeLoc = player.getEyeLocation();
+        Vector direction = eyeLoc.getDirection().normalize();
+        LivingEntity target = null;
+        double bestScore = Double.MAX_VALUE;
 
-        if (result != null && result.getHitEntity() instanceof LivingEntity) {
-            LivingEntity target = (LivingEntity) result.getHitEntity();
+        // Search in a cone: check entities within 20 blocks, prefer those closer to crosshair
+        for (Entity entity : player.getWorld().getNearbyEntities(eyeLoc, 20, 20, 20)) {
+            if (!(entity instanceof LivingEntity) || entity == player) continue;
+            if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) continue;
 
-            // Trust check
-            if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
-                player.sendMessage(ChatColor.RED + "Cannot target trusted players!");
-                return false;
+            LivingEntity living = (LivingEntity) entity;
+            Vector toEntity = living.getEyeLocation().toVector().subtract(eyeLoc.toVector());
+            double distance = toEntity.length();
+            if (distance > 20) continue;
+
+            toEntity.normalize();
+            double dot = direction.dot(toEntity); // 1.0 = looking directly at, 0 = perpendicular
+
+            // Accept targets within ~30 degree cone (dot > 0.85)
+            if (dot > 0.85) {
+                // Score based on how close to crosshair (prefer more centered targets)
+                double score = distance * (2 - dot); // Lower is better
+                if (score < bestScore) {
+                    bestScore = score;
+                    target = living;
+                }
             }
-
-            // Teleport target directly to player's face
-            Location playerLoc = player.getLocation();
-            Vector direction = playerLoc.getDirection().normalize();
-            Location targetLoc = playerLoc.clone().add(direction.multiply(1.0)); // 1 block in front
-            targetLoc.setY(playerLoc.getY()); // Same Y level
-            target.teleport(targetLoc);
-            target.setVelocity(new Vector(0, 0, 0)); // Stop their momentum
-
-            // Deal damage (4 hearts through prot 4 = ~20 raw damage)
-            target.damage(20.0, player);
-
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
-
-            // Enhanced particles
-            target.getWorld().spawnParticle(Particle.SOUL, target.getLocation(), 120, 0.5, 1, 0.5, 0);
-            target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation(), 80, 0.5, 1, 0.5, 0.1);
-            target.getWorld().spawnParticle(Particle.SMOKE, target.getLocation(), 60, 0.5, 1, 0.5, 0.05);
-
-            // Notify victim
-            if (target instanceof Player) {
-                ((Player) target).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_GRAY + "Soul Bind" + ChatColor.RED + " from " + player.getName() + "!");
-            }
-
-            player.sendMessage(ChatColor.DARK_GRAY + "Soul Bind!");
-            return true;
         }
 
-        player.sendMessage(ChatColor.RED + "No target found!");
-        return false;
+        if (target == null) {
+            player.sendMessage(ChatColor.RED + "No target found!");
+            return false;
+        }
+
+        // Pull target to player's face (not teleport)
+        Location playerLoc = player.getLocation();
+        Vector pullDirection = playerLoc.toVector().subtract(target.getLocation().toVector()).normalize();
+
+        // Calculate where they should end up (1.5 blocks in front of player)
+        Location faceLoc = playerLoc.clone().add(playerLoc.getDirection().normalize().multiply(1.5));
+        faceLoc.setY(playerLoc.getY());
+
+        // Strong pull velocity towards the player
+        double pullStrength = target.getLocation().distance(playerLoc) * 0.8;
+        Vector velocity = faceLoc.toVector().subtract(target.getLocation().toVector()).normalize().multiply(pullStrength);
+        velocity.setY(0.3); // Slight upward arc
+        target.setVelocity(velocity);
+
+        // Deal damage (4 hearts through prot 4 = ~20 raw damage)
+        target.damage(20.0, player);
+
+        // Apply slowness after pull
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
+
+        // Chain particles from target to player
+        Location start = target.getLocation().add(0, 1, 0);
+        Location end = playerLoc.add(0, 1, 0);
+        Vector step = end.toVector().subtract(start.toVector()).normalize().multiply(0.5);
+        Location current = start.clone();
+        for (int i = 0; i < 40; i++) {
+            player.getWorld().spawnParticle(Particle.SOUL, current, 3, 0.1, 0.1, 0.1, 0);
+            current.add(step);
+            if (current.distance(end) < 0.5) break;
+        }
+
+        // Enhanced particles at target
+        target.getWorld().spawnParticle(Particle.SOUL, target.getLocation(), 120, 0.5, 1, 0.5, 0);
+        target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation(), 80, 0.5, 1, 0.5, 0.1);
+
+        // Notify victim
+        if (target instanceof Player) {
+            ((Player) target).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_GRAY + "Soul Bind" + ChatColor.RED + " from " + player.getName() + "!");
+        }
+
+        player.sendMessage(ChatColor.DARK_GRAY + "Soul Bind!");
+        return true;
     }
 
     private boolean prisonOfDamned(Player player) {
@@ -1347,42 +1379,50 @@ public class AbilityManager implements Listener {
                 }
 
                 // MASSIVE gravitational black hole effect - spiral particles being sucked in
-                // Outer spiral particles moving inward
-                for (double angle = 0; angle < 360; angle += 20) {
-                    double radians = Math.toRadians(angle + ticks * 15); // Rotating spiral
-                    for (double r = 4; r >= 0.5; r -= 0.5) {
+                // Outer spiral particles moving inward (BIGGER - radius 8)
+                for (double angle = 0; angle < 360; angle += 15) {
+                    double radians = Math.toRadians(angle + ticks * 20); // Faster rotating spiral
+                    for (double r = 8; r >= 0.5; r -= 0.4) {
                         double x = r * Math.cos(radians + r * 0.5);
                         double z = r * Math.sin(radians + r * 0.5);
-                        double y = (4 - r) * 0.3; // Funnel shape
+                        double y = (8 - r) * 0.25; // Taller funnel shape
                         Location spiralPoint = riftLocation.clone().add(x, y, z);
 
-                        world.spawnParticle(Particle.REVERSE_PORTAL, spiralPoint, 5, 0.1, 0.1, 0.1, 0.3);
-                        world.spawnParticle(Particle.PORTAL, spiralPoint, 3, 0.1, 0.1, 0.1, 0.5);
+                        world.spawnParticle(Particle.REVERSE_PORTAL, spiralPoint, 8, 0.1, 0.1, 0.1, 0.5);
+                        world.spawnParticle(Particle.PORTAL, spiralPoint, 5, 0.1, 0.1, 0.1, 0.7);
+                        // Add black dust particles for visibility
+                        world.spawnParticle(Particle.DUST, spiralPoint, 2, 0.1, 0.1, 0.1,
+                            new Particle.DustOptions(Color.BLACK, 2.5f));
                     }
                 }
 
-                // Dense center particles
-                world.spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 150, 0.8, 0.8, 0.8, 1.5);
-                world.spawnParticle(Particle.DRAGON_BREATH, riftLocation, 100, 0.6, 0.6, 0.6, 0.1);
-                world.spawnParticle(Particle.WITCH, riftLocation, 80, 0.5, 0.5, 0.5, 0.2);
-                world.spawnParticle(Particle.SQUID_INK, riftLocation, 60, 0.4, 0.4, 0.4, 0.1);
-                world.spawnParticle(Particle.DUST, riftLocation, 50, 0.5, 0.5, 0.5,
-                    new Particle.DustOptions(Color.fromRGB(50, 0, 80), 2.0f)); // Dark purple core
+                // Dense center particles - MUCH bigger and darker
+                world.spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 300, 1.5, 1.5, 1.5, 2.0);
+                world.spawnParticle(Particle.DRAGON_BREATH, riftLocation, 200, 1.2, 1.2, 1.2, 0.15);
+                world.spawnParticle(Particle.WITCH, riftLocation, 150, 1.0, 1.0, 1.0, 0.3);
+                world.spawnParticle(Particle.SQUID_INK, riftLocation, 120, 0.8, 0.8, 0.8, 0.15);
+                // Large black core
+                world.spawnParticle(Particle.DUST, riftLocation, 150, 1.2, 1.2, 1.2,
+                    new Particle.DustOptions(Color.BLACK, 4.0f)); // Black core
+                world.spawnParticle(Particle.DUST, riftLocation, 80, 0.8, 0.8, 0.8,
+                    new Particle.DustOptions(Color.fromRGB(30, 0, 50), 3.0f)); // Dark purple rim
 
-                // Pull-in particle lines from nearby area
-                for (int i = 0; i < 8; i++) {
+                // Pull-in particle lines from nearby area (more and further)
+                for (int i = 0; i < 16; i++) {
                     double angle = Math.random() * Math.PI * 2;
-                    double dist = 3 + Math.random() * 3;
+                    double dist = 5 + Math.random() * 5;
                     Location pullStart = riftLocation.clone().add(
                         Math.cos(angle) * dist,
-                        (Math.random() - 0.5) * 3,
+                        (Math.random() - 0.5) * 4,
                         Math.sin(angle) * dist
                     );
-                    world.spawnParticle(Particle.REVERSE_PORTAL, pullStart, 10, 0.1, 0.1, 0.1, 0.8);
+                    world.spawnParticle(Particle.REVERSE_PORTAL, pullStart, 15, 0.1, 0.1, 0.1, 1.0);
+                    world.spawnParticle(Particle.DUST, pullStart, 5, 0.2, 0.2, 0.2,
+                        new Particle.DustOptions(Color.BLACK, 2.0f));
                 }
 
-                // Pull entities with stronger force
-                for (Entity entity : world.getNearbyEntities(riftLocation, 10, 10, 10)) {
+                // Pull entities with stronger force (BIGGER radius - 12 blocks)
+                for (Entity entity : world.getNearbyEntities(riftLocation, 12, 12, 12)) {
                     if (entity instanceof LivingEntity && entity != player) {
                         // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {

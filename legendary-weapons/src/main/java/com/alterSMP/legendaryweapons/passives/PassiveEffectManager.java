@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -23,7 +24,9 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class PassiveEffectManager implements Listener {
@@ -36,6 +39,9 @@ public class PassiveEffectManager implements Listener {
     private Map<UUID, Integer> chainsHitCounter; // Chains of Eternity
     private Map<UUID, Long> lastIceCreateTime; // Copper Boots path cooldown
 
+    // Track players killed for Soul Devourer (can only get 1 soul per unique player)
+    private Map<UUID, Set<UUID>> soulDevourerKills; // killer -> set of victims
+
     // Cache for legendary IDs to avoid repeated PDC lookups (major performance optimization)
     private Map<UUID, String[]> legendaryCache; // [mainHand, boots, offhand, helmet]
 
@@ -45,6 +51,7 @@ public class PassiveEffectManager implements Listener {
         this.chronoHitCounter = new HashMap<>();
         this.chainsHitCounter = new HashMap<>();
         this.lastIceCreateTime = new HashMap<>();
+        this.soulDevourerKills = new HashMap<>();
         this.legendaryCache = new HashMap<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -355,17 +362,43 @@ public class PassiveEffectManager implements Listener {
         String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
 
         if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
-            // Soul Collector - Increase soul count (max 5 souls)
+            Player victim = (Player) event.getEntity();
+            UUID killerId = killer.getUniqueId();
+            UUID victimId = victim.getUniqueId();
+
+            // Check if this player was already killed for a soul
+            Set<UUID> killedPlayers = soulDevourerKills.computeIfAbsent(killerId, k -> new HashSet<>());
+            if (killedPlayers.contains(victimId)) {
+                killer.sendMessage(ChatColor.GRAY + "You already collected " + victim.getName() + "'s soul.");
+                return;
+            }
+
+            // Soul Collector - Increase soul count (max 5 souls, 1 per unique player)
             int currentSouls = LegendaryItemFactory.getSoulCount(mainHand);
             if (currentSouls < 5) {
+                killedPlayers.add(victimId); // Mark this player as killed
                 LegendaryItemFactory.setSoulCount(mainHand, currentSouls + 1);
                 // Put the modified item back into the inventory to persist the change
                 killer.getInventory().setItemInMainHand(mainHand);
-                killer.sendMessage(ChatColor.DARK_PURPLE + "Soul collected: " +
+                killer.sendMessage(ChatColor.DARK_PURPLE + "Soul collected from " + victim.getName() + ": " +
                     ChatColor.LIGHT_PURPLE + (currentSouls + 1) + "/5");
             }
         }
 
+    }
+
+    // ========== SOUL DEVOURER DEATH RESET ==========
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        UUID playerId = player.getUniqueId();
+
+        // Reset soul devourer kill tracker on death
+        if (soulDevourerKills.containsKey(playerId)) {
+            soulDevourerKills.remove(playerId);
+            player.sendMessage(ChatColor.DARK_PURPLE + "Your collected souls have been released...");
+        }
     }
 
     // ========== CACHE INVALIDATION EVENTS ==========
