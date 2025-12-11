@@ -146,6 +146,14 @@ public class AltarCraftingListener implements Listener {
             return;
         }
 
+        // Check if this legendary is disabled
+        if (plugin.getDataManager().isLegendaryDisabled(legendaryId)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "This legendary is currently disabled and cannot be forged!");
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            return;
+        }
+
         // Consume ingredients
         int[] gridSlots = AltarInteractListener.getGridSlots();
         for (int slot : gridSlots) {
@@ -164,11 +172,17 @@ public class AltarCraftingListener implements Listener {
         inv.setItem(outputSlot, null);
 
         player.getInventory().addItem(legendary);
-        plugin.getDataManager().markCrafted(player.getUniqueId(), legendaryId);
 
-        // Broadcast to entire server
+        // Get location for storage and broadcast
+        org.bukkit.Location loc = player.getLocation();
+        String locationStr = loc.getWorld().getName() + "," + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
+        plugin.getDataManager().markCrafted(player.getUniqueId(), legendaryId, locationStr);
+
+        // Broadcast to entire server with coordinates
         org.bukkit.Bukkit.broadcastMessage(ChatColor.GOLD + "" + ChatColor.BOLD + player.getName() +
             " has forged " + matchedRecipe.getResult().getDisplayName() + ChatColor.GOLD + ChatColor.BOLD + "!");
+        org.bukkit.Bukkit.broadcastMessage(ChatColor.GRAY + "Location: " + ChatColor.YELLOW +
+            loc.getWorld().getName() + " " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
 
         // Effects for crafter
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
@@ -185,9 +199,23 @@ public class AltarCraftingListener implements Listener {
         int outputSlot = AltarInteractListener.getOutputSlot();
 
         if (matchedRecipe != null) {
-            // Check if already crafted globally
             String legendaryId = matchedRecipe.getResult().getId();
-            if (plugin.getDataManager().hasCrafted(legendaryId)) {
+
+            // Check if disabled
+            if (plugin.getDataManager().isLegendaryDisabled(legendaryId)) {
+                ItemStack disabled = new ItemStack(org.bukkit.Material.BARRIER);
+                org.bukkit.inventory.meta.ItemMeta meta = disabled.getItemMeta();
+                if (meta != null) {
+                    meta.setDisplayName(ChatColor.RED + "Disabled");
+                    java.util.List<String> lore = new java.util.ArrayList<>();
+                    lore.add(ChatColor.GRAY + "This legendary is currently disabled");
+                    meta.setLore(lore);
+                    disabled.setItemMeta(meta);
+                }
+                inv.setItem(outputSlot, disabled);
+            }
+            // Check if already crafted globally
+            else if (plugin.getDataManager().hasCrafted(legendaryId)) {
                 // Show locked item with crafter name
                 ItemStack locked = new ItemStack(org.bukkit.Material.BARRIER);
                 org.bukkit.inventory.meta.ItemMeta meta = locked.getItemMeta();

@@ -42,6 +42,9 @@ public class PassiveEffectManager implements Listener {
     // Track players killed for Soul Devourer (can only get 1 soul per unique player)
     private Map<UUID, Set<UUID>> soulDevourerKills; // killer -> set of victims
 
+    // Dragonborn Blade heart stealing now uses HeartManager for persistence
+    // (removed local dragonbornStolenHearts - was not persisted and caused duplicate steal bugs)
+
     // Cache for legendary IDs to avoid repeated PDC lookups (major performance optimization)
     private Map<UUID, String[]> legendaryCache; // [mainHand, boots, offhand, helmet]
 
@@ -65,7 +68,7 @@ public class PassiveEffectManager implements Listener {
                     applyPassiveEffects(player);
                 }
             }
-        }.runTaskTimer(plugin, 0L, 20L); // Every 1 second (optimized from 0.5s)
+        }.runTaskTimer(plugin, 0L, 30L); // Every 1.5 seconds - optimized for performance
     }
 
     /**
@@ -117,9 +120,9 @@ public class PassiveEffectManager implements Listener {
             applyHelmetPassive(player, helmetLegendary);
         }
 
-        // Tick Copper Leggings passives (flame trail, attack speed, lava speed)
+        // Tick Forge Leggings passives (flame trail, attack speed, lava speed)
         if (plugin.getArmorPassivesListener() != null) {
-            plugin.getArmorPassivesListener().tickCopperLeggings(player);
+            plugin.getArmorPassivesListener().tickForgeLeggings(player);
         }
     }
 
@@ -128,6 +131,24 @@ public class PassiveEffectManager implements Listener {
         if (type == null) return;
 
         switch (type) {
+            case HOLY_MOONLIGHT_SWORD:
+                // Lunar Blessing - Moon Phase Buffs (applied passively while holding)
+                long time = player.getWorld().getFullTime();
+                int moonPhase = (int) ((time / 24000) % 8);
+
+                if (moonPhase == 0) {
+                    // Full Moon - Strength III
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 50, 2, true, false));
+                } else if (moonPhase == 1 || moonPhase == 7) {
+                    // Waxing/Waning Gibbous - Speed I
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 50, 0, true, false));
+                } else if (moonPhase == 2 || moonPhase == 6) {
+                    // First/Last Quarter - Strength I
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 50, 0, true, false));
+                }
+                // Crescent (3, 5) and New Moon (4) - no buff
+                break;
+
             case TEMPESTBREAKER_SPEAR:
                 // Passive: Lightning strike on trident hit (handled in AbilityManager)
                 break;
@@ -135,7 +156,7 @@ public class PassiveEffectManager implements Listener {
             case THOUSAND_DEMON_DAGGERS:
                 // Shadow Presence - Speed III while sneaking
                 if (player.isSneaking()) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 2, true, false));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 50, 2, true, false));
                 }
                 break;
 
@@ -145,7 +166,7 @@ public class PassiveEffectManager implements Listener {
                 Material belowType = below.getType();
                 if (belowType == Material.GRASS_BLOCK || belowType.name().contains("LOG") ||
                     belowType.name().contains("LEAVES")) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 40, 2, true, false));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 50, 2, true, false));
                 }
                 break;
 
@@ -162,14 +183,19 @@ public class PassiveEffectManager implements Listener {
                         if (plugin.getTrustManager().isTrusted(player, target)) {
                             continue;
                         }
-                        target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 40, 0, true, false));
+                        target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 50, 0, true, false));
                     }
                 }
                 break;
 
             case PHEONIX_GRACE:
                 // Heat Shield - Permanent Fire Resistance
-                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 40, 0, true, false));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 50, 0, true, false));
+                break;
+
+            case CHAINS_OF_ETERNITY:
+                // Eternal Resilience - Resistance I while holding
+                player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
                 break;
         }
     }
@@ -178,10 +204,10 @@ public class PassiveEffectManager implements Listener {
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
 
-        if (type == LegendaryType.COPPER_BOOTS) {
+        if (type == LegendaryType.FORGE_BOOTS) {
             // Featherfall - No fall damage (handled in event listener)
             // Permanent Speed II
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 50, 1, true, false));
         }
     }
 
@@ -189,10 +215,10 @@ public class PassiveEffectManager implements Listener {
         LegendaryType type = LegendaryType.fromId(legendaryId);
         if (type == null) return;
 
-        if (type == LegendaryType.COPPER_HELMET) {
+        if (type == LegendaryType.FORGE_HELMET) {
             // Water Mobility - Dolphin's Grace + Conduit Power
-            player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 40, 0, true, false));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 40, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 50, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 50, 0, true, false));
         }
     }
 
@@ -203,7 +229,7 @@ public class PassiveEffectManager implements Listener {
         if (type == LegendaryType.CELESTIAL_AEGIS_SHIELD) {
             // Aura of Protection - Self and trusted allies gain Resistance I
             // Apply to self first
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 40, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
 
             // Apply to nearby trusted players
             for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
@@ -213,9 +239,14 @@ public class PassiveEffectManager implements Listener {
                     if (!plugin.getTrustManager().isTrusted(player, ally)) {
                         continue;
                     }
-                    ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 40, 0, true, false));
+                    ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
                 }
             }
+        }
+
+        if (type == LegendaryType.CHAINS_OF_ETERNITY) {
+            // Eternal Resilience - Resistance I while holding in offhand
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
         }
     }
 
@@ -249,7 +280,7 @@ public class PassiveEffectManager implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = false)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player)) {
             return;
@@ -300,11 +331,11 @@ public class PassiveEffectManager implements Listener {
                     player.getWorld().spawnParticle(Particle.FIREWORK, hitLoc, 8, 0.2, 0.2, 0.2, 0.05);
                 }
             } else if (moonPhase == 1 || moonPhase == 7) {
-                // Waxing/Waning Gibbous - Strength I
-                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, 0, true, false));
-            } else if (moonPhase == 2 || moonPhase == 6) {
-                // First/Last Quarter - Speed I
+                // Waxing/Waning Gibbous - Speed I
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 0, true, false));
+            } else if (moonPhase == 2 || moonPhase == 6) {
+                // First/Last Quarter - Strength I
+                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, 0, true, false));
             }
             // Crescent (3, 5) and New Moon (4) - no buff
         }
@@ -345,11 +376,13 @@ public class PassiveEffectManager implements Listener {
             }
         }
 
+        // Melee attack particles removed
+
     }
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        // Soul Collector only works on PLAYER kills
+        // Soul Collector and Heart Steal only work on PLAYER kills
         if (!(event.getEntity() instanceof Player)) return;
 
         Player killer = event.getEntity().getKiller();
@@ -385,20 +418,96 @@ public class PassiveEffectManager implements Listener {
             }
         }
 
+        // Dragonborn Blade - Heart Steal: Permanently steal 1 heart from victim (max 5 hearts)
+        // Uses HeartManager for persistence (survives server restarts)
+        if (legendaryId != null && legendaryId.equals(LegendaryType.DRAGONBORN_BLADE.getId())) {
+            Player victim = (Player) event.getEntity();
+            UUID killerId = killer.getUniqueId();
+            UUID victimId = victim.getUniqueId();
+
+            // Trust check - don't steal hearts from trusted players
+            if (plugin.getTrustManager().isTrusted(killer, victim)) {
+                return;
+            }
+
+            // Check if already stolen from this victim (by this killer)
+            if (plugin.getHeartManager().hasAlreadyStolenFrom(killerId, victimId)) {
+                killer.sendMessage(ChatColor.GRAY + "You already stole " + victim.getName() + "'s heart.");
+                return;
+            }
+
+            // Check if ANY killer has already stolen from this victim (each player can only lose 1 heart total)
+            if (plugin.getHeartManager().hasAnyoneStolenFrom(victimId)) {
+                killer.sendMessage(ChatColor.GRAY + victim.getName() + "'s heart was already stolen by someone else.");
+                return;
+            }
+
+            // Check if at max (5 hearts stolen)
+            if (plugin.getHeartManager().getHeartsStolen(killerId) >= 5) {
+                killer.sendMessage(ChatColor.GRAY + "You have already stolen the maximum 5 hearts.");
+                return;
+            }
+
+            // Steal the heart using HeartManager (handles persistence)
+            boolean success = plugin.getHeartManager().onPlayerKill(killer, victim);
+            if (!success) {
+                killer.sendMessage(ChatColor.GRAY + "Could not steal heart from " + victim.getName() + ".");
+                return;
+            }
+
+            int currentStolen = plugin.getHeartManager().getHeartsStolen(killerId);
+
+            // Visual and sound feedback
+            killer.getWorld().spawnParticle(Particle.HEART, killer.getLocation().add(0, 2, 0), 10, 0.5, 0.3, 0.5, 0);
+            killer.getWorld().spawnParticle(Particle.REVERSE_PORTAL, killer.getLocation().add(0, 1, 0), 30, 0.5, 0.5, 0.5, 0.3);
+            killer.getWorld().playSound(killer.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.8f, 1.5f);
+
+            // Victim effects
+            victim.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, victim.getLocation().add(0, 1, 0), 10, 0.3, 0.5, 0.3, 0);
+
+            killer.sendMessage(ChatColor.DARK_PURPLE + "Heart Steal! " + ChatColor.RED + "+1 heart" +
+                ChatColor.GRAY + " stolen from " + victim.getName() + " (" + currentStolen + "/5)");
+            victim.sendMessage(ChatColor.DARK_RED + "Your heart was stolen by " + killer.getName() + "! (-1 max heart)");
+        }
+
     }
 
-    // ========== SOUL DEVOURER DEATH RESET ==========
+    // Heart penalty is now handled by HeartManager for persistence
+
+    // ========== SOUL DEVOURER DEATH PENALTY ==========
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         UUID playerId = player.getUniqueId();
 
-        // Reset soul devourer kill tracker on death
-        if (soulDevourerKills.containsKey(playerId)) {
-            soulDevourerKills.remove(playerId);
-            player.sendMessage(ChatColor.DARK_PURPLE + "Your collected souls have been released...");
+        // Check if player was holding Soul Devourer - lose 1 soul on death
+        ItemStack mainHand = player.getInventory().getItemInMainHand();
+        String legendaryId = LegendaryItemFactory.getLegendaryId(mainHand);
+
+        if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
+            int currentSouls = LegendaryItemFactory.getSoulCount(mainHand);
+            if (currentSouls > 0) {
+                LegendaryItemFactory.setSoulCount(mainHand, currentSouls - 1);
+                player.getInventory().setItemInMainHand(mainHand);
+                player.sendMessage(ChatColor.DARK_PURPLE + "A soul escaped... (" + (currentSouls - 1) + "/5 remaining)");
+            }
         }
+
+        // Dragonborn Blade Heart Steal - Return all stolen hearts when killer dies
+        // HeartManager handles persistence and heart restoration
+        if (plugin.getHeartManager().getHeartsStolen(playerId) > 0) {
+            plugin.getHeartManager().onHolderDeath(player);
+            player.sendMessage(ChatColor.DARK_RED + "All stolen hearts have been returned!");
+        }
+    }
+
+    // Called when a player joins to apply their heart modifier
+    @EventHandler
+    public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        // Apply heart modifier in case they had hearts stolen while offline
+        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getHeartManager().onPlayerJoin(player), 20L);
     }
 
     // ========== CACHE INVALIDATION EVENTS ==========

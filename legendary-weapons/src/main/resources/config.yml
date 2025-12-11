@@ -68,8 +68,8 @@ cooldowns:
     ability1: 35  # Soul Bind
     ability2: 65  # Prison of the Damned
 
-  # Copper Boots
-  copper_boots:
+  # Forge Boots
+  forge_boots:
     ability1: 0  # Meteor Slam (shift-activated)
 
   # Celestial Aegis Shield
@@ -207,15 +207,15 @@ ranges:
 #   thousand_demon_daggers
 #   divine_axe_rhitta
 #   chains_of_eternity
-#   copper_boots
+#   forge_boots
 #   celestial_aegis_shield
 #   chrono_blade
 #   soul_devourer
 #   dragonborn_blade
 #   forge_pickaxe
-#   copper_chestplate
-#   copper_leggings
-#   copper_helmet
+#   forge_chestplate
+#   forge_leggings
+#   forge_helmet
 #   lantern_of_lost_names
 #   rift_key_of_endkeeper
 #   chaos_dice_of_fate
@@ -502,8 +502,8 @@ recipes:
     - DRAGON_BREATH
     - DRAGON_HEAD
 
-  # Copper Boots
-  copper_boots:
+  # Forge Boots
+  forge_boots:
     - ENCHANTED_BOOK:FEATHER_FALLING:4
     - COPPER_BLOCK
     - COPPER_BLOCK
@@ -558,8 +558,8 @@ recipes:
     - COPPER_BLOCK
     - COPPER_BLOCK
 
-  # Copper Chestplate
-  copper_chestplate:
+  # Forge Chestplate
+  forge_chestplate:
     - LIGHTNING_ROD
     - COPPER_BLOCK
     - COPPER_BLOCK
@@ -586,8 +586,8 @@ recipes:
     - COPPER_BLOCK
     - LIGHTNING_ROD
 
-  # Copper Leggings
-  copper_leggings:
+  # Forge Leggings
+  forge_leggings:
     - BLAZE_POWDER
     - MAGMA_CREAM
     - MAGMA_CREAM
@@ -614,8 +614,8 @@ recipes:
     - BLAZE_ROD
     - BLAZE_POWDER
 
-  # Copper Helmet
-  copper_helmet:
+  # Forge Helmet
+  forge_helmet:
     - WITHER_ROSE
     - REDSTONE_BLOCK
     - REDSTONE_BLOCK

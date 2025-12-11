@@ -81,16 +81,27 @@ Transform your SMP with powerful legendary items that players will fight to obta
 
 ## Commands
 
+### Legendary Weapons Plugin
+
 | Command | Permission | Description |
 |---------|-----------|-------------|
-| `/givealtar [player]` | `legendaryweapons.givealtar` (OP) | Gives a Legendary Altar item |
+| `/giveforge [player]` | `legendaryweapons.giveforge` (OP) | Gives a Legendary Forge item |
 | `/ability <1\|2>` | None | Uses the active ability of your equipped legendary |
 | `/kreset` | `legendaryweapons.kreset` (OP) | Resets all legendary crafting progress globally |
-| `/kresetplayer <player>` | `legendaryweapons.kreset` (OP) | Resets crafting progress for a specific player |
-| `/givelegendary <type> [player]` | `legendaryweapons.givelegendary` (OP) | Gives a specific legendary item |
-| `/trust <player>` | None | Toggle trust with a player (prevents friendly fire) |
+| `/kresetplayer <player>` | `legendaryweapons.kresetplayer` (OP) | Resets crafting progress for a specific player |
+| `/givelegendary <type> [player]` | `legendaryweapons.givelegendary` (OP) | Gives a specific legendary item (does not mark as crafted) |
+| `/trust <player>` | None | Toggle trust with a player (prevents friendly fire from abilities) |
 | `/lreload` | `legendaryweapons.reload` (OP) | Reloads plugin configuration |
-| `/cooldown` | None | Check your current ability cooldowns |
+| `/cooldown [player]` | `legendaryweapons.cooldown` (OP) | Clear all ability cooldowns for yourself or another player |
+| `/togglecooldown` | None | Toggle ability cooldown display in action bar |
+| `/ldisable <legendary_id\|list>` | `legendaryweapons.disable` (OP) | Disable/enable a legendary from being crafted, or list disabled |
+| `/heartreset <player\|all>` | `legendaryweapons.admin` (OP) | Reset heart steal data for a player or all players |
+
+### Combat Logger Plugin
+
+| Command | Permission | Description |
+|---------|-----------|-------------|
+| `/combattimer` | None | Toggle combat timer display in action bar |
 
 ## Legendary Items Overview
 
@@ -121,10 +132,11 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - **Ability 1:** Void Slice (30s) - 8-block horizontal purple arc
 - **Ability 2:** Void Rift (85s) - Black hole that pulls and damages enemies
 
-#### Voidrender (Diamond Sword)
-- **Passive:** Dragon's Gaze - Nearby enemies within 8 blocks glow
-- **Ability 1:** End Sever (18s) - 7-block cone dealing 2 hearts true damage with blindness
-- **Ability 2:** Genesis Collapse (120s) - 10-block explosion dealing 5 hearts true damage
+#### Dragonborn Blade (Diamond Sword)
+- **Passive:** Dragon's Gaze - Nearby enemies within 30 blocks glow
+- **Passive:** Heart Steal - Steal 1 heart per player kill (max 5 hearts). Victim permanently loses 1 max heart. All stolen hearts return to victims when you die (works for offline players too).
+- **Ability 1:** End Sever (30s) - Wide 12-block sweeping blade arc with purple particles, applies Weakness and Levitation
+- **Ability 2:** Dragon Dash (120s) - Dash 15 blocks forward through enemies, dealing 4 hearts damage and 0.5s stun to each enemy passed through. Dragon wing particles and sound effects.
 
 ### Other Weapons
 
@@ -213,7 +225,6 @@ Transform your SMP with powerful legendary items that players will fight to obta
 - Several abilities deal true damage (ignores armor):
   - Thousand Demon Daggers: Shadowstep bonus (+1 heart), Soul Mark (+4 hearts/hit)
   - Chrono Blade: Time Distortion (4 hearts)
-  - Creation Splitter: End Sever (2 hearts), Genesis Collapse (5 hearts)
 
 ### Crafting Limits
 - Each legendary can be crafted once per player

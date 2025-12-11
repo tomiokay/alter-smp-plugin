@@ -67,6 +67,9 @@ public class AbilityManager implements Listener {
     private Map<UUID, Long> combatTagTime; // Player UUID -> last combat time
     private static final long COMBAT_TAG_DURATION = 20000; // 20 seconds
 
+    // Track when abilities are dealing damage (to exclude from Forge Chestplate melee counter)
+    private Set<UUID> abilityDamageActive = new HashSet<>();
+
     public AbilityManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
         this.fireRebirthActive = new HashMap<>();
@@ -98,6 +101,16 @@ public class AbilityManager implements Listener {
         this.combatTagTime = new HashMap<>();
 
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    /**
+     * Deal ability damage to an entity. This marks the damage as ability damage
+     * so it won't count toward Forge Chestplate melee hit counter.
+     */
+    private void dealAbilityDamage(LivingEntity target, double damage, Player source) {
+        abilityDamageActive.add(source.getUniqueId());
+        target.damage(damage, source);
+        abilityDamageActive.remove(source.getUniqueId());
     }
 
     /**
@@ -205,6 +218,9 @@ public class AbilityManager implements Listener {
     // ========== HOLY MOONLIGHT SWORD ==========
 
     private boolean starRiftSlash(Player player) {
+        // Play attack animation
+        player.swingMainHand();
+
         Vector direction = player.getLocation().getDirection();
         Location start = player.getEyeLocation();
 
@@ -224,7 +240,7 @@ public class AbilityManager implements Listener {
                         continue;
                     }
                     LivingEntity victim = (LivingEntity) entity;
-                    victim.damage(35.0, player); // ~7 hearts through full Prot 4
+                    dealAbilityDamage(victim, 35.0, player); // ~7 hearts through full Prot 4
 
                     // Notify victim
                     if (victim instanceof Player) {
@@ -277,6 +293,9 @@ public class AbilityManager implements Listener {
     // ========== PHEONIX GRACE ==========
 
     private boolean flameHarvest(Player player) {
+        // Play attack animation
+        player.swingMainHand();
+
         int entitiesHit = 0;
 
         for (Entity entity : player.getNearbyEntities(6, 6, 6)) {
@@ -294,7 +313,7 @@ public class AbilityManager implements Listener {
                 double damage = 3.0;
                 double newHealth = living.getHealth() - damage;
                 if (newHealth <= 0) {
-                    living.damage(1000, player); // Kill them
+                    dealAbilityDamage(living, 1000, player); // Kill them
                 } else {
                     living.setHealth(newHealth);
                 }
@@ -361,6 +380,9 @@ public class AbilityManager implements Listener {
     }
 
     private boolean stormcall(Player player) {
+        // Play attack animation
+        player.swingMainHand();
+
         // Stationary lightning storm radius around player
         Location center = player.getLocation();
         World world = player.getWorld();
@@ -407,7 +429,7 @@ public class AbilityManager implements Listener {
                         LivingEntity living = (LivingEntity) entity;
 
                         // Deal high damage (~6 hearts through prot 4 = ~30 raw damage per strike)
-                        living.damage(30.0, player);
+                        dealAbilityDamage(living, 30.0, player);
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
 
                         // Notify victim once
@@ -571,6 +593,9 @@ public class AbilityManager implements Listener {
     // ========== DIVINE AXE RHITTA ==========
 
     private boolean natureGrasp(Player player) {
+        // Play attack animation
+        player.swingMainHand();
+
         for (Entity entity : player.getNearbyEntities(6, 6, 6)) {
             if (entity instanceof LivingEntity) {
                 // Trust check
@@ -608,6 +633,9 @@ public class AbilityManager implements Listener {
     }
 
     private boolean forestShield(Player player) {
+        // Play attack animation
+        player.swingMainHand();
+
         // Verdant Cyclone - 360° spin attack with leaves and wind
         Location center = player.getLocation();
         World world = center.getWorld();
@@ -656,7 +684,7 @@ public class AbilityManager implements Listener {
                         }
 
                         // Deal 20 damage = 2 hearts after full prot 4 diamond (~80% reduction)
-                        living.damage(20.0, player);
+                        dealAbilityDamage(living, 20.0, player);
 
                         // Push enemies back
                         Vector knockback = living.getLocation().toVector().subtract(center.toVector()).normalize();
@@ -702,6 +730,9 @@ public class AbilityManager implements Listener {
     // ========== CHAINS OF ETERNITY ==========
 
     private boolean soulBind(Player player) {
+        // Play attack animation
+        player.swingMainHand();
+
         // Find target using a forgiving cone-based search (easier to aim)
         Location eyeLoc = player.getEyeLocation();
         Vector direction = eyeLoc.getDirection().normalize();
@@ -737,29 +768,13 @@ public class AbilityManager implements Listener {
             return false;
         }
 
-        // Pull target to player's face (not teleport)
-        Location playerLoc = player.getLocation();
-        Vector pullDirection = playerLoc.toVector().subtract(target.getLocation().toVector()).normalize();
-
-        // Calculate where they should end up (1.5 blocks in front of player)
-        Location faceLoc = playerLoc.clone().add(playerLoc.getDirection().normalize().multiply(1.5));
-        faceLoc.setY(playerLoc.getY());
-
-        // Strong pull velocity towards the player
-        double pullStrength = target.getLocation().distance(playerLoc) * 0.8;
-        Vector velocity = faceLoc.toVector().subtract(target.getLocation().toVector()).normalize().multiply(pullStrength);
-        velocity.setY(0.3); // Slight upward arc
-        target.setVelocity(velocity);
-
-        // Deal damage (4 hearts through prot 4 = ~20 raw damage)
-        target.damage(20.0, player);
-
-        // Apply slowness after pull
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
+        final LivingEntity finalTarget = target;
+        final Location playerLoc = player.getLocation();
+        final Location targetLoc = target.getLocation();
 
         // Chain particles from target to player
-        Location start = target.getLocation().add(0, 1, 0);
-        Location end = playerLoc.add(0, 1, 0);
+        Location start = targetLoc.clone().add(0, 1, 0);
+        Location end = playerLoc.clone().add(0, 1, 0);
         Vector step = end.toVector().subtract(start.toVector()).normalize().multiply(0.5);
         Location current = start.clone();
         for (int i = 0; i < 40; i++) {
@@ -768,9 +783,72 @@ public class AbilityManager implements Listener {
             if (current.distance(end) < 0.5) break;
         }
 
-        // Enhanced particles at target
-        target.getWorld().spawnParticle(Particle.SOUL, target.getLocation(), 120, 0.5, 1, 0.5, 0);
-        target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation(), 80, 0.5, 1, 0.5, 0.1);
+        // Calculate destination: 2 blocks in front of player
+        Vector playerDirection = playerLoc.getDirection().setY(0).normalize();
+        final Location destination = playerLoc.clone().add(playerDirection.multiply(2.0));
+        destination.setY(playerLoc.getY());
+
+        // Smooth pull using repeating task
+        new BukkitRunnable() {
+            int ticks = 0;
+            final int maxTicks = 20; // 1 second max pull time
+
+            @Override
+            public void run() {
+                if (ticks >= maxTicks || !finalTarget.isValid() || !player.isOnline()) {
+                    // Stop and apply effects
+                    finalTarget.setVelocity(new Vector(0, 0, 0));
+                    abilityDamageActive.add(player.getUniqueId());
+                    finalTarget.damage(20.0, player);
+                    abilityDamageActive.remove(player.getUniqueId());
+                    finalTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
+                    finalTarget.getWorld().spawnParticle(Particle.SOUL, finalTarget.getLocation(), 120, 0.5, 1, 0.5, 0);
+                    finalTarget.getWorld().spawnParticle(Particle.ENCHANT, finalTarget.getLocation(), 80, 0.5, 1, 0.5, 0.1);
+                    cancel();
+                    return;
+                }
+
+                // Check if target reached destination (within 2.5 blocks of player)
+                double distanceToPlayer = finalTarget.getLocation().distance(player.getLocation());
+                if (distanceToPlayer <= 2.5) {
+                    // Stop them right here
+                    finalTarget.setVelocity(new Vector(0, 0, 0));
+                    abilityDamageActive.add(player.getUniqueId());
+                    finalTarget.damage(20.0, player);
+                    abilityDamageActive.remove(player.getUniqueId());
+                    finalTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4));
+                    finalTarget.getWorld().spawnParticle(Particle.SOUL, finalTarget.getLocation(), 120, 0.5, 1, 0.5, 0);
+                    finalTarget.getWorld().spawnParticle(Particle.ENCHANT, finalTarget.getLocation(), 80, 0.5, 1, 0.5, 0.1);
+                    cancel();
+                    return;
+                }
+
+                // Pull towards player's current position (2 blocks in front)
+                Location currentPlayerLoc = player.getLocation();
+                Vector currentDirection = currentPlayerLoc.getDirection().setY(0).normalize();
+                Location currentDestination = currentPlayerLoc.clone().add(currentDirection.multiply(2.0));
+                currentDestination.setY(currentPlayerLoc.getY());
+
+                Vector pullDir = currentDestination.toVector().subtract(finalTarget.getLocation().toVector());
+                double distance = pullDir.length();
+                pullDir.normalize();
+
+                // Pull speed scales with distance - faster when far, slower when close
+                double speed = Math.min(2.0, Math.max(0.5, distance * 0.3));
+                pullDir.multiply(speed);
+                pullDir.setY(0.1); // Slight lift to avoid ground friction
+
+                finalTarget.setVelocity(pullDir);
+
+                // Trail particles during pull
+                finalTarget.getWorld().spawnParticle(Particle.SOUL, finalTarget.getLocation().add(0, 1, 0), 5, 0.2, 0.2, 0.2, 0.02);
+
+                ticks++;
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
+
+        // Enhanced particles at original target location
+        target.getWorld().spawnParticle(Particle.SOUL, targetLoc, 60, 0.5, 1, 0.5, 0);
 
         // Notify victim
         if (target instanceof Player) {
@@ -805,18 +883,20 @@ public class AbilityManager implements Listener {
             // Create 3x3 cage with iron bars walls, floor, and ceiling
             for (int x = -1; x <= 1; x++) {
                 for (int z = -1; z <= 1; z++) {
-                    // Floor (y = -1) - use barrier for floor so they can't fall through
-                    Location floorLoc = center.clone().add(x, -1, z);
-                    if (floorLoc.getBlock().getType() == Material.AIR || floorLoc.getBlock().isPassable()) {
-                        floorLoc.getBlock().setType(Material.BARRIER);
-                        cageBlocks.add(floorLoc.getBlock().getLocation()); // Use block location for proper comparison
+                    // Floor (y = -1 and y = -2) - double layer barrier so they can't dig out
+                    for (int floorY = -1; floorY >= -2; floorY--) {
+                        Location floorLoc = center.clone().add(x, floorY, z);
+                        if (floorLoc.getBlock().getType() == Material.AIR || floorLoc.getBlock().isPassable()) {
+                            floorLoc.getBlock().setType(Material.BARRIER);
+                            cageBlocks.add(floorLoc.getBlock().getLocation());
+                        }
                     }
 
                     // Ceiling (y = 3) - use iron bars
                     Location ceilingLoc = center.clone().add(x, 3, z);
                     if (ceilingLoc.getBlock().getType() == Material.AIR || ceilingLoc.getBlock().isPassable()) {
                         ceilingLoc.getBlock().setType(Material.IRON_BARS);
-                        cageBlocks.add(ceilingLoc.getBlock().getLocation()); // Use block location for proper comparison
+                        cageBlocks.add(ceilingLoc.getBlock().getLocation());
                     }
 
                     // Walls - only place on the outer edges (not center column, and only edges)
@@ -825,7 +905,7 @@ public class AbilityManager implements Listener {
                             Location loc = center.clone().add(x, y, z);
                             if (loc.getBlock().getType() == Material.AIR || loc.getBlock().isPassable()) {
                                 loc.getBlock().setType(Material.IRON_BARS);
-                                cageBlocks.add(loc.getBlock().getLocation()); // Use block location for proper comparison
+                                cageBlocks.add(loc.getBlock().getLocation());
                             }
                         }
                     }
@@ -1301,56 +1381,60 @@ public class AbilityManager implements Listener {
     // ========== SOUL DEVOURER ==========
 
     private boolean voidSlice(Player player) {
+        // Play attack animation
+        player.swingMainHand();
+
         Vector direction = player.getLocation().getDirection().setY(0).normalize();
-        Location start = player.getLocation().add(0, 1, 0); // At chest height
+        Location start = player.getLocation().add(0, 1, 0);
         World world = player.getWorld();
 
         Set<UUID> hitEntities = new HashSet<>();
 
-        // Purple horizontal slice - wide arc in front
-        for (int i = 1; i <= 8; i++) {
+        // Soul horizontal slice (optimized - fewer iterations)
+        for (int i = 2; i <= 8; i += 2) { // Every 2 blocks
             Location point = start.clone().add(direction.clone().multiply(i));
 
-            // Wide horizontal sweep - side to side
-            for (double offset = -2.5; offset <= 2.5; offset += 0.3) {
+            // Wide horizontal sweep
+            for (double offset = -2.5; offset <= 2.5; offset += 1.0) { // Every 1 block instead of 0.3
                 Vector perpendicular = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(offset);
                 Location sweepPoint = point.clone().add(perpendicular);
 
-                // LOTS of purple particles - horizontal slice effect
-                world.spawnParticle(Particle.REVERSE_PORTAL, sweepPoint, 40, 0.1, 0.05, 0.1, 0.8);
-                world.spawnParticle(Particle.DRAGON_BREATH, sweepPoint, 30, 0.15, 0.05, 0.15, 0.05);
-                world.spawnParticle(Particle.WITCH, sweepPoint, 25, 0.1, 0.05, 0.1, 0.15);
-                world.spawnParticle(Particle.PORTAL, sweepPoint, 35, 0.15, 0.05, 0.15, 1.0);
-                world.spawnParticle(Particle.DUST, sweepPoint, 20, 0.1, 0.05, 0.1,
-                    new Particle.DustOptions(Color.fromRGB(128, 0, 255), 1.5f)); // Purple dust
+                // Soul particles
+                world.spawnParticle(Particle.SOUL, sweepPoint, 4, 0.15, 0.1, 0.15, 0.05);
+                world.spawnParticle(Particle.SOUL_FIRE_FLAME, sweepPoint, 3, 0.15, 0.1, 0.15, 0.02);
+            }
+        }
 
-                for (Entity entity : world.getNearbyEntities(sweepPoint, 1.2, 1.5, 1.2)) {
-                    if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
-                        // Trust check
-                        if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
-                            continue;
-                        }
-                        LivingEntity living = (LivingEntity) entity;
-                        living.damage(20.0, player); // ~4 hearts through full Prot 4
-                        hitEntities.add(entity.getUniqueId());
+        // Check for entities in the slice area (more efficient single check)
+        for (Entity entity : world.getNearbyEntities(start, 9, 2, 6)) {
+            if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
+                Vector toEntity = entity.getLocation().toVector().subtract(start.toVector());
+                double dot = toEntity.normalize().dot(direction);
+                double distance = start.distance(entity.getLocation());
 
-                        // Extra particles on hit
-                        world.spawnParticle(Particle.REVERSE_PORTAL, living.getLocation().add(0, 1, 0), 60, 0.3, 0.5, 0.3, 1.0);
-                        world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 40, 0.3, 0.5, 0.3, 0.2);
+                if (dot > 0.2 && distance <= 8) { // In front, within range
+                    // Trust check
+                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
+                    LivingEntity living = (LivingEntity) entity;
+                    dealAbilityDamage(living, 20.0, player);
+                    hitEntities.add(entity.getUniqueId());
 
-                        // Notify victim
-                        if (living instanceof Player) {
-                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Void Slice" + ChatColor.RED + " from " + player.getName() + "!");
-                        }
+                    // Soul particles on hit
+                    world.spawnParticle(Particle.SOUL, living.getLocation().add(0, 1, 0), 15, 0.3, 0.4, 0.3, 0.08);
+                    world.spawnParticle(Particle.SOUL_FIRE_FLAME, living.getLocation().add(0, 1, 0), 10, 0.3, 0.4, 0.3, 0.03);
+
+                    if (living instanceof Player) {
+                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_RED + "Void Slice" + ChatColor.RED + " from " + player.getName() + "!");
                     }
                 }
             }
         }
 
-        // Sweep attack sound
         world.playSound(start, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.5f);
         world.playSound(start, Sound.ENTITY_WITHER_SHOOT, 1.0f, 0.6f);
-        player.sendMessage(ChatColor.DARK_PURPLE + "Void Slice!");
+        player.sendMessage(ChatColor.DARK_RED + "Void Slice!");
         return true;
     }
 
@@ -1378,120 +1462,233 @@ public class AbilityManager implements Listener {
                     return;
                 }
 
-                // MASSIVE gravitational black hole effect - spiral particles being sucked in
-                // Outer spiral particles moving inward (BIGGER - radius 8)
-                for (double angle = 0; angle < 360; angle += 15) {
-                    double radians = Math.toRadians(angle + ticks * 20); // Faster rotating spiral
-                    for (double r = 8; r >= 0.5; r -= 0.4) {
+                // Soul vortex effect - simplified spiral
+                for (double angle = 0; angle < 360; angle += 60) { // 6 arms instead of 24
+                    double radians = Math.toRadians(angle + ticks * 20);
+                    for (double r = 6; r >= 1; r -= 1.5) { // Fewer points per arm
                         double x = r * Math.cos(radians + r * 0.5);
                         double z = r * Math.sin(radians + r * 0.5);
-                        double y = (8 - r) * 0.25; // Taller funnel shape
+                        double y = (6 - r) * 0.2;
                         Location spiralPoint = riftLocation.clone().add(x, y, z);
 
-                        world.spawnParticle(Particle.REVERSE_PORTAL, spiralPoint, 8, 0.1, 0.1, 0.1, 0.5);
-                        world.spawnParticle(Particle.PORTAL, spiralPoint, 5, 0.1, 0.1, 0.1, 0.7);
-                        // Add black dust particles for visibility
-                        world.spawnParticle(Particle.DUST, spiralPoint, 2, 0.1, 0.1, 0.1,
-                            new Particle.DustOptions(Color.BLACK, 2.5f));
+                        world.spawnParticle(Particle.SOUL, spiralPoint, 2, 0.1, 0.1, 0.1, 0.05);
+                        world.spawnParticle(Particle.SOUL_FIRE_FLAME, spiralPoint, 1, 0.1, 0.1, 0.1, 0.02);
                     }
                 }
 
-                // Dense center particles - MUCH bigger and darker
-                world.spawnParticle(Particle.REVERSE_PORTAL, riftLocation, 300, 1.5, 1.5, 1.5, 2.0);
-                world.spawnParticle(Particle.DRAGON_BREATH, riftLocation, 200, 1.2, 1.2, 1.2, 0.15);
-                world.spawnParticle(Particle.WITCH, riftLocation, 150, 1.0, 1.0, 1.0, 0.3);
-                world.spawnParticle(Particle.SQUID_INK, riftLocation, 120, 0.8, 0.8, 0.8, 0.15);
-                // Large black core
-                world.spawnParticle(Particle.DUST, riftLocation, 150, 1.2, 1.2, 1.2,
-                    new Particle.DustOptions(Color.BLACK, 4.0f)); // Black core
-                world.spawnParticle(Particle.DUST, riftLocation, 80, 0.8, 0.8, 0.8,
-                    new Particle.DustOptions(Color.fromRGB(30, 0, 50), 3.0f)); // Dark purple rim
+                // Center soul particles
+                world.spawnParticle(Particle.SOUL, riftLocation, 25, 0.8, 0.8, 0.8, 0.1);
+                world.spawnParticle(Particle.SOUL_FIRE_FLAME, riftLocation, 20, 1.0, 1.0, 1.0, 0.08);
+                world.spawnParticle(Particle.DUST, riftLocation, 15, 0.8, 0.8, 0.8,
+                    new Particle.DustOptions(Color.fromRGB(85, 200, 200), 2.5f)); // Soul blue color
 
-                // Pull-in particle lines from nearby area (more and further)
-                for (int i = 0; i < 16; i++) {
-                    double angle = Math.random() * Math.PI * 2;
-                    double dist = 5 + Math.random() * 5;
+                // Soul pull-in lines (reduced)
+                for (int i = 0; i < 4; i++) {
+                    double pullAngle = Math.random() * Math.PI * 2;
+                    double dist = 4 + Math.random() * 4;
                     Location pullStart = riftLocation.clone().add(
-                        Math.cos(angle) * dist,
-                        (Math.random() - 0.5) * 4,
-                        Math.sin(angle) * dist
+                        Math.cos(pullAngle) * dist,
+                        (Math.random() - 0.5) * 3,
+                        Math.sin(pullAngle) * dist
                     );
-                    world.spawnParticle(Particle.REVERSE_PORTAL, pullStart, 15, 0.1, 0.1, 0.1, 1.0);
-                    world.spawnParticle(Particle.DUST, pullStart, 5, 0.2, 0.2, 0.2,
-                        new Particle.DustOptions(Color.BLACK, 2.0f));
+                    world.spawnParticle(Particle.SOUL, pullStart, 3, 0.1, 0.1, 0.1, 0.08);
+                    world.spawnParticle(Particle.SOUL_FIRE_FLAME, pullStart, 2, 0.1, 0.1, 0.1, 0.05);
                 }
 
-                // Pull entities with stronger force (BIGGER radius - 12 blocks)
-                for (Entity entity : world.getNearbyEntities(riftLocation, 12, 12, 12)) {
+                // Pull entities (unchanged - this is gameplay)
+                for (Entity entity : world.getNearbyEntities(riftLocation, 10, 10, 10)) {
                     if (entity instanceof LivingEntity && entity != player) {
-                        // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
                             continue;
                         }
 
                         double distance = entity.getLocation().distance(riftLocation);
-                        Vector direction = riftLocation.toVector().subtract(entity.getLocation().toVector()).normalize();
+                        Vector dir = riftLocation.toVector().subtract(entity.getLocation().toVector()).normalize();
+                        double pullStrength = Math.min(0.8, 5.0 / (distance + 1));
+                        entity.setVelocity(dir.multiply(pullStrength));
 
-                        // Stronger pull the closer they are
-                        double pullStrength = Math.min(1.0, 6.0 / (distance + 1));
-                        entity.setVelocity(direction.multiply(pullStrength));
-
-                        // Damage if inside rift core
                         if (distance < 2.5) {
                             LivingEntity living = (LivingEntity) entity;
-                            living.damage(12.0, player); // ~2.5 hearts through full Prot 4 per tick
+                            dealAbilityDamage(living, 5.0, player);
 
-                            // Notify victim (once to avoid spam)
                             if (!damagedEntities.contains(entity.getUniqueId())) {
                                 damagedEntities.add(entity.getUniqueId());
                                 if (living instanceof Player) {
-                                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Void Rift" + ChatColor.RED + " from " + player.getName() + "!");
+                                    ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_RED + "Void Rift" + ChatColor.RED + " from " + player.getName() + "!");
                                 }
                             }
                         }
                     }
                 }
 
-                // Ambient sound
                 if (ticks % 20 == 0) {
-                    world.playSound(riftLocation, Sound.BLOCK_PORTAL_AMBIENT, 2.0f, 0.5f);
+                    world.playSound(riftLocation, Sound.BLOCK_PORTAL_AMBIENT, 1.5f, 0.5f);
                 }
 
-                ticks += 5; // Run every 5 ticks for smoother effect
+                ticks += 5;
             }
         }.runTaskTimer(plugin, 0L, 5L);
 
-        world.playSound(riftLocation, Sound.ENTITY_ENDERMAN_TELEPORT, 2.0f, 0.3f);
-        player.sendMessage(ChatColor.DARK_PURPLE + "Void Rift!");
+        world.playSound(riftLocation, Sound.ENTITY_WITHER_AMBIENT, 1.5f, 1.5f);
+        world.playSound(riftLocation, Sound.PARTICLE_SOUL_ESCAPE, 2.0f, 0.8f);
+        player.sendMessage(ChatColor.DARK_AQUA + "Void Rift!");
         return true;
     }
 
     // ========== CREATION SPLITTER ==========
 
     private boolean endSever(Player player) {
-        Vector direction = player.getLocation().getDirection();
+        Vector direction = player.getLocation().getDirection().setY(0).normalize();
         Location playerLoc = player.getLocation();
         World world = player.getWorld();
 
         Set<UUID> hitEntities = new HashSet<>();
 
-        // Create 7-block cone slash in front
-        for (int distance = 1; distance <= 7; distance++) {
-            // Wider spread as distance increases (cone shape)
-            double spread = distance * 0.5;
+        // Swing the blade animation - create arc slash effect
+        player.swingMainHand();
 
-            for (double angle = -45; angle <= 45; angle += 15) {
+        // Sound effects - dragon sword swing
+        world.playSound(playerLoc, Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 1.2f);
+        world.playSound(playerLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.8f);
+        world.playSound(playerLoc, Sound.ENTITY_ENDER_DRAGON_HURT, 0.8f, 1.5f);
+
+        // Create 12-block wide sweeping arc slash in front (optimized - fewer particle calls)
+        for (int distance = 2; distance <= 12; distance += 2) { // Every 2 blocks instead of every block
+            // Wide arc sweep from left to right (-60 to +60 degrees)
+            for (double angle = -60; angle <= 60; angle += 20) { // Every 20 degrees instead of 8
                 Vector rotated = rotateVector(direction.clone(), angle);
                 Location point = playerLoc.clone().add(0, 1, 0).add(rotated.multiply(distance));
 
-                // Purple "cut" line particles - Enhanced purple theme
-                world.spawnParticle(Particle.REVERSE_PORTAL, point, 15, 0.3, 0.3, 0.3, 0.5);
-                world.spawnParticle(Particle.DRAGON_BREATH, point, 10, 0.2, 0.2, 0.2, 0.05);
-                world.spawnParticle(Particle.WITCH, point, 8, 0.2, 0.2, 0.2, 0.1);
-                world.spawnParticle(Particle.PORTAL, point, 5, 0.2, 0.2, 0.2, 0.5);
+                // Purple witch slash arc particles
+                world.spawnParticle(Particle.WITCH, point, 10, 0.2, 0.15, 0.2, 0.1);
+                world.spawnParticle(Particle.DRAGON_BREATH, point, 3, 0.1, 0.1, 0.1, 0.02);
 
-                // Check for entities in cone
-                for (Entity entity : world.getNearbyEntities(point, 1.2, 1.5, 1.2)) {
+                // Sweep indicator particles along the arc
+                if (distance % 4 == 0) {
+                    world.spawnParticle(Particle.SWEEP_ATTACK, point, 1, 0, 0, 0, 0);
+                }
+            }
+        }
+
+        // Check for entities in the entire arc area (more efficient than per-point)
+        for (Entity entity : world.getNearbyEntities(playerLoc, 13, 3, 13)) {
+            if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
+                // Check if entity is in front arc
+                Vector toEntity = entity.getLocation().toVector().subtract(playerLoc.toVector());
+                double dot = toEntity.normalize().dot(direction);
+                double distance = playerLoc.distance(entity.getLocation());
+
+                if (dot > 0.3 && distance <= 12) { // In front 120-degree arc, within 12 blocks
+                    // Trust check
+                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
+                        continue;
+                    }
+
+                    LivingEntity living = (LivingEntity) entity;
+                    hitEntities.add(entity.getUniqueId());
+
+                    // 2.5 hearts damage through full Prot 4 diamond (~12.5 raw damage)
+                    dealAbilityDamage(living, 12.5, player);
+                    living.setNoDamageTicks(0);
+
+                    // Weakness for 4 seconds
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 0));
+
+                    // Brief levitation (0.5s)
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 10, 0));
+
+                    // Purple witch slash effects on hit
+                    world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 60, 0.5, 0.6, 0.5, 0.15);
+                    world.spawnParticle(Particle.DRAGON_BREATH, living.getLocation().add(0, 1, 0), 15, 0.3, 0.4, 0.3, 0.05);
+                    world.spawnParticle(Particle.SWEEP_ATTACK, living.getLocation().add(0, 1, 0), 2, 0.2, 0.2, 0.2, 0);
+
+                    // Notify victim
+                    if (living instanceof Player) {
+                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "End Sever" + ChatColor.RED + " from " + player.getName() + "!");
+                    }
+                }
+            }
+        }
+
+        player.sendMessage(ChatColor.DARK_PURPLE + "End Sever!");
+        return true;
+    }
+
+    private boolean cataclysmPulse(Player player) {
+        // Dragon Dash - Smooth velocity-based dash in the direction player is facing (including up/down)
+        Location startLoc = player.getLocation();
+        Vector direction = startLoc.getDirection().normalize(); // Full 3D direction - can dash up/down!
+        World world = startLoc.getWorld();
+
+        Set<UUID> hitEntities = new HashSet<>();
+
+        // Dragon wing flap and roar sounds at start
+        world.playSound(startLoc, Sound.ENTITY_ENDER_DRAGON_FLAP, 2.0f, 0.8f);
+        world.playSound(startLoc, Sound.ENTITY_ENDER_DRAGON_GROWL, 1.5f, 1.2f);
+
+        // Initial particles at start - purple witch dragon wing burst
+        world.spawnParticle(Particle.WITCH, startLoc.clone().add(0, 1, 0), 80, 1.2, 1.0, 1.2, 0.15);
+        world.spawnParticle(Particle.DRAGON_BREATH, startLoc.clone().add(0, 1, 0), 20, 0.8, 0.6, 0.8, 0.1);
+
+        player.sendMessage(ChatColor.DARK_PURPLE + "Dragon Dash!");
+
+        // Use velocity for smooth movement - 15 blocks over ~0.3 seconds (6 ticks)
+        // Velocity = distance / time in ticks * 20 (ticks per second)
+        // 15 blocks in 6 ticks = 15 / 6 * 20 = 50 blocks/second velocity
+        final double dashVelocity = 3.5; // Strong forward push
+        final int dashDuration = 6; // ticks
+
+        // Apply initial velocity boost (full 3D direction)
+        player.setVelocity(direction.clone().multiply(dashVelocity));
+
+        new BukkitRunnable() {
+            int tick = 0;
+            Location lastLoc = startLoc.clone();
+
+            @Override
+            public void run() {
+                if (tick >= dashDuration || !player.isOnline()) {
+                    // Final dragon roar at end
+                    world.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 1.0f);
+                    // Stop momentum at end
+                    player.setVelocity(player.getVelocity().multiply(0.3));
+                    cancel();
+                    return;
+                }
+
+                // Keep pushing player in dash direction (full 3D - can go up/down)
+                Vector targetVel = direction.clone().multiply(dashVelocity);
+                // Apply full 3D velocity for directional dashing
+                player.setVelocity(targetVel);
+
+                // Check if we hit a wall (check in dash direction at feet and head level)
+                Location checkLoc = player.getLocation().add(direction.clone().multiply(0.5));
+                Location checkLocHead = checkLoc.clone().add(0, 1.8, 0);
+                if (!checkLoc.getBlock().isPassable() || !checkLocHead.getBlock().isPassable()) {
+                    player.setVelocity(new Vector(0, 0, 0));
+                    cancel();
+                    return;
+                }
+
+                // Purple witch trail behind player
+                Location trailLoc = player.getLocation().add(0, 1, 0);
+                world.spawnParticle(Particle.WITCH, trailLoc, 30, 0.5, 0.5, 0.5, 0.12);
+                world.spawnParticle(Particle.DRAGON_BREATH, trailLoc, 8, 0.3, 0.3, 0.3, 0.05);
+
+                // Dragon wing particles on sides with witch
+                Vector perpendicular = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+                Location leftWing = trailLoc.clone().add(perpendicular.clone().multiply(1.5));
+                Location rightWing = trailLoc.clone().add(perpendicular.clone().multiply(-1.5));
+                world.spawnParticle(Particle.WITCH, leftWing, 15, 0.4, 0.5, 0.4, 0.1);
+                world.spawnParticle(Particle.WITCH, rightWing, 15, 0.4, 0.5, 0.4, 0.1);
+
+                // Wing flap sound during dash
+                if (tick % 2 == 0) {
+                    world.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 0.8f, 1.5f);
+                }
+
+                // Check for entities we pass through (wider hitbox for smooth dash)
+                for (Entity entity : world.getNearbyEntities(player.getLocation(), 2.5, 2.5, 2.5)) {
                     if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
                         // Trust check
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
@@ -1501,127 +1698,32 @@ public class AbilityManager implements Listener {
                         LivingEntity living = (LivingEntity) entity;
                         hitEntities.add(entity.getUniqueId());
 
-                        // 2 TRUE DAMAGE (bypasses armor) - 2 hearts = 4 HP
-                        double currentHealth = living.getHealth();
-                        double newHealth = Math.max(0, currentHealth - 4.0); // 2 hearts = 4 damage
-                        living.setHealth(newHealth);
-                        living.setNoDamageTicks(0);
+                        // 4 hearts damage through full Prot 4 diamond (~20 raw damage)
+                        dealAbilityDamage(living, 20.0, player);
 
-                        // Ender Decay - 10% lower defense (Weakness effect approximation)
-                        living.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 80, 0)); // 4 seconds
+                        // Stun for 0.5 seconds (10 ticks) - slowness + no jump
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 10, 255)); // Can't move
+                        living.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 10, 250)); // Can't jump (negative)
 
-                        // Slight levitation (0.5s = 10 ticks)
-                        living.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 10, 0));
+                        // Purple witch slash effect on hit
+                        world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 70, 0.5, 0.6, 0.5, 0.15);
+                        world.spawnParticle(Particle.DRAGON_BREATH, living.getLocation().add(0, 1, 0), 15, 0.3, 0.4, 0.3, 0.06);
+                        world.spawnParticle(Particle.SWEEP_ATTACK, living.getLocation().add(0, 1, 0), 3, 0.3, 0.3, 0.3, 0);
 
-                        // Purple visual effects on hit
-                        world.spawnParticle(Particle.REVERSE_PORTAL, living.getLocation().add(0, 1, 0), 50, 0.4, 0.6, 0.4, 0.8);
-                        world.spawnParticle(Particle.DRAGON_BREATH, living.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.05);
-                        world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3, 0.1);
+                        // Dragon hit sound
+                        world.playSound(living.getLocation(), Sound.ENTITY_ENDER_DRAGON_HURT, 1.0f, 1.5f);
+                        world.playSound(living.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.8f);
 
                         // Notify victim
                         if (living instanceof Player) {
-                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "End Sever" + ChatColor.RED + " from " + player.getName() + "!");
+                            ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Dragon Dash" + ChatColor.RED + " from " + player.getName() + "!");
                         }
                     }
                 }
+
+                tick++;
             }
-        }
-
-        // Teleport user 2 blocks backward (End recoil)
-        Vector backward = direction.clone().multiply(-2);
-        Location recoilLoc = playerLoc.clone().add(backward);
-        recoilLoc.setY(playerLoc.getY()); // Keep same Y level
-        recoilLoc.setPitch(playerLoc.getPitch());
-        recoilLoc.setYaw(playerLoc.getYaw());
-
-        // Check if recoil location is safe
-        if (recoilLoc.getBlock().isPassable() && recoilLoc.clone().add(0, 1, 0).getBlock().isPassable()) {
-            player.teleport(recoilLoc);
-            world.spawnParticle(Particle.REVERSE_PORTAL, playerLoc, 50, 0.3, 0.5, 0.3, 0.5);
-            world.spawnParticle(Particle.REVERSE_PORTAL, recoilLoc, 50, 0.3, 0.5, 0.3, 0.5);
-        }
-
-        // Sound effects
-        world.playSound(playerLoc, Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 1.5f);
-        world.playSound(playerLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.5f, 0.8f);
-        world.playSound(playerLoc, Sound.BLOCK_END_PORTAL_SPAWN, 0.5f, 2.0f);
-
-        player.sendMessage(ChatColor.DARK_PURPLE + "End Sever!");
-        return true;
-    }
-
-    private boolean cataclysmPulse(Player player) {
-        Location center = player.getLocation();
-        World world = center.getWorld();
-
-        // Channel particles during 1 second charge - Purple theme
-        world.spawnParticle(Particle.REVERSE_PORTAL, center, 250, 1, 1, 1, 0.7);
-        world.spawnParticle(Particle.WITCH, center, 100, 1, 1, 1, 0.2);
-        world.spawnParticle(Particle.DRAGON_BREATH, center, 80, 1, 1, 1, 0.1);
-        world.playSound(center, Sound.BLOCK_BEACON_POWER_SELECT, 1.5f, 0.5f);
-
-        player.sendMessage(ChatColor.DARK_PURPLE + "Genesis Collapse charging...");
-
-        // After 1 second channel, unleash collapse
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            Location collapseCenter = player.getLocation();
-
-            // Pull all enemies within 7 blocks to center
-            for (Entity entity : world.getNearbyEntities(collapseCenter, 7, 7, 7)) {
-                if (entity instanceof LivingEntity && entity != player) {
-                    // Trust check
-                    if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
-                        continue;
-                    }
-
-                    LivingEntity living = (LivingEntity) entity;
-
-                    // Pull to center
-                    Vector direction = collapseCenter.toVector().subtract(entity.getLocation().toVector()).normalize();
-                    entity.setVelocity(direction.multiply(2.0));
-
-                    // 5 TRUE DAMAGE (bypasses armor) - 5 hearts = 10 HP
-                    double currentHealth = living.getHealth();
-                    double newHealth = Math.max(0, currentHealth - 10.0); // 5 hearts = 10 damage
-                    living.setHealth(newHealth);
-
-                    living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
-                    living.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 40, 0));
-
-                    // Purple effects on each target
-                    world.spawnParticle(Particle.REVERSE_PORTAL, living.getLocation().add(0, 1, 0), 40, 0.4, 0.6, 0.4, 0.8);
-                    world.spawnParticle(Particle.WITCH, living.getLocation().add(0, 1, 0), 25, 0.3, 0.5, 0.3, 0.1);
-
-                    // Notify victim
-                    if (living instanceof Player) {
-                        ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.DARK_PURPLE + "Genesis Collapse" + ChatColor.RED + " - 5 true damage from " + player.getName() + "!");
-                    }
-                }
-            }
-
-            // Massive purple shockwave particles
-            world.spawnParticle(Particle.REVERSE_PORTAL, collapseCenter, 600, 5, 3, 5, 2.0);
-            world.spawnParticle(Particle.DRAGON_BREATH, collapseCenter, 500, 5, 3, 5, 0.15);
-            world.spawnParticle(Particle.WITCH, collapseCenter, 300, 5, 3, 5, 0.2);
-            world.spawnParticle(Particle.PORTAL, collapseCenter, 500, 5, 3, 5, 2.5);
-
-            // Sound effects
-            world.playSound(collapseCenter, Sound.ENTITY_WITHER_SPAWN, 1.0f, 0.5f);
-            world.playSound(collapseCenter, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 0.5f);
-            world.playSound(collapseCenter, Sound.ENTITY_ENDER_DRAGON_GROWL, 1.5f, 0.6f);
-
-            // Teleport player slightly upward (End-style blink)
-            Location blinkLoc = player.getLocation().add(0, 1.5, 0);
-            if (blinkLoc.getBlock().isPassable()) {
-                player.teleport(blinkLoc);
-                world.spawnParticle(Particle.REVERSE_PORTAL, blinkLoc, 50, 0.3, 0.3, 0.3, 0.3);
-            }
-
-            // Give Absorption IV for 5 seconds (100 ticks)
-            player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 100, 3));
-
-            player.sendMessage(ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "GENESIS COLLAPSE!");
-        }, 20L); // 1 second delay
+        }.runTaskTimer(plugin, 0L, 1L);
 
         return true;
     }
@@ -1692,7 +1794,7 @@ public class AbilityManager implements Listener {
                             }
                         }
                         LivingEntity living = (LivingEntity) entity;
-                        living.damage(40.0, player); // ~8 hearts through full Prot 4
+                        dealAbilityDamage(living, 40.0, player); // ~8 hearts through full Prot 4
                         Vector knockback = entity.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(2);
                         entity.setVelocity(knockback);
 
@@ -1733,7 +1835,9 @@ public class AbilityManager implements Listener {
                     // Schedule echo hit
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
                         if (target.isValid() && !target.isDead()) {
+                            abilityDamageActive.add(player.getUniqueId());
                             target.damage(damage, player);
+                            abilityDamageActive.remove(player.getUniqueId());
                             target.getWorld().spawnParticle(Particle.CRIT, target.getLocation(), 20, 0.5, 0.5, 0.5, 0);
                             player.sendMessage(ChatColor.YELLOW + "Echo!");
                         }
@@ -1912,7 +2016,7 @@ public class AbilityManager implements Listener {
                     living.setVelocity(direction.multiply(1.5).setY(0.8));
 
                     // Damage
-                    living.damage(25.0, player); // ~5 hearts through full Prot 4
+                    dealAbilityDamage(living, 25.0, player); // ~5 hearts through full Prot 4
 
                     // Levitation effect
                     living.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 20, 5));
@@ -1987,6 +2091,27 @@ public class AbilityManager implements Listener {
 
     public boolean isFortuneModeActive(UUID playerId) {
         return fortuneModeActive.contains(playerId);
+    }
+
+    /**
+     * Check if a player is currently dealing ability damage (not melee)
+     */
+    public boolean isAbilityDamageActive(UUID playerId) {
+        return abilityDamageActive.contains(playerId);
+    }
+
+    /**
+     * Mark that a player is about to deal ability damage
+     */
+    public void setAbilityDamageActive(UUID playerId) {
+        abilityDamageActive.add(playerId);
+    }
+
+    /**
+     * Mark that a player is done dealing ability damage
+     */
+    public void clearAbilityDamageActive(UUID playerId) {
+        abilityDamageActive.remove(playerId);
     }
 
     @EventHandler

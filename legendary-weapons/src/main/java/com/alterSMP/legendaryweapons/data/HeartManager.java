@@ -172,6 +172,85 @@ public class HeartManager {
         return stolen != null && stolen.contains(victim);
     }
 
+    /**
+     * Check if ANY player has already stolen from this victim.
+     * Each victim can only lose one heart total (regardless of which killer took it).
+     */
+    public boolean hasAnyoneStolenFrom(UUID victim) {
+        for (Set<UUID> victims : stolenFrom.values()) {
+            if (victims.contains(victim)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get the underlying stolenFrom map (for internal use by PassiveEffectManager).
+     */
+    public Map<UUID, Set<UUID>> getStolenFromMap() {
+        return stolenFrom;
+    }
+
+    /**
+     * Reset all heart data for a specific player (admin command).
+     * Clears hearts lost, hearts gained, and removes them from stolen lists.
+     */
+    public void resetPlayerHearts(UUID playerUUID) {
+        // Clear hearts lost
+        heartsLost.remove(playerUUID);
+
+        // Clear hearts gained
+        heartsGained.remove(playerUUID);
+
+        // Remove from stolenFrom (as killer)
+        stolenFrom.remove(playerUUID);
+
+        // Remove from all victim lists (as victim)
+        for (Set<UUID> victims : stolenFrom.values()) {
+            victims.remove(playerUUID);
+        }
+
+        // Reset player's max health to default if online
+        Player player = Bukkit.getPlayer(playerUUID);
+        if (player != null) {
+            // Remove ALL modifiers first
+            org.bukkit.attribute.AttributeInstance maxHealthAttr = player.getAttribute(Attribute.MAX_HEALTH);
+            if (maxHealthAttr != null) {
+                // Clear all modifiers
+                for (org.bukkit.attribute.AttributeModifier modifier : new java.util.ArrayList<>(maxHealthAttr.getModifiers())) {
+                    maxHealthAttr.removeModifier(modifier);
+                }
+                // Set base value to default
+                maxHealthAttr.setBaseValue(20.0);
+            }
+
+            // Also remove health boost potion effect
+            player.removePotionEffect(org.bukkit.potion.PotionEffectType.HEALTH_BOOST);
+
+            // Force health to max
+            player.setHealth(20.0);
+        }
+
+        saveData();
+    }
+
+    /**
+     * Reset ALL heart data (admin command for full reset).
+     */
+    public void resetAllHearts() {
+        stolenFrom.clear();
+        heartsLost.clear();
+        heartsGained.clear();
+
+        // Reset all online players to default health
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
+        }
+
+        saveData();
+    }
+
     private void loadData() {
         if (!dataFile.exists()) {
             data = new YamlConfiguration();

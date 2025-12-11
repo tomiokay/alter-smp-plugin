@@ -12,6 +12,9 @@ import com.alterSMP.legendaryweapons.commands.LReloadCommand;
 import com.alterSMP.legendaryweapons.commands.CooldownCommand;
 import com.alterSMP.legendaryweapons.commands.TrustCommand;
 import com.alterSMP.legendaryweapons.commands.GiveLegendaryCommand;
+import com.alterSMP.legendaryweapons.commands.ToggleCooldownCommand;
+import com.alterSMP.legendaryweapons.commands.LDisableCommand;
+import com.alterSMP.legendaryweapons.commands.HeartResetCommand;
 import com.alterSMP.legendaryweapons.config.ConfigManager;
 import com.alterSMP.legendaryweapons.data.DataManager;
 import com.alterSMP.legendaryweapons.data.CooldownManager;
@@ -79,6 +82,13 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
         GiveLegendaryCommand giveLegendaryCmd = new GiveLegendaryCommand(this);
         getCommand("givelegendary").setExecutor(giveLegendaryCmd);
         getCommand("givelegendary").setTabCompleter(giveLegendaryCmd);
+        getCommand("togglecooldown").setExecutor(new ToggleCooldownCommand(this));
+        LDisableCommand ldisableCmd = new LDisableCommand(this);
+        getCommand("ldisable").setExecutor(ldisableCmd);
+        getCommand("ldisable").setTabCompleter(ldisableCmd);
+        HeartResetCommand heartResetCmd = new HeartResetCommand(this);
+        getCommand("heartreset").setExecutor(heartResetCmd);
+        getCommand("heartreset").setTabCompleter(heartResetCmd);
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new AltarPlaceListener(this), this);
@@ -105,6 +115,7 @@ public class LegendaryWeaponsPlugin extends JavaPlugin {
             dataManager.saveAll();
         }
         if (altarManager != null) {
+            altarManager.stopParticleEffects();
             altarManager.saveAltars();
         }
         if (trustManager != null) {

@@ -4,3 +4,17 @@ main: com.alterSMP.combatlogger.CombatLoggerPlugin
 api-version: '1.21'
 description: Combat logging prevention plugin
 author: AlterSMP
+
+commands:
+  togglecombat:
+    description: Toggle combat timer display in action bar
+    usage: /togglecombat
+  togglepvp:
+    description: Toggle PvP on/off server-wide (broadcasts to all players)
+    usage: /togglepvp
+    permission: combatlogger.togglepvp
+
+permissions:
+  combatlogger.togglepvp:
+    description: Allows toggling PvP on/off
+    default: op

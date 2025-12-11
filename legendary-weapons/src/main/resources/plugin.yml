@@ -4,6 +4,7 @@ main: com.alterSMP.legendaryweapons.LegendaryWeaponsPlugin
 api-version: '1.21'
 description: 'Legendary Weapons SMP with unique items and abilities'
 author: AlterSMP
+softdepend: [CombatLogger]
 
 commands:
   giveforge:
@@ -50,6 +51,22 @@ commands:
     permission: legendaryweapons.givelegendary
     permission-message: 'You do not have permission to use this command'
 
+  togglecooldown:
+    description: 'Toggle ability cooldown display in action bar'
+    usage: '/togglecooldown'
+
+  ldisable:
+    description: 'Toggle a legendary weapon crafting availability'
+    usage: '/ldisable <legendary_id|list>'
+    permission: legendaryweapons.disable
+    permission-message: 'You do not have permission to use this command'
+
+  heartreset:
+    description: 'Reset heart steal data for a player or all players'
+    usage: '/heartreset <player|all>'
+    permission: legendaryweapons.admin
+    permission-message: 'You do not have permission to use this command'
+
 permissions:
   legendaryweapons.giveforge:
     description: 'Allows giving legendary forges'
@@ -73,4 +90,12 @@ permissions:
 
   legendaryweapons.givelegendary:
     description: 'Allows giving legendary weapons for testing (does not mark as crafted)'
+    default: op
+
+  legendaryweapons.disable:
+    description: 'Allows disabling/enabling legendary weapons from being crafted'
+    default: op
+
+  legendaryweapons.admin:
+    description: 'Admin permissions for heart reset and other admin commands'
     default: op

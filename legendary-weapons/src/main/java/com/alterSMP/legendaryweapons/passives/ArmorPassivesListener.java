@@ -25,18 +25,21 @@ public class ArmorPassivesListener implements Listener {
 
     private final LegendaryWeaponsPlugin plugin;
 
-    // Copper Chestplate - hit counter
+    // Forge Chestplate - hit counter
     private Map<UUID, Integer> hitCounter = new HashMap<>();
 
-    // Copper Leggings - flame trail tracking
+    // Forge Leggings - flame trail tracking
     private Map<UUID, Location> lastFlameLocation = new HashMap<>();
     private Set<UUID> shockwaveActive = new HashSet<>(); // Prevent shockwave damage from counting as hits
 
-    // Copper Boots - falling state
+    // Cache for leggings legendary ID to avoid PDC lookups every tick
+    private Map<UUID, String> leggingsCache = new HashMap<>();
+
+    // Forge Boots - falling state
     private Set<UUID> isFalling = new HashSet<>();
     private Map<UUID, Double> fallDistance = new HashMap<>();
 
-    // Copper Helmet - health boost tracking
+    // Forge Helmet - health boost tracking
     private Map<UUID, Double> originalMaxHealth = new HashMap<>();
 
     // Lantern of Lost Names - kill tracking (persistent across sessions via AbilityManager)
@@ -52,7 +55,7 @@ public class ArmorPassivesListener implements Listener {
         startLanternVisibilityTask();
     }
 
-    // ========== COPPER BOOTS ==========
+    // ========== FORGE BOOTS ==========
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onFallDamage(EntityDamageEvent event) {
@@ -63,7 +66,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack boots = player.getInventory().getBoots();
         String legendaryId = LegendaryItemFactory.getLegendaryId(boots);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_BOOTS.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.FORGE_BOOTS.getId())) {
             // Passive: No fall damage
             event.setCancelled(true);
 
@@ -82,7 +85,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack boots = player.getInventory().getBoots();
         String legendaryId = LegendaryItemFactory.getLegendaryId(boots);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_BOOTS.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.FORGE_BOOTS.getId())) {
             // Check if player is in the air
             if (!player.isOnGround() && player.getVelocity().getY() < 0) {
                 // Player is falling and pressed shift - METEOR SLAM!
@@ -116,7 +119,7 @@ public class ArmorPassivesListener implements Listener {
             ItemStack boots = player.getInventory().getBoots();
             String legendaryId = LegendaryItemFactory.getLegendaryId(boots);
 
-            if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_BOOTS.getId())) {
+            if (legendaryId != null && legendaryId.equals(LegendaryType.FORGE_BOOTS.getId())) {
                 event.setCancelled(true); // No fall damage
 
                 double dist = player.getFallDistance();
@@ -178,7 +181,7 @@ public class ArmorPassivesListener implements Listener {
         }
     }
 
-    // ========== COPPER CHESTPLATE ==========
+    // ========== FORGE CHESTPLATE ==========
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerMeleeHit(EntityDamageByEntityEvent event) {
@@ -200,10 +203,15 @@ public class ArmorPassivesListener implements Listener {
             return;
         }
 
+        // Ignore if this is ability damage (not actual melee hits)
+        if (plugin.getAbilityManager().isAbilityDamageActive(player.getUniqueId())) {
+            return;
+        }
+
         ItemStack chestplate = player.getInventory().getChestplate();
         String legendaryId = LegendaryItemFactory.getLegendaryId(chestplate);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_CHESTPLATE.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.FORGE_CHESTPLATE.getId())) {
             // Increment hit counter
             int hits = hitCounter.getOrDefault(player.getUniqueId(), 0) + 1;
 
@@ -235,7 +243,7 @@ public class ArmorPassivesListener implements Listener {
         target.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, targetLoc.add(0, 1, 0), 100, 1, 1, 1, 0.3);
 
         if (target instanceof Player) {
-            ((Player) target).sendMessage(ChatColor.YELLOW + "⚡ Struck by " + ChatColor.GOLD + "Copper Chestplate Lightning Storm" +
+            ((Player) target).sendMessage(ChatColor.YELLOW + "⚡ Struck by " + ChatColor.GOLD + "Forge Chestplate Lightning Storm" +
                 ChatColor.YELLOW + " from " + player.getName() + "!");
         }
 
@@ -243,7 +251,7 @@ public class ArmorPassivesListener implements Listener {
         shockwaveActive.remove(player.getUniqueId());
     }
 
-    // ========== COPPER LEGGINGS ==========
+    // ========== FORGE LEGGINGS ==========
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onFireDamage(EntityDamageEvent event) {
@@ -263,7 +271,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack leggings = player.getInventory().getLeggings();
         String legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_LEGGINGS.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.FORGE_LEGGINGS.getId())) {
             // Immune to fire, lava, and magma
             event.setCancelled(true);
             player.setFireTicks(0); // Extinguish any fire
@@ -271,23 +279,31 @@ public class ArmorPassivesListener implements Listener {
     }
 
     /**
-     * Called by PassiveEffectManager tick to handle Copper Leggings passives
+     * Called by PassiveEffectManager tick to handle Forge Leggings passives
      */
-    public void tickCopperLeggings(Player player) {
+    public void tickForgeLeggings(Player player) {
+        // Always check leggings directly - no caching issues
         ItemStack leggings = player.getInventory().getLeggings();
         String legendaryId = LegendaryItemFactory.getLegendaryId(leggings);
 
-        if (legendaryId == null || !legendaryId.equals(LegendaryType.COPPER_LEGGINGS.getId())) {
+        if (legendaryId == null || !legendaryId.equals(LegendaryType.FORGE_LEGGINGS.getId())) {
             return;
         }
 
         // Haste II always
-        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 40, 1, true, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 50, 1, true, false));
         // Fire Resistance always
-        player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 40, 0, true, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 50, 0, true, false));
     }
 
-    // ========== COPPER HELMET ==========
+    /**
+     * Invalidate leggings cache for a player (call when inventory changes)
+     */
+    public void invalidateLeggingsCache(UUID playerId) {
+        leggingsCache.remove(playerId);
+    }
+
+    // ========== FORGE HELMET ==========
 
     @EventHandler
     public void onEntityKill(EntityDeathEvent event) {
@@ -303,7 +319,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack helmet = killer.getInventory().getHelmet();
         String legendaryId = LegendaryItemFactory.getLegendaryId(helmet);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_HELMET.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.FORGE_HELMET.getId())) {
             UUID killerId = killer.getUniqueId();
 
             // Store original max health if not already stored
@@ -356,7 +372,7 @@ public class ArmorPassivesListener implements Listener {
         ItemStack helmet = player.getInventory().getHelmet();
         String legendaryId = LegendaryItemFactory.getLegendaryId(helmet);
 
-        if (legendaryId != null && legendaryId.equals(LegendaryType.COPPER_HELMET.getId())) {
+        if (legendaryId != null && legendaryId.equals(LegendaryType.FORGE_HELMET.getId())) {
             // Check if it's a critical hit (player must be falling)
             if (player.getFallDistance() > 0 && player.getVelocity().getY() < 0) {
                 // Grant 10% speed for 3 seconds (Speed I = 20%, so we use level 0 with amplifier tricks)
@@ -379,12 +395,15 @@ public class ArmorPassivesListener implements Listener {
     private Map<UUID, Map<UUID, Long>> lanternAttackTimers = new HashMap<>();
 
     private void startLanternVisibilityTask() {
-        // Run every 10 ticks (0.5 seconds) to update visibility
+        // Run every 40 ticks (2 seconds) to update visibility - reduced from 10 ticks for performance
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Player holder : Bukkit.getOnlinePlayers()) {
-                updateLanternVisibility(holder);
+                // Only update if they're holding a lantern (skip others for performance)
+                if (isHoldingLantern(holder)) {
+                    updateLanternVisibility(holder);
+                }
             }
-        }, 20L, 10L);
+        }, 20L, 40L);
     }
 
     private boolean isHoldingLantern(Player player) {
@@ -511,13 +530,17 @@ public class ArmorPassivesListener implements Listener {
 
         // Run one tick later to ensure player is fully loaded
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Update visibility for all lantern holders
+            // Update visibility for lantern holders only (skip others for performance)
             for (Player holder : Bukkit.getOnlinePlayers()) {
                 if (holder.equals(joiningPlayer)) continue;
-                updateLanternVisibility(holder);
+                if (isHoldingLantern(holder)) {
+                    updateLanternVisibility(holder);
+                }
             }
             // Also update if the joining player is holding a lantern
-            updateLanternVisibility(joiningPlayer);
+            if (isHoldingLantern(joiningPlayer)) {
+                updateLanternVisibility(joiningPlayer);
+            }
         }, 2L);
     }
 
@@ -529,12 +552,25 @@ public class ArmorPassivesListener implements Listener {
         hiddenFromPlayer.remove(playerId);
         lanternAttackTimers.remove(playerId);
 
+        // Clean up leggings cache
+        leggingsCache.remove(playerId);
+
         // Remove this player from others' hidden lists and attack timers
         for (Set<UUID> hidden : hiddenFromPlayer.values()) {
             hidden.remove(playerId);
         }
         for (Map<UUID, Long> timers : lanternAttackTimers.values()) {
             timers.remove(playerId);
+        }
+    }
+
+    // Invalidate leggings cache when inventory changes
+    @EventHandler
+    public void onInventoryClick(org.bukkit.event.inventory.InventoryClickEvent event) {
+        if (event.getWhoClicked() instanceof Player) {
+            // Invalidate cache after a tick to ensure inventory is updated
+            UUID playerId = event.getWhoClicked().getUniqueId();
+            Bukkit.getScheduler().runTaskLater(plugin, () -> leggingsCache.remove(playerId), 1L);
         }
     }
 

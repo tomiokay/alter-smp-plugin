@@ -15,12 +15,12 @@ public enum LegendaryType {
     CHAINS_OF_ETERNITY("chains_of_eternity", "Chains of Eternity", Material.WOODEN_SHOVEL, 9),
     
     // Armor (no custom models, just for completeness)
-    COPPER_BOOTS("copper_boots", "Copper Boots", Material.DIAMOND_BOOTS, 10),
+    FORGE_BOOTS("forge_boots", "Forge Boots", Material.DIAMOND_BOOTS, 10),
     CELESTIAL_AEGIS_SHIELD("celestial_aegis_shield", "Celestial Aegis Shield", Material.SHIELD, 11),
     FORGE_PICKAXE("forge_pickaxe", "Forge Pickaxe", Material.NETHERITE_PICKAXE, 12),
-    COPPER_CHESTPLATE("copper_chestplate", "Copper Chestplate", Material.DIAMOND_CHESTPLATE, 13),
-    COPPER_LEGGINGS("copper_leggings", "Copper Leggings", Material.DIAMOND_LEGGINGS, 14),
-    COPPER_HELMET("copper_helmet", "Copper Helmet", Material.DIAMOND_HELMET, 15),
+    FORGE_CHESTPLATE("forge_chestplate", "Forge Chestplate", Material.DIAMOND_CHESTPLATE, 13),
+    FORGE_LEGGINGS("forge_leggings", "Forge Leggings", Material.DIAMOND_LEGGINGS, 14),
+    FORGE_HELMET("forge_helmet", "Forge Helmet", Material.DIAMOND_HELMET, 15),
 
     // New Legendary Items
     LANTERN_OF_LOST_NAMES("lantern_of_lost_names", "Lantern of Lost Names", Material.SOUL_LANTERN, 16),

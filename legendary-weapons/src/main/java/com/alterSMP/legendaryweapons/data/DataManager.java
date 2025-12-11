@@ -16,10 +16,16 @@ public class DataManager {
 
     // Global crafting history: Legendary ID -> UUID of crafter
     private Map<String, UUID> globalCraftingHistory;
+    // Crafting location history: Legendary ID -> "world,x,y,z"
+    private Map<String, String> craftingLocations;
+    // Disabled legendaries (cannot be crafted)
+    private Set<String> disabledLegendaries;
 
     public DataManager(LegendaryWeaponsPlugin plugin) {
         this.plugin = plugin;
         this.globalCraftingHistory = new HashMap<>();
+        this.craftingLocations = new HashMap<>();
+        this.disabledLegendaries = new HashSet<>();
         initializeFiles();
     }
 
@@ -52,17 +58,27 @@ public class DataManager {
 
     private void loadCraftingHistory() {
         globalCraftingHistory.clear();
+        craftingLocations.clear();
+        disabledLegendaries.clear();
 
-        if (!craftingData.contains("crafted")) {
-            return;
+        if (craftingData.contains("crafted")) {
+            for (String legendaryId : craftingData.getConfigurationSection("crafted").getKeys(false)) {
+                String uuidString = craftingData.getString("crafted." + legendaryId + ".crafter");
+                if (uuidString != null) {
+                    UUID crafter = UUID.fromString(uuidString);
+                    globalCraftingHistory.put(legendaryId, crafter);
+                }
+                String location = craftingData.getString("crafted." + legendaryId + ".location");
+                if (location != null) {
+                    craftingLocations.put(legendaryId, location);
+                }
+            }
         }
 
-        for (String legendaryId : craftingData.getConfigurationSection("crafted").getKeys(false)) {
-            String uuidString = craftingData.getString("crafted." + legendaryId + ".crafter");
-            if (uuidString != null) {
-                UUID crafter = UUID.fromString(uuidString);
-                globalCraftingHistory.put(legendaryId, crafter);
-            }
+        // Load disabled legendaries
+        if (craftingData.contains("disabled")) {
+            List<String> disabled = craftingData.getStringList("disabled");
+            disabledLegendaries.addAll(disabled);
         }
     }
 
@@ -73,7 +89,15 @@ public class DataManager {
             String legendaryId = entry.getKey();
             String crafterUUID = entry.getValue().toString();
             craftingData.set("crafted." + legendaryId + ".crafter", crafterUUID);
+            // Save location if available
+            String location = craftingLocations.get(legendaryId);
+            if (location != null) {
+                craftingData.set("crafted." + legendaryId + ".location", location);
+            }
         }
+
+        // Save disabled legendaries
+        craftingData.set("disabled", new ArrayList<>(disabledLegendaries));
 
         try {
             craftingData.save(craftingDataFile);
@@ -91,11 +115,18 @@ public class DataManager {
         return globalCraftingHistory.get(legendaryId);
     }
 
-    public void markCrafted(UUID playerUUID, String legendaryId) {
+    public void markCrafted(UUID playerUUID, String legendaryId, String location) {
         globalCraftingHistory.put(legendaryId, playerUUID);
+        if (location != null) {
+            craftingLocations.put(legendaryId, location);
+        }
         saveCraftingHistory();
 
-        plugin.getLogger().info("Player " + playerUUID + " crafted " + legendaryId + " (GLOBALLY)");
+        plugin.getLogger().info("Player " + playerUUID + " crafted " + legendaryId + " at " + location + " (GLOBALLY)");
+    }
+
+    public String getCraftingLocation(String legendaryId) {
+        return craftingLocations.get(legendaryId);
     }
 
     public void resetAllCrafting() {
@@ -114,7 +145,34 @@ public class DataManager {
 
     public void resetLegendaryCrafting(String legendaryId) {
         globalCraftingHistory.remove(legendaryId);
+        craftingLocations.remove(legendaryId);
         saveCraftingHistory();
         plugin.getLogger().info("Reset crafting for legendary: " + legendaryId);
+    }
+
+    // ========== DISABLED LEGENDARIES ==========
+
+    public boolean isLegendaryDisabled(String legendaryId) {
+        return disabledLegendaries.contains(legendaryId);
+    }
+
+    /**
+     * Toggle a legendary's disabled state.
+     * @return true if now disabled, false if now enabled
+     */
+    public boolean toggleLegendaryDisabled(String legendaryId) {
+        if (disabledLegendaries.contains(legendaryId)) {
+            disabledLegendaries.remove(legendaryId);
+            saveCraftingHistory();
+            return false; // Now enabled
+        } else {
+            disabledLegendaries.add(legendaryId);
+            saveCraftingHistory();
+            return true; // Now disabled
+        }
+    }
+
+    public Set<String> getDisabledLegendaries() {
+        return new HashSet<>(disabledLegendaries);
     }
 }

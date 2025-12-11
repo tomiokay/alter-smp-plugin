@@ -1,2 +1,7 @@
 // Legendary Weapons module
 description = 'Legendary Weapons SMP Plugin'
+
+dependencies {
+    // Optional dependency on combat-logger for combat timer integration
+    compileOnly project(':combat-logger')
+}

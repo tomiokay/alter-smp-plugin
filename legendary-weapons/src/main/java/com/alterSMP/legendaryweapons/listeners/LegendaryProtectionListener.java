@@ -12,6 +12,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -156,11 +157,21 @@ public class LegendaryProtectionListener implements Listener {
     }
 
     /**
-     * Prevent hoppers from moving legendary items
+     * Prevent hoppers from moving legendary items between inventories
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryMoveItem(InventoryMoveItemEvent event) {
         if (isLegendary(event.getItem())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Prevent hoppers from picking up legendary items from the ground
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryPickupItem(InventoryPickupItemEvent event) {
+        if (isLegendary(event.getItem().getItemStack())) {
             event.setCancelled(true);
         }
     }

@@ -68,8 +68,8 @@ cooldowns:
     ability1: 35  # Soul Bind
     ability2: 65  # Prison of the Damned
 
-  # Copper Boots
-  copper_boots:
+  # Forge Boots
+  forge_boots:
     ability1: 0  # Meteor Slam (shift-activated)
 
   # Celestial Aegis Shield
@@ -207,15 +207,15 @@ ranges:
 #   thousand_demon_daggers
 #   divine_axe_rhitta
 #   chains_of_eternity
-#   copper_boots
+#   forge_boots
 #   celestial_aegis_shield
 #   chrono_blade
 #   soul_devourer
 #   dragonborn_blade
 #   forge_pickaxe
-#   copper_chestplate
-#   copper_leggings
-#   copper_helmet
+#   forge_chestplate
+#   forge_leggings
+#   forge_helmet
 #   lantern_of_lost_names
 #   rift_key_of_endkeeper
 #   chaos_dice_of_fate
@@ -502,8 +502,8 @@ recipes:
     - DRAGON_BREATH
     - DRAGON_HEAD
 
-  # Copper Boots
-  copper_boots:
+  # Forge Boots
+  forge_boots:
     - ENCHANTED_BOOK:FEATHER_FALLING:4
     - COPPER_BLOCK
     - COPPER_BLOCK
@@ -511,17 +511,17 @@ recipes:
     - ENCHANTED_BOOK:FEATHER_FALLING:4
     - COPPER_BLOCK
     - DIAMOND_BLOCK
-    - DIAMOND_BOOTS
+    - NETHERITE_BOOTS
     - DIAMOND_BLOCK
     - COPPER_BLOCK
     - COPPER_BLOCK
-    - DIAMOND_BOOTS
+    - NETHERITE_BOOTS
     - MACE
-    - DIAMOND_BOOTS
+    - NETHERITE_BOOTS
     - COPPER_BLOCK
     - COPPER_BLOCK
     - DIAMOND_BLOCK
-    - DIAMOND_BOOTS
+    - NETHERITE_BOOTS
     - DIAMOND_BLOCK
     - COPPER_BLOCK
     - ENCHANTED_BOOK:FEATHER_FALLING:4
@@ -558,11 +558,11 @@ recipes:
     - COPPER_BLOCK
     - COPPER_BLOCK
 
-  # Copper Chestplate
-  copper_chestplate:
+  # Forge Chestplate
+  forge_chestplate:
     - LIGHTNING_ROD
     - COPPER_BLOCK
-    - COPPER_BLOCK
+    - CREEPER_HEAD
     - COPPER_BLOCK
     - LIGHTNING_ROD
     - COPPER_BLOCK
@@ -570,11 +570,11 @@ recipes:
     - BOLT_ARMOR_TRIM_SMITHING_TEMPLATE
     - DIAMOND_BLOCK
     - COPPER_BLOCK
-    - COPPER_BLOCK
+    - CREEPER_HEAD
     - BOLT_ARMOR_TRIM_SMITHING_TEMPLATE
     - NETHERITE_CHESTPLATE
     - BOLT_ARMOR_TRIM_SMITHING_TEMPLATE
-    - COPPER_BLOCK
+    - CREEPER_HEAD
     - COPPER_BLOCK
     - DIAMOND_BLOCK
     - BOLT_ARMOR_TRIM_SMITHING_TEMPLATE
@@ -582,64 +582,64 @@ recipes:
     - COPPER_BLOCK
     - LIGHTNING_ROD
     - COPPER_BLOCK
-    - COPPER_BLOCK
+    - CREEPER_HEAD
     - COPPER_BLOCK
     - LIGHTNING_ROD
 
-  # Copper Leggings
-  copper_leggings:
-    - BLAZE_POWDER
-    - COPPER_BLOCK
-    - COPPER_BLOCK
-    - COPPER_BLOCK
+  # Forge Leggings
+  forge_leggings:
     - BLAZE_POWDER
     - COPPER_BLOCK
     - MAGMA_BLOCK
-    - MAGMA_BLOCK
-    - MAGMA_BLOCK
     - COPPER_BLOCK
+    - BLAZE_POWDER
+    - COPPER_BLOCK
+    - ENCHANTED_BOOK:EFFICIENCY:5
+    - NETHERITE_PICKAXE
+    - ENCHANTED_BOOK:EFFICIENCY:5
     - COPPER_BLOCK
     - MAGMA_BLOCK
+    - NETHERITE_PICKAXE
     - NETHERITE_LEGGINGS
-    - MAGMA_BLOCK
+    - NETHERITE_PICKAXE
+    - NAGMA_BLOCK
     - COPPER_BLOCK
-    - COPPER_BLOCK
-    - MAGMA_BLOCK
-    - MAGMA_BLOCK
-    - MAGMA_BLOCK
+    - ENCHANTED_BOOK:EFFICIENCY:5
+    - NETHERITE_PICKAXE
+    - ENCHANTED_BOOK:EFFICIENCY:5
     - COPPER_BLOCK
     - BLAZE_POWDER
     - COPPER_BLOCK
-    - COPPER_BLOCK
+    - MAGMA_BLOCK
     - COPPER_BLOCK
     - BLAZE_POWDER
 
-  # Copper Helmet
-  copper_helmet:
+  # Forge Helmet
+  forge_helmet:
     - WITHER_ROSE
-    - REDSTONE_BLOCK
-    - REDSTONE_BLOCK
-    - REDSTONE_BLOCK
+    - COPPER_BLOCK
+    - COPPER_BLOCK
+    - COPPER_BLOCK
     - WITHER_ROSE
-    - REDSTONE_BLOCK
-    - DIAMOND
+    - COPPER_BLOCK
+    - CONDUIT
     - FERMENTED_SPIDER_EYE
-    - DIAMOND
-    - REDSTONE_BLOCK
-    - REDSTONE_BLOCK
+    - CONDUIT
+    - COPPER_BLOCK
+    - COPPER_BLOCK
     - FERMENTED_SPIDER_EYE
-    - DIAMOND_HELMET
+    - NETHERITE_HELMET
     - FERMENTED_SPIDER_EYE
-    - REDSTONE_BLOCK
-    - REDSTONE_BLOCK
-    - DIAMOND
+    - COPPER_BLOCK
+    - COPPER_BLOCK
+    - CONDUIT
     - FERMENTED_SPIDER_EYE
-    - DIAMOND
-    - REDSTONE_BLOCK
+    - CONDUIT
+    - COPPER_BLOCK
     - WITHER_ROSE
-    - REDSTONE_BLOCK
-    - REDSTONE_BLOCK
-    - REDSTONE_BLOCK
+    - COPPER_BLOCK
+    - COPPER_BLOCK
+    - COPPER_BLOCK
     - WITHER_ROSE
 
   # Lantern of Lost Names

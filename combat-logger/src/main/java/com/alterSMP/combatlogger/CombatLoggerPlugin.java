@@ -18,6 +18,10 @@ public class CombatLoggerPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(combatManager, this);
 
+        // Register commands
+        getCommand("togglecombat").setExecutor(new ToggleCombatTimerCommand(this));
+        getCommand("togglepvp").setExecutor(new TogglePvPCommand(this));
+
         getLogger().info("CombatLogger enabled!");
     }
 

@@ -37,7 +37,19 @@
       "Bash(timeout /t 3 /nobreak)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar build --no-daemon --rerun-tasks)",
       "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:build --no-daemon)",
-      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :combat-logger:build --no-daemon)"
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :combat-logger:build --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:shadowJar --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:clean :legendary-weapons:shadowJar --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:shadowJar --no-daemon --rerun-tasks)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:compileJava --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:shadowJar :combat-logger:shadowJar --no-daemon --rerun-tasks)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:shadowJar :combat-logger:shadowJar --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :combat-logger:shadowJar --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :combat-logger:shadowJar --no-daemon --rerun-tasks)",
+      "Bash(cmd.exe /c \"rmdir /s /q combat-logger\\build 2>nul\")",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :combat-logger:shadowJar :legendary-weapons:shadowJar --no-daemon)",
+      "Bash(\"/c/Program Files/Zulu/zulu-21/bin/java\" -jar gradle/wrapper/gradle-wrapper.jar :legendary-weapons:clean :legendary-weapons:shadowJar --no-daemon --rerun-tasks)",
+      "Bash(cmd.exe /c \"rmdir /s /q legendary-weapons\\build 2>nul\")"
     ],
     "deny": [],
     "ask": []

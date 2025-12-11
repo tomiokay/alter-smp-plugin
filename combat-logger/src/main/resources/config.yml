@@ -6,6 +6,9 @@ combat-duration: 30
 # Riptide cooldown in combat (in seconds)
 riptide-cooldown: 15
 
+# Mace cooldown (in seconds) - applies globally, not just in combat
+mace-cooldown: 60
+
 # Messages
 messages:
   combat-start: "&c&l⚔ You are now in combat! Don't log out for %time% seconds."
@@ -15,3 +18,6 @@ messages:
   elytra-blocked: "&c✗ You cannot use elytra while in combat!"
   riptide-cooldown: "&c✗ Riptide on cooldown! %remaining%s remaining"
   riptide-used: "&e⚠ Riptide used! %cooldown%s cooldown in combat."
+  mace-cooldown: "&c✗ Mace on cooldown! %remaining%s remaining"
+  mace-used: "&e⚠ Mace used! %cooldown%s cooldown."
+  mace-unenchantable: "&c✗ Maces cannot be enchanted!"

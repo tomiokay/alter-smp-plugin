@@ -15,6 +15,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRiptideEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
+import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
@@ -26,10 +29,14 @@ public class CombatManager implements Listener {
     private final CombatLoggerPlugin plugin;
     private final Map<UUID, Long> combatTagged = new HashMap<>();
     private final Map<UUID, Long> riptideCooldown = new HashMap<>();
+    private final Map<UUID, Long> maceCooldown = new HashMap<>();
+    private final java.util.Set<UUID> combatTimerDisabled = new java.util.HashSet<>();
+    private boolean pvpEnabled = true;
 
     // Config values
     private long combatTagDuration;
     private long riptideCooldownTime;
+    private long maceCooldownTime;
 
     public CombatManager(CombatLoggerPlugin plugin) {
         this.plugin = plugin;
@@ -40,25 +47,59 @@ public class CombatManager implements Listener {
     private void loadConfig() {
         combatTagDuration = plugin.getConfig().getLong("combat-duration", 30) * 1000;
         riptideCooldownTime = plugin.getConfig().getLong("riptide-cooldown", 15) * 1000;
+        maceCooldownTime = plugin.getConfig().getLong("mace-cooldown", 60) * 1000; // 1 minute default
     }
 
     /**
      * Start the action bar display task
+     * NOTE: Combat timer is now displayed by LegendaryWeapons plugin in its action bar
+     * This task is disabled for performance - combat display is handled there
      */
     private void startActionBarTask() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (isInCombat(player)) {
-                        int remaining = getRemainingCombatTime(player.getUniqueId());
-                        String barColor = remaining > 10 ? "§c" : (remaining > 5 ? "§6" : "§4");
-                        String message = barColor + "⚔ COMBAT: " + remaining + "s ⚔";
-                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
-                    }
-                }
-            }
-        }.runTaskTimer(plugin, 0L, 10L); // Every 0.5 seconds
+        // Disabled - LegendaryWeapons plugin handles combat timer display in its action bar
+        // This prevents duplicate action bar updates and improves performance
+    }
+
+    /**
+     * Toggle combat timer display for a player
+     */
+    public boolean toggleCombatTimer(UUID playerId) {
+        if (combatTimerDisabled.contains(playerId)) {
+            combatTimerDisabled.remove(playerId);
+            return true; // Now enabled
+        } else {
+            combatTimerDisabled.add(playerId);
+            return false; // Now disabled
+        }
+    }
+
+    /**
+     * Check if combat timer is enabled for a player
+     */
+    public boolean isCombatTimerEnabled(UUID playerId) {
+        return !combatTimerDisabled.contains(playerId);
+    }
+
+    /**
+     * Toggle PvP on/off globally
+     */
+    public boolean togglePvP() {
+        pvpEnabled = !pvpEnabled;
+        return pvpEnabled;
+    }
+
+    /**
+     * Check if PvP is enabled
+     */
+    public boolean isPvPEnabled() {
+        return pvpEnabled;
+    }
+
+    /**
+     * Set PvP state
+     */
+    public void setPvPEnabled(boolean enabled) {
+        this.pvpEnabled = enabled;
     }
 
     /**
@@ -115,6 +156,34 @@ public class CombatManager implements Listener {
         combatTagged.remove(playerId);
     }
 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPvPDamage(EntityDamageByEntityEvent event) {
+        if (pvpEnabled) return; // PvP is on, don't block
+
+        Player attacker = null;
+        Player victim = null;
+
+        // Get attacker
+        if (event.getDamager() instanceof Player) {
+            attacker = (Player) event.getDamager();
+        } else if (event.getDamager() instanceof org.bukkit.entity.Projectile) {
+            org.bukkit.entity.Projectile proj = (org.bukkit.entity.Projectile) event.getDamager();
+            if (proj.getShooter() instanceof Player) {
+                attacker = (Player) proj.getShooter();
+            }
+        }
+
+        // Get victim
+        if (event.getEntity() instanceof Player) {
+            victim = (Player) event.getEntity();
+        }
+
+        // Block PvP damage if both are players
+        if (attacker != null && victim != null && !attacker.equals(victim)) {
+            event.setCancelled(true);
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
         Player attacker = null;
@@ -159,6 +228,7 @@ public class CombatManager implements Listener {
 
         combatTagged.remove(player.getUniqueId());
         riptideCooldown.remove(player.getUniqueId());
+        maceCooldown.remove(player.getUniqueId());
     }
 
     @EventHandler
@@ -166,6 +236,7 @@ public class CombatManager implements Listener {
         // Remove combat tag on death
         combatTagged.remove(event.getEntity().getUniqueId());
         riptideCooldown.remove(event.getEntity().getUniqueId());
+        maceCooldown.remove(event.getEntity().getUniqueId());
     }
 
     // ========== ENDER PEARL BLOCKING ==========
@@ -193,15 +264,25 @@ public class CombatManager implements Listener {
             event.setCancelled(true);
             player.sendMessage(ChatColor.RED + "✗ You cannot use elytra while in combat!");
 
-            // Force stop gliding after a tick (backup)
+            // Force stop gliding and kill momentum to prevent bunnyhopping
             new BukkitRunnable() {
+                int ticks = 0;
                 @Override
                 public void run() {
+                    if (ticks >= 5 || !player.isOnline()) {
+                        cancel();
+                        return;
+                    }
+                    // Force stop gliding
                     if (player.isGliding()) {
                         player.setGliding(false);
                     }
+                    // Kill horizontal momentum to prevent bunnyhopping
+                    org.bukkit.util.Vector vel = player.getVelocity();
+                    player.setVelocity(new org.bukkit.util.Vector(vel.getX() * 0.3, vel.getY(), vel.getZ() * 0.3));
+                    ticks++;
                 }
-            }.runTaskLater(plugin, 1L);
+            }.runTaskTimer(plugin, 0L, 1L);
         }
     }
 
@@ -210,6 +291,12 @@ public class CombatManager implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onRiptide(PlayerRiptideEvent event) {
         Player player = event.getPlayer();
+        ItemStack trident = event.getItem();
+
+        // Only apply cooldown if the trident has Riptide enchantment
+        if (trident == null || !trident.containsEnchantment(org.bukkit.enchantments.Enchantment.RIPTIDE)) {
+            return;
+        }
 
         if (!isInCombat(player)) return; // No restriction outside combat
 
@@ -218,7 +305,7 @@ public class CombatManager implements Listener {
         long now = System.currentTimeMillis();
 
         if (lastRiptide != null && (now - lastRiptide) < riptideCooldownTime) {
-            // Still on cooldown - cancel the riptide by stopping velocity multiple times
+            // Still on cooldown - cancel the riptide by stopping velocity
             long remaining = (riptideCooldownTime - (now - lastRiptide)) / 1000;
             player.sendMessage(ChatColor.RED + "✗ Riptide on cooldown! " + remaining + "s remaining");
 
@@ -241,6 +328,65 @@ public class CombatManager implements Listener {
         // Set cooldown
         riptideCooldown.put(playerId, now);
         int cooldownSeconds = (int) (riptideCooldownTime / 1000);
+
+        // Note: We don't set Material.TRIDENT cooldown anymore as it affects ALL tridents
+        // The internal cooldown tracking is sufficient
+
         player.sendMessage(ChatColor.YELLOW + "⚠ Riptide used! " + cooldownSeconds + "s cooldown in combat.");
+    }
+
+    // ========== MACE COOLDOWN ==========
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onMaceAttack(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player)) return;
+
+        Player player = (Player) event.getDamager();
+        if (player.getInventory().getItemInMainHand().getType() != Material.MACE) return;
+
+        UUID playerId = player.getUniqueId();
+        Long lastMace = maceCooldown.get(playerId);
+        long now = System.currentTimeMillis();
+
+        if (lastMace != null && (now - lastMace) < maceCooldownTime) {
+            // Still on cooldown - cancel the attack
+            long remaining = (maceCooldownTime - (now - lastMace)) / 1000;
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "✗ Mace on cooldown! " + remaining + "s remaining");
+            return;
+        }
+
+        // Set cooldown on successful hit
+        maceCooldown.put(playerId, now);
+        int cooldownSeconds = (int) (maceCooldownTime / 1000);
+
+        // Set visual cooldown on the mace (like ender pearls)
+        int cooldownTicks = cooldownSeconds * 20; // Convert seconds to ticks
+        player.setCooldown(Material.MACE, cooldownTicks);
+
+        player.sendMessage(ChatColor.YELLOW + "⚠ Mace used! " + cooldownSeconds + "s cooldown.");
+    }
+
+    // ========== MACE UNENCHANTABLE ==========
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEnchantMace(PrepareItemEnchantEvent event) {
+        if (event.getItem().getType() == Material.MACE) {
+            event.setCancelled(true);
+            event.getEnchanter().sendMessage(ChatColor.RED + "✗ Maces cannot be enchanted!");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onAnvilMace(PrepareAnvilEvent event) {
+        if (event.getInventory().getFirstItem() != null &&
+            event.getInventory().getFirstItem().getType() == Material.MACE) {
+            event.setResult(null);
+            // Can't send message here easily, but the result being null prevents it
+        }
+        if (event.getInventory().getSecondItem() != null &&
+            event.getInventory().getSecondItem().getType() == Material.MACE) {
+            event.setResult(null);
+        }
     }
 }
