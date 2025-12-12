@@ -1523,7 +1523,7 @@ public class AbilityManager implements Listener {
                     world.spawnParticle(Particle.SOUL_FIRE_FLAME, pullStart, 2, 0.1, 0.1, 0.1, 0.05);
                 }
 
-                // Pull entities (unchanged - this is gameplay)
+                // Pull entities - adds to velocity so they can still be hit/knocked back
                 for (Entity entity : world.getNearbyEntities(riftLocation, 10, 10, 10)) {
                     if (entity instanceof LivingEntity && entity != player) {
                         if (entity instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) entity)) {
@@ -1532,8 +1532,10 @@ public class AbilityManager implements Listener {
 
                         double distance = entity.getLocation().distance(riftLocation);
                         Vector dir = riftLocation.toVector().subtract(entity.getLocation().toVector()).normalize();
-                        double pullStrength = Math.min(0.8, 5.0 / (distance + 1));
-                        entity.setVelocity(dir.multiply(pullStrength));
+                        double pullStrength = Math.min(0.5, 3.0 / (distance + 1));
+                        // Add pull to current velocity instead of overriding (allows hits/knockback)
+                        Vector currentVel = entity.getVelocity();
+                        entity.setVelocity(currentVel.add(dir.multiply(pullStrength)));
 
                         if (distance < 2.5) {
                             LivingEntity living = (LivingEntity) entity;
