@@ -148,7 +148,7 @@ public class RestrictedItemsListener implements Listener {
 
             // Send warning message (only occasionally to not spam)
             if (Math.random() < 0.1) { // 10% chance to show message
-                player.sendMessage(ChatColor.RED + "Your non-legendary netherite armor provides no protection!");
+                player.sendMessage(ChatColor.RED + "Netherite armor provides no protection!");
             }
         }
     }
