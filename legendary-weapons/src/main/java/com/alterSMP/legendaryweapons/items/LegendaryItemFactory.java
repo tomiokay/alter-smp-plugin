@@ -271,7 +271,7 @@ public class LegendaryItemFactory {
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Star Rift Slash (25s)");
                 lore.add(ChatColor.GRAY + "  30-block beam through walls");
-                lore.add(ChatColor.GRAY + "  ~7 hearts through Prot 4");
+                lore.add(ChatColor.GRAY + "  High damage piercing attack");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Stargate Blink (45s)");
                 lore.add(ChatColor.GRAY + "  Teleport up to 45 blocks");
                 break;
@@ -289,15 +289,15 @@ public class LegendaryItemFactory {
                 break;
 
             case TEMPESTBREAKER_SPEAR:
-                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Windwalker");
-                lore.add(ChatColor.GRAY + "  Dolphin's Grace in water");
+                lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Storm's Fury");
+                lore.add(ChatColor.GRAY + "  Trident strikes lightning on throw");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Gale Throw (25s)");
                 lore.add(ChatColor.GRAY + "  Wind vortex pulls enemies in");
-                lore.add(ChatColor.GRAY + "  ~5 hearts damage, levitation");
+                lore.add(ChatColor.GRAY + "  Deals damage + levitation");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Stormcall (50s)");
                 lore.add(ChatColor.GRAY + "  8-block lightning storm for 2s");
-                lore.add(ChatColor.GRAY + "  ~3 hearts per strike, slowness");
+                lore.add(ChatColor.GRAY + "  Multiple strikes + slowness");
                 break;
 
             case THOUSAND_DEMON_DAGGERS:
@@ -306,10 +306,10 @@ public class LegendaryItemFactory {
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Shadowstep (20s)");
                 lore.add(ChatColor.GRAY + "  Teleport behind target (15 blocks)");
-                lore.add(ChatColor.GRAY + "  Next attack: +1 heart true damage");
+                lore.add(ChatColor.GRAY + "  Next attack deals bonus true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Soul Mark (60s)");
                 lore.add(ChatColor.GRAY + "  Mark target for 15s");
-                lore.add(ChatColor.GRAY + "  All hits deal +4 hearts true damage");
+                lore.add(ChatColor.GRAY + "  All hits deal bonus true damage");
                 break;
 
             case DIVINE_AXE_RHITTA:
@@ -319,9 +319,9 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Nature Grasp (35s)");
                 lore.add(ChatColor.GRAY + "  Root enemies in place for 2s (6 blocks)");
                 lore.add(ChatColor.GRAY + "  Frozen in place, no knockback");
-                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Forest Shield (70s)");
-                lore.add(ChatColor.GRAY + "  Axe becomes Breach V weapon");
-                lore.add(ChatColor.GRAY + "  Shreds shields for 15s");
+                lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Verdant Cyclone (70s)");
+                lore.add(ChatColor.GRAY + "  360 spin attack with knockback");
+                lore.add(ChatColor.GRAY + "  Hits all enemies in 5-block radius");
                 break;
 
             case CHAINS_OF_ETERNITY:
@@ -364,7 +364,7 @@ public class LegendaryItemFactory {
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Time Distortion (40s)");
                 lore.add(ChatColor.GRAY + "  6-block bubble freezes enemies 3s");
-                lore.add(ChatColor.GRAY + "  Ends with 4 hearts true damage");
+                lore.add(ChatColor.GRAY + "  Deals true damage when freeze ends");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Chrono Shift (120s)");
                 lore.add(ChatColor.GRAY + "  Mark position, recast to return");
                 lore.add(ChatColor.GRAY + "  Clears debuffs, grants Speed II");
@@ -372,13 +372,13 @@ public class LegendaryItemFactory {
 
             case SOUL_DEVOURER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Soul Collector");
-                lore.add(ChatColor.GRAY + "  +1 heart dmg per player kill (max 5)");
+                lore.add(ChatColor.GRAY + "  Bonus damage per player kill (max 5)");
                 lore.add(ChatColor.GRAY + "  Souls lost on death");
                 lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/5");
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Void Slice (30s)");
                 lore.add(ChatColor.GRAY + "  8-block void crescent attack");
-                lore.add(ChatColor.GRAY + "  ~3 hearts + wither effect");
+                lore.add(ChatColor.GRAY + "  Deals damage + wither effect");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Void Rift (85s)");
                 lore.add(ChatColor.GRAY + "  Black hole for 5s (10 blocks)");
                 lore.add(ChatColor.GRAY + "  Pulls and damages all nearby");
@@ -393,10 +393,10 @@ public class LegendaryItemFactory {
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (30s)");
                 lore.add(ChatColor.GRAY + "  12-block purple blade arc");
-                lore.add(ChatColor.GRAY + "  ~3 hearts + Weakness + Levitation");
+                lore.add(ChatColor.GRAY + "  Weakness + Levitation effect");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Dragon Dash (120s)");
                 lore.add(ChatColor.GRAY + "  15-block dash through enemies");
-                lore.add(ChatColor.GRAY + "  ~4 hearts damage + 0.5s stun");
+                lore.add(ChatColor.GRAY + "  Damages + stuns enemies hit");
                 break;
 
             case FORGE_PICKAXE:
@@ -409,7 +409,7 @@ public class LegendaryItemFactory {
             case FORGE_CHESTPLATE:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Storm Strike");
                 lore.add(ChatColor.GRAY + "  Every 10 hits: lightning strike");
-                lore.add(ChatColor.GRAY + "  ~2.5 hearts through Prot 4");
+                lore.add(ChatColor.GRAY + "  Deals bonus lightning damage");
                 break;
 
             case FORGE_LEGGINGS:
