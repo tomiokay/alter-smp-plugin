@@ -596,6 +596,8 @@ public class AbilityManager implements Listener {
         // Play attack animation
         player.swingMainHand();
 
+        Set<LivingEntity> rooted = new HashSet<>();
+
         for (Entity entity : player.getNearbyEntities(6, 6, 6)) {
             if (entity instanceof LivingEntity) {
                 // Trust check
@@ -606,9 +608,10 @@ public class AbilityManager implements Listener {
                 }
 
                 LivingEntity living = (LivingEntity) entity;
+                rooted.add(living);
 
-                living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 255));
-                living.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 40, 128));
+                // Store their location to freeze them in place
+                Location frozenLoc = living.getLocation().clone();
 
                 // Enhanced particles
                 living.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, living.getLocation(), 120, 0.5, 1, 0.5, 0);
@@ -619,6 +622,27 @@ public class AbilityManager implements Listener {
                 if (living instanceof Player) {
                     ((Player) living).sendMessage(ChatColor.RED + "⚔ Hit by " + ChatColor.GREEN + "Nature Grasp" + ChatColor.RED + " from " + player.getName() + "!");
                 }
+
+                // Freeze them in place for 2 seconds (40 ticks) - teleport back every tick
+                new BukkitRunnable() {
+                    int ticks = 0;
+                    @Override
+                    public void run() {
+                        if (ticks >= 40 || living.isDead() || !living.isValid()) {
+                            cancel();
+                            return;
+                        }
+                        // Teleport back to frozen location (keeps them in place, cancels knockback)
+                        living.teleport(frozenLoc);
+                        living.setVelocity(new Vector(0, 0, 0));
+
+                        // Small particle effect while rooted
+                        if (ticks % 5 == 0) {
+                            living.getWorld().spawnParticle(Particle.COMPOSTER, living.getLocation().add(0, 0.5, 0), 5, 0.3, 0.3, 0.3, 0);
+                        }
+                        ticks++;
+                    }
+                }.runTaskTimer(plugin, 0L, 1L);
             }
         }
 
@@ -1418,8 +1442,12 @@ public class AbilityManager implements Listener {
                         continue;
                     }
                     LivingEntity living = (LivingEntity) entity;
-                    dealAbilityDamage(living, 20.0, player);
+                    // 3 hearts through full Prot 4 diamond (~15 raw damage)
+                    dealAbilityDamage(living, 15.0, player);
                     hitEntities.add(entity.getUniqueId());
+
+                    // Wither effect
+                    living.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 60, 1)); // 3 seconds of wither II
 
                     // Soul particles on hit
                     world.spawnParticle(Particle.SOUL, living.getLocation().add(0, 1, 0), 15, 0.3, 0.4, 0.3, 0.08);

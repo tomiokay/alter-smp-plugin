@@ -132,21 +132,17 @@ public class PassiveEffectManager implements Listener {
 
         switch (type) {
             case HOLY_MOONLIGHT_SWORD:
-                // Lunar Blessing - Moon Phase Buffs (applied passively while holding)
-                long time = player.getWorld().getFullTime();
-                int moonPhase = (int) ((time / 24000) % 8);
+                // Lunar Blessing - Strength III only during full moon at NIGHT
+                long fullTime = player.getWorld().getFullTime();
+                int moonPhase = (int) ((fullTime / 24000) % 8);
+                long timeOfDay = player.getWorld().getTime(); // 0-24000, night is 13000-23000
+                boolean isNight = timeOfDay >= 13000 && timeOfDay <= 23000;
 
-                if (moonPhase == 0) {
-                    // Full Moon - Strength III
+                if (moonPhase == 0 && isNight) {
+                    // Full Moon at night - Strength III
                     player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 50, 2, true, false));
-                } else if (moonPhase == 1 || moonPhase == 7) {
-                    // Waxing/Waning Gibbous - Speed I
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 50, 0, true, false));
-                } else if (moonPhase == 2 || moonPhase == 6) {
-                    // First/Last Quarter - Strength I
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 50, 0, true, false));
                 }
-                // Crescent (3, 5) and New Moon (4) - no buff
+                // No buffs during day or other moon phases
                 break;
 
             case TEMPESTBREAKER_SPEAR:
@@ -313,32 +309,7 @@ public class PassiveEffectManager implements Listener {
             }
         }
 
-        // Holy Moonlight Sword - Moon Phase Buffs
-        if (type == LegendaryType.HOLY_MOONLIGHT_SWORD) {
-            // Get moon phase (0 = full moon, 4 = new moon)
-            long time = player.getWorld().getFullTime();
-            int moonPhase = (int) ((time / 24000) % 8);
-
-            // Apply effects based on moon phase
-            if (moonPhase == 0) {
-                // Full Moon - Strength III + white hit effect
-                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, 2, true, false));
-
-                // White particle effect on hit
-                if (event.getEntity() instanceof LivingEntity) {
-                    Location hitLoc = event.getEntity().getLocation().add(0, 1, 0);
-                    player.getWorld().spawnParticle(Particle.END_ROD, hitLoc, 15, 0.3, 0.3, 0.3, 0.1);
-                    player.getWorld().spawnParticle(Particle.FIREWORK, hitLoc, 8, 0.2, 0.2, 0.2, 0.05);
-                }
-            } else if (moonPhase == 1 || moonPhase == 7) {
-                // Waxing/Waning Gibbous - Speed I
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 0, true, false));
-            } else if (moonPhase == 2 || moonPhase == 6) {
-                // First/Last Quarter - Strength I
-                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, 0, true, false));
-            }
-            // Crescent (3, 5) and New Moon (4) - no buff
-        }
+        // Holy Moonlight Sword - passive buffs applied in applyMainHandPassive, no melee effects
 
         // Chrono Blade - Freeze every 20th hit
         if (type == LegendaryType.CHRONO_BLADE) {
