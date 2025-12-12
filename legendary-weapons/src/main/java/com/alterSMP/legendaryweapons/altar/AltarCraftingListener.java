@@ -6,6 +6,8 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -57,6 +59,21 @@ public class AltarCraftingListener implements Listener {
             if (isGridSlot || slot == outputSlot) {
                 // If clicking output slot
                 if (slot == outputSlot) {
+                    // Block placing items INTO the output slot (only allow taking)
+                    InventoryAction action = event.getAction();
+                    ItemStack cursor = event.getCursor();
+
+                    // If trying to place an item into output slot, cancel it
+                    if (cursor != null && cursor.getType() != org.bukkit.Material.AIR) {
+                        if (action == InventoryAction.PLACE_ALL ||
+                            action == InventoryAction.PLACE_ONE ||
+                            action == InventoryAction.PLACE_SOME ||
+                            action == InventoryAction.SWAP_WITH_CURSOR) {
+                            event.setCancelled(true);
+                            return;
+                        }
+                    }
+
                     handleOutputClick(event, player);
                 } else {
                     // Normal grid interaction - update result after a tick
@@ -68,6 +85,42 @@ public class AltarCraftingListener implements Listener {
                 // Clicking on decoration - cancel
                 event.setCancelled(true);
             }
+
+        // Handle shift-click from player inventory - block if it would go to output slot
+        } else if (slot >= 54 && event.isShiftClick()) {
+            // Shift-clicking from player inventory into the forge
+            // We need to make sure items don't go into the output slot
+            // The output slot should never receive items via shift-click
+            // Since shift-click tries to put items in available slots,
+            // and we want it to only go to grid slots, we handle it manually
+
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem == null || clickedItem.getType() == org.bukkit.Material.AIR) {
+                return;
+            }
+
+            // Cancel the default behavior
+            event.setCancelled(true);
+
+            // Manually place the item in an empty grid slot
+            int[] gridSlots = AltarInteractListener.getGridSlots();
+            Inventory inv = event.getInventory();
+
+            for (int gridSlot : gridSlots) {
+                ItemStack slotItem = inv.getItem(gridSlot);
+                if (slotItem == null || slotItem.getType() == org.bukkit.Material.AIR) {
+                    // Found empty slot, move item there
+                    inv.setItem(gridSlot, clickedItem.clone());
+                    clickedItem.setAmount(0);
+
+                    // Update crafting result
+                    plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                        updateCraftingResult(inv, player);
+                    }, 1L);
+                    return;
+                }
+            }
+            // No empty grid slots - item stays in player inventory
         }
     }
 
