@@ -1907,46 +1907,10 @@ public class AbilityManager implements Listener {
                 }
             }
 
-            // Chrono Blade - Time Slow passive (first hit applies slow, 20s cooldown per target)
-            String legendaryId = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInMainHand());
-            if (legendaryId != null && legendaryId.equals(LegendaryType.CHRONO_BLADE.getId())) {
-                if (event.getEntity() instanceof LivingEntity) {
-                    LivingEntity target = (LivingEntity) event.getEntity();
-
-                    // Trust check
-                    if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
-                        // Skip trusted players
-                    } else {
-                        UUID playerUUID = player.getUniqueId();
-                        UUID targetUUID = target.getUniqueId();
-
-                        // Check cooldown for this specific target
-                        Map<UUID, Long> targetCooldowns = timeSlowCooldowns.computeIfAbsent(playerUUID, k -> new HashMap<>());
-                        long now = System.currentTimeMillis();
-                        Long lastSlowed = targetCooldowns.get(targetUUID);
-
-                        if (lastSlowed == null || now - lastSlowed >= 20000) { // 20 second cooldown
-                            // Apply Time Slow - 20% slower movement and attack speed for 3 seconds
-                            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 0, true, true)); // Slowness I = 20% slower
-                            target.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 60, 0, true, true)); // Approximates attack speed reduction
-
-                            // Record cooldown
-                            targetCooldowns.put(targetUUID, now);
-
-                            // Particles
-                            target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation().add(0, 1, 0), 30, 0.3, 0.5, 0.3, 0.1);
-                            target.getWorld().spawnParticle(Particle.REVERSE_PORTAL, target.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3, 0.3);
-                            player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.5f, 1.5f);
-
-                            if (target instanceof Player) {
-                                ((Player) target).sendMessage(ChatColor.YELLOW + "⏳ Time Slow! Movement and attack speed reduced!");
-                            }
-                        }
-                    }
-                }
-            }
+            // Chrono Blade - Time Slow passive removed (now uses 20-hit freeze in PassiveEffectManager)
 
             // Voidrender - bonus damage based on soul count (+1 damage per soul)
+            String legendaryId = LegendaryItemFactory.getLegendaryId(player.getInventory().getItemInMainHand());
             if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
                 int soulCount = LegendaryItemFactory.getSoulCount(player.getInventory().getItemInMainHand());
                 if (soulCount > 0 && event.getEntity() instanceof LivingEntity) {

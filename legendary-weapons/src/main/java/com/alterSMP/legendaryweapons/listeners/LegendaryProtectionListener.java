@@ -124,7 +124,27 @@ public class LegendaryProtectionListener implements Listener {
         // Prevent putting legendaries in bundles (bundle slot interaction)
         ItemStack currentItem = event.getCurrentItem();
         if (currentItem != null && currentItem.getType().name().contains("BUNDLE")) {
+            // Block clicking on bundle with legendary on cursor (right-click to insert)
             if (isLegendary(cursor)) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.RED + "Legendary items cannot be stored in bundles!");
+                return;
+            }
+        }
+
+        // Also block right-clicking a legendary onto a bundle
+        if (cursor != null && cursor.getType().name().contains("BUNDLE")) {
+            if (isLegendary(currentItem)) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.RED + "Legendary items cannot be stored in bundles!");
+                return;
+            }
+        }
+
+        // Block swapping legendary with bundle contents
+        if (isLegendary(cursor) || isLegendary(currentItem)) {
+            ItemStack other = isLegendary(cursor) ? currentItem : cursor;
+            if (other != null && other.getType().name().contains("BUNDLE")) {
                 event.setCancelled(true);
                 player.sendMessage(ChatColor.RED + "Legendary items cannot be stored in bundles!");
                 return;
