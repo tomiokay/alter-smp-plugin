@@ -13,8 +13,15 @@ commands:
     description: Toggle PvP on/off server-wide (broadcasts to all players)
     usage: /togglepvp
     permission: combatlogger.togglepvp
+  combattag:
+    description: Put a player in combat
+    usage: /combattag <player>
+    permission: combatlogger.combattag
 
 permissions:
   combatlogger.togglepvp:
     description: Allows toggling PvP on/off
+    default: op
+  combatlogger.combattag:
+    description: Allows putting players in combat
     default: op
