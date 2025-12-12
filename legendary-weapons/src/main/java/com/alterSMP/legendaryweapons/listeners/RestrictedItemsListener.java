@@ -11,11 +11,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityResurrectEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -25,7 +29,7 @@ import java.util.Set;
  * Legendary netherite items are allowed.
  *
  * Restrictions:
- * - Armor: Can be equipped but provides NO protection (damage isn't reduced)
+ * - Armor: Cannot be equipped at all
  * - Weapons: Cannot deal damage (but can be held)
  * - Tools: Cannot mine/break blocks (but can be held)
  */
@@ -67,6 +71,12 @@ public class RestrictedItemsListener implements Listener {
         Material.NETHERITE_HOE
     );
 
+    // Armor slot indices in player inventory
+    private static final int HELMET_SLOT = 39;
+    private static final int CHESTPLATE_SLOT = 38;
+    private static final int LEGGINGS_SLOT = 37;
+    private static final int BOOTS_SLOT = 36;
+
     /**
      * Check if an item is a restricted netherite item (non-legendary netherite)
      */
@@ -89,18 +99,21 @@ public class RestrictedItemsListener implements Listener {
     }
 
     /**
-     * Check if a player is wearing any restricted netherite armor
+     * Check if an item is restricted netherite armor
      */
-    private boolean isWearingRestrictedNetheriteArmor(Player player) {
-        ItemStack helmet = player.getInventory().getHelmet();
-        ItemStack chest = player.getInventory().getChestplate();
-        ItemStack legs = player.getInventory().getLeggings();
-        ItemStack boots = player.getInventory().getBoots();
+    private boolean isRestrictedNetheriteArmor(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) {
+            return false;
+        }
+        return isRestrictedNetherite(item) && NETHERITE_ARMOR.contains(item.getType());
+    }
 
-        return (isRestrictedNetherite(helmet) && NETHERITE_ARMOR.contains(helmet.getType())) ||
-               (isRestrictedNetherite(chest) && NETHERITE_ARMOR.contains(chest.getType())) ||
-               (isRestrictedNetherite(legs) && NETHERITE_ARMOR.contains(legs.getType())) ||
-               (isRestrictedNetherite(boots) && NETHERITE_ARMOR.contains(boots.getType()));
+    /**
+     * Check if a slot is an armor slot
+     */
+    private boolean isArmorSlot(int slot) {
+        return slot == HELMET_SLOT || slot == CHESTPLATE_SLOT ||
+               slot == LEGGINGS_SLOT || slot == BOOTS_SLOT;
     }
 
     /**
@@ -126,35 +139,7 @@ public class RestrictedItemsListener implements Listener {
     }
 
     /**
-     * Make restricted netherite armor provide NO protection.
-     * Instead of blocking equip, we just make the armor useless.
-     */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player)) {
-            return;
-        }
-
-        Player player = (Player) event.getEntity();
-
-        // Check if player is wearing restricted netherite armor
-        if (isWearingRestrictedNetheriteArmor(player)) {
-            // Get the original damage and set it as final damage (bypassing armor reduction)
-            double originalDamage = event.getDamage(EntityDamageEvent.DamageModifier.BASE);
-
-            // Set final damage to bypass armor protection from netherite
-            // This effectively makes the netherite armor provide 0 protection
-            event.setDamage(originalDamage);
-
-            // Send warning message (only occasionally to not spam)
-            if (Math.random() < 0.1) { // 10% chance to show message
-                player.sendMessage(ChatColor.RED + "Netherite armor provides no protection!");
-            }
-        }
-    }
-
-    /**
-     * Prevent totem in offhand via inventory click
+     * Block netherite armor from being equipped via inventory click
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryClick(InventoryClickEvent event) {
@@ -164,12 +149,124 @@ public class RestrictedItemsListener implements Listener {
 
         Player player = (Player) event.getWhoClicked();
         ItemStack cursor = event.getCursor();
-        int rawSlot = event.getRawSlot();
+        ItemStack currentItem = event.getCurrentItem();
+        int slot = event.getSlot();
+        ClickType clickType = event.getClick();
 
         // Check totem placement in offhand (raw slot 45)
-        if (isTotem(cursor) && rawSlot == 45) {
+        if (isTotem(cursor) && event.getRawSlot() == 45) {
             event.setCancelled(true);
             player.sendMessage(ChatColor.RED + "Totems of Undying are disabled on this server!");
+            updateInventoryLater(player);
+            return;
+        }
+
+        // Only check for player inventory armor slots
+        if (event.getClickedInventory() == null ||
+            event.getClickedInventory().getType() != InventoryType.PLAYER) {
+            return;
+        }
+
+        // Block placing restricted netherite armor in armor slots
+        if (isArmorSlot(slot)) {
+            // Placing item with cursor
+            if (isRestrictedNetheriteArmor(cursor)) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.RED + "Netherite armor cannot be equipped!");
+                updateInventoryLater(player);
+                return;
+            }
+
+            // Shift-click wouldn't place in armor slot if clicking on armor slot
+        }
+
+        // Handle shift-click from any slot to armor slot
+        if (clickType.isShiftClick() && isRestrictedNetheriteArmor(currentItem)) {
+            // Check if this armor would go to an armor slot
+            Material type = currentItem.getType();
+            if (type == Material.NETHERITE_HELMET || type == Material.NETHERITE_CHESTPLATE ||
+                type == Material.NETHERITE_LEGGINGS || type == Material.NETHERITE_BOOTS) {
+
+                // Check if the corresponding armor slot is empty (shift-click would fill it)
+                ItemStack targetSlot = null;
+                if (type == Material.NETHERITE_HELMET) {
+                    targetSlot = player.getInventory().getHelmet();
+                } else if (type == Material.NETHERITE_CHESTPLATE) {
+                    targetSlot = player.getInventory().getChestplate();
+                } else if (type == Material.NETHERITE_LEGGINGS) {
+                    targetSlot = player.getInventory().getLeggings();
+                } else if (type == Material.NETHERITE_BOOTS) {
+                    targetSlot = player.getInventory().getBoots();
+                }
+
+                if (targetSlot == null || targetSlot.getType() == Material.AIR) {
+                    event.setCancelled(true);
+                    player.sendMessage(ChatColor.RED + "Netherite armor cannot be equipped!");
+                    updateInventoryLater(player);
+                    return;
+                }
+            }
+        }
+
+        // Handle number key swap to armor slots
+        if (clickType == ClickType.NUMBER_KEY && isArmorSlot(slot)) {
+            int hotbarSlot = event.getHotbarButton();
+            ItemStack hotbarItem = player.getInventory().getItem(hotbarSlot);
+            if (isRestrictedNetheriteArmor(hotbarItem)) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.RED + "Netherite armor cannot be equipped!");
+                updateInventoryLater(player);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Block netherite armor from being equipped via drag
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) {
+            return;
+        }
+
+        Player player = (Player) event.getWhoClicked();
+        ItemStack draggedItem = event.getOldCursor();
+
+        if (!isRestrictedNetheriteArmor(draggedItem)) {
+            return;
+        }
+
+        // Check if any of the slots are armor slots
+        for (int slot : event.getRawSlots()) {
+            // Raw slots 5-8 are armor slots in player inventory view
+            if (slot >= 5 && slot <= 8) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.RED + "Netherite armor cannot be equipped!");
+                updateInventoryLater(player);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Block right-click equipping of netherite armor
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+
+        if (item == null) {
+            return;
+        }
+
+        // Check if trying to right-click equip netherite armor
+        if (isRestrictedNetheriteArmor(item)) {
+            if (event.getAction().name().contains("RIGHT")) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.RED + "Netherite armor cannot be equipped!");
+            }
         }
     }
 
@@ -201,7 +298,7 @@ public class RestrictedItemsListener implements Listener {
 
         if (isRestrictedNetherite(mainHand) && NETHERITE_WEAPONS.contains(mainHand.getType())) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "Non-legendary netherite weapons cannot deal damage!");
+            player.sendMessage(ChatColor.RED + "Netherite weapons cannot deal damage!");
         }
     }
 
@@ -215,7 +312,7 @@ public class RestrictedItemsListener implements Listener {
 
         if (isRestrictedNetherite(mainHand) && NETHERITE_TOOLS.contains(mainHand.getType())) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "Non-legendary netherite tools cannot break blocks!");
+            player.sendMessage(ChatColor.RED + "Netherite tools cannot break blocks!");
         }
     }
 
@@ -229,7 +326,19 @@ public class RestrictedItemsListener implements Listener {
 
         if (isRestrictedNetherite(mainHand) && NETHERITE_TOOLS.contains(mainHand.getType())) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "Non-legendary netherite tools cannot mine blocks!");
+            player.sendMessage(ChatColor.RED + "Netherite tools cannot mine blocks!");
         }
+    }
+
+    /**
+     * Update player inventory on next tick to prevent ghost items
+     */
+    private void updateInventoryLater(Player player) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.updateInventory();
+            }
+        }.runTaskLater(plugin, 1L);
     }
 }
