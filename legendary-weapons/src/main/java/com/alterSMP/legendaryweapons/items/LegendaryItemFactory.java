@@ -373,7 +373,7 @@ public class LegendaryItemFactory {
 
             case SOUL_DEVOURER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Soul Collector");
-                lore.add(ChatColor.GRAY + "  +4 damage per player kill (max 5)");
+                lore.add(ChatColor.GRAY + "  +1 heart damage per player kill (max 5)");
                 lore.add(ChatColor.GRAY + "  Souls lost on death");
                 lore.add(ChatColor.DARK_PURPLE + "Souls: " + ChatColor.LIGHT_PURPLE + "0/5");
                 lore.add("");

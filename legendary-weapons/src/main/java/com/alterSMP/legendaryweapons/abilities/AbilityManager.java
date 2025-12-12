@@ -1913,7 +1913,7 @@ public class AbilityManager implements Listener {
                 }
             }
 
-            // Voidrender - bonus damage based on soul count (+2 damage per soul)
+            // Voidrender - bonus damage based on soul count (+1 damage per soul)
             if (legendaryId != null && legendaryId.equals(LegendaryType.SOUL_DEVOURER.getId())) {
                 int soulCount = LegendaryItemFactory.getSoulCount(player.getInventory().getItemInMainHand());
                 if (soulCount > 0 && event.getEntity() instanceof LivingEntity) {
@@ -1923,8 +1923,8 @@ public class AbilityManager implements Listener {
                     if (target instanceof Player && plugin.getTrustManager().isTrusted(player, (Player) target)) {
                         // Skip trusted players
                     } else {
-                        // +2 damage per soul (so +4 HP damage per soul)
-                        double bonusDamage = soulCount * 4.0; // 2 hearts = 4 HP per soul
+                        // +1 damage per soul (so +2 HP damage per soul)
+                        double bonusDamage = soulCount * 2.0; // 1 heart = 2 HP per soul
                         event.setDamage(event.getDamage() + bonusDamage);
 
                         // Soul particles on hit

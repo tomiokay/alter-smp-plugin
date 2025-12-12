@@ -129,7 +129,7 @@ damage:
   void_slice_damage: 5.0
   void_rift_damage: 3.0  # Per tick
   oblivion_max_souls: 5
-  oblivion_damage_per_soul: 2.0  # +2 damage per soul (max +10 at 5 souls)
+  oblivion_damage_per_soul: 1.0  # +1 damage per soul (max +5 at 5 souls)
 
   # Creation Splitter
   end_sever_damage: 4.0        # 2 hearts true damage
