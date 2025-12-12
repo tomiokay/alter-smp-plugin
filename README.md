@@ -35,85 +35,87 @@ Custom Minecraft plugin with **18 legendary items**, a **combat logger**, and **
 ### Swords
 
 #### Holy Moonlight Sword
-- **Passive: Flashburst Counter** - Every 20 hits blinds nearby enemies
-- **Ability 1: Star Rift Slash** (25s) - 30-block beam through walls
+- **Passive: Lunar Blessing** - Buffs based on moon phase:
+  - Full Moon: Strength III
+  - Gibbous: Speed I
+  - Quarter: Strength I
+- **Ability 1: Star Rift Slash** (25s) - 30-block beam through walls (~7 hearts through Prot IV)
 - **Ability 2: Stargate Blink** (45s) - Teleport up to 45 blocks
 
 #### Phoenix Grace
 - **Passive: Heat Shield** - Immune to fire and explosions
-- **Ability 1: Flame Harvest** (90s) - Deal 40% HP damage to nearby enemies, gain absorption per hit
-- **Ability 2: Fire Rebirth** (300s) - Cheat death for 10 seconds
+- **Ability 1: Flame Harvest** (30s) - 8-block fire explosion, grants 3 absorption hearts
+- **Ability 2: Fire Rebirth** (3min) - Survive death for 30s window, revive at 6 hearts with fire resistance
 
 #### Thousand Demon Daggers
 - **Passive: Shadow Presence** - Speed III while sneaking
-- **Ability 1: Shadowstep** (20s) - Teleport behind target, next attack deals +1 heart true damage
-- **Ability 2: Soul Mark** (60s) - Mark target for +4 hearts true damage per hit for 15 seconds
+- **Ability 1: Shadowstep** (20s) - Teleport behind target (15 blocks), next attack deals +1 heart true damage
+- **Ability 2: Soul Mark** (60s) - Mark target for 15s, all hits deal +4 hearts true damage
 
 #### Chrono Blade
-- **Passive: Time Slow** - First hit on each enemy slows them
+- **Passive: Time Freeze** - Every 20th melee hit freezes target for 3s
 - **Ability 1: Time Distortion** (40s) - 6-block bubble freezes enemies for 3s, then deals 4 hearts true damage
-- **Ability 2: Chrono Shift** (120s) - Mark position, re-cast to return (clears debuffs, grants Speed II)
+- **Ability 2: Chrono Shift** (120s) - Mark position, recast to return (clears debuffs, grants Speed II)
 
 #### Soul Devourer
 - **Passive: Soul Collector** - +1 heart damage per player kill (max 5 souls, lost on death)
-- **Ability 1: Void Slice** (30s) - 10-block void crescent attack with wither
+- **Ability 1: Void Slice** (30s) - 10-block void crescent attack (~6 hearts + wither)
 - **Ability 2: Void Rift** (85s) - Black hole for 5s that pulls and damages enemies
 
 #### Dragonborn Blade
 - **Passive: Dragon's Gaze** - Nearby enemies within 30 blocks glow
 - **Passive: Heart Steal** - Steal 1 heart per player kill (max 5). Victim permanently loses 1 heart. All stolen hearts return when you die.
-- **Ability 1: End Sever** (30s) - 12-block sweeping arc with Weakness and Levitation
-- **Ability 2: Dragon Dash** (120s) - Dash 15 blocks through enemies, dealing 4 hearts + stun
+- **Ability 1: End Sever** (30s) - Wide 12-block purple blade arc (~2.5 hearts + Weakness + Levitation)
+- **Ability 2: Dragon Dash** (120s) - 15-block dash through enemies, dealing 4 hearts + 0.5s stun each
 
 ---
 
 ### Other Weapons
 
 #### Tempestbreaker Spear (Trident)
-- **Passive: Storm's Fury** - Hits strike lightning (1 heart damage)
-- **Ability 1: Gale Throw** (25s) - Next throw creates wind vortex
-- **Ability 2: Stormcall** (50s) - 8-block lightning storm for 2 seconds
+- **Passive: Windwalker** - Dolphin's Grace and water breathing
+- **Ability 1: Gale Throw** (25s) - Wind vortex pulls enemies in (~3 hearts + levitation)
+- **Ability 2: Stormcall** (50s) - 8-block cone lightning strike (~5 hearts + 2s stun)
 
 #### Divine Axe Rhitta (Axe)
 - **Passive: Nature Channel** - Regeneration III on grass/logs/leaves
-- **Ability 1: Nature Grasp** (35s) - Root enemies in 6-block radius
-- **Ability 2: Verdant Cyclone** (70s) - 360 spin attack with knockback
+- **Ability 1: Nature Grasp** (35s) - Root enemies for 3s (8-block radius)
+- **Ability 2: Forest Shield** (70s) - Axe becomes Breach V weapon, shreds shields for 15s
 
 #### Chains of Eternity (Chain Weapon)
-- **Passive: Soul Links** - Every 5th hit immobilizes target
-- **Ability 1: Soul Bind** (35s) - Pull target, deal damage, and slow
-- **Ability 2: Prison of the Damned** (65s) - Cage target in iron bars for 5 seconds
+- **Passive: Eternal Resilience** - Resistance I while holding (main or offhand)
+- **Ability 1: Soul Bind** (35s) - Pull target to you (20 blocks), deals damage + Slowness V for 3s
+- **Ability 2: Prison of the Damned** (65s) - Cage target in unbreakable iron bars for 5s
 
 ---
 
 ### Shield
 
 #### Celestial Aegis Shield
-- **Passive: Aura of Protection** - You and trusted allies within 5 blocks gain Resistance I
-- **Ability 1: Radiant Block** (40s) - Reflect 75% damage for 5 seconds
-- **Ability 2: Heaven's Wall** (90s) - Summon 16x16 barrier for 32s (only trusted players can pass)
+- **Passive: Aura of Protection** - You and trusted allies within 5 blocks gain Resistance I (requires offhand)
+- **Ability 1: Radiant Block** (40s) - Reflect 75% damage for 5s
+- **Ability 2: Heaven's Wall** (90s) - 16x16 glass barrier for 32s (only trusted players can pass)
 
 ---
 
 ### Armor
 
 #### Copper Boots
-- **Passive: Featherfall** - No fall damage + permanent Speed II
-- **Ability: Meteor Slam** - Shift mid-air to slam down with mace-like AOE damage
+- **Passive: Featherfall** - Immune to fall damage + permanent Speed II
+- **Ability: Meteor Slam** - Shift mid-air to slam down with mace-like AOE damage (4-block radius, damage scales with height)
 
 #### Copper Chestplate
-- **Passive: Storm Strike** - Every 10 melee hits triggers lightning storm (~2.5 hearts through Prot IV)
+- **Passive: Lightning Storm** - Every 10 melee hits triggers lightning strike on target (~2.5 hearts through Prot IV)
 
 #### Copper Leggings
-- **Passive: Flamebound Feet** - Immune to fire, lava, and magma damage
-- **Passive: Flame Trail** - Walking leaves damaging flame trails
-- **Passive:** Haste I when above 50% HP
+- **Passive: Flamebound Feet** - Permanent Fire Resistance
+- **Passive:** Permanent Haste II
+- **Passive: Flame Trail** - Walking leaves damaging fire trails
 - **Passive:** Super speed in lava
 
 #### Copper Helmet
-- **Passive: Blood Harvest** - Player kills grant +5 hearts for 5 minutes
-- **Passive: Critical Rush** - Critical hits grant Speed I for 3 seconds
-- **Passive: Water Mobility** - Dolphin's Grace + Conduit Power
+- **Passive: Blood Harvest** - Player kills grant +5 max hearts for 5 minutes
+- **Passive: Aqua Abilities** - Permanent Conduit Power and Dolphin's Grace
 
 ---
 
@@ -127,26 +129,26 @@ Custom Minecraft plugin with **18 legendary items**, a **combat logger**, and **
 
 ### Utility Items
 
-#### Lantern of Lost Names (Soul Lantern - Offhand)
-- **Passive: Phantom Veil** - Invisible to players you've never killed
-- They cannot see you until you kill them once
-- Deactivates for 5 minutes after attacking
+#### Lantern of Lost Names (Soul Lantern - Main/Offhand)
+- **Passive: Phantom Veil** - Invisible to players you haven't killed yet
+- Attacking reveals you for 5 minutes
+- Strategic assassin tool
 
 #### Rift Key of the Endkeeper (Tripwire Hook)
-- **Ability: End Rift** (24h cooldown) - Open a portal to ANY coordinates
-- Rift stays open for 30 seconds
-- Usage: `/ability 1 <x> <y> <z>`
+- **Ability 1: Rift Teleport** (24h cooldown) - Teleport to any coordinates
+- Type coords in chat after activating: X Y Z
+- Cannot use while in combat
 
 #### Chaos Dice of Fate (Amethyst Shard)
-- **Ability 1: Roll Dice** (30min cooldown) - Random effect:
-  - +5 hearts for 15 minutes
-  - Summon 5 iron golems
-  - Speed III + Strength III for 10 minutes
-  - Jumble opponent's hotbar
-  - Free player scans for 20 minutes
-  - Insta-crit for 15 minutes
-  - Resistance II for 5 minutes
-- **Ability 2: Player Scan** (10s cooldown) - Shows all player locations
+- **Ability 1: Roll Dice** (30min) - Random powerful effect:
+  1. +5 hearts for 15 minutes
+  2. Summon 5 Iron Golems for 5 minutes
+  3. Speed III + Strength III for 10 minutes
+  4. Scramble enemy hotbar
+  5. Free player scans for 20 minutes
+  6. All attacks are crits for 15 minutes
+  7. Resistance II for 5 minutes
+- **Ability 2: Player Scan** (10s) - Only available with effect #5, shows all player locations
 
 ---
 

@@ -309,8 +309,8 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Teleport behind target (15 blocks)");
                 lore.add(ChatColor.GRAY + "  Next attack: +1 heart true damage");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Soul Mark (60s)");
-                lore.add(ChatColor.GRAY + "  Mark target for 10s");
-                lore.add(ChatColor.GRAY + "  All hits deal +2 true damage");
+                lore.add(ChatColor.GRAY + "  Mark target for 15s");
+                lore.add(ChatColor.GRAY + "  All hits deal +4 hearts true damage");
                 break;
 
             case DIVINE_AXE_RHITTA:
@@ -442,7 +442,7 @@ public class LegendaryItemFactory {
             case RIFT_KEY_OF_ENDKEEPER:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "None");
                 lore.add("");
-                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Rift Teleport (4h)");
+                lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "Rift Teleport (24h)");
                 lore.add(ChatColor.GRAY + "  Teleport to any coordinates");
                 lore.add(ChatColor.GRAY + "  Type coords in chat: X Y Z");
                 lore.add(ChatColor.GRAY + "  Cannot use while in combat");
