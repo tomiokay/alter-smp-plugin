@@ -68,7 +68,7 @@ public class PassiveEffectManager implements Listener {
                     applyPassiveEffects(player);
                 }
             }
-        }.runTaskTimer(plugin, 0L, 30L); // Every 1.5 seconds - optimized for performance
+        }.runTaskTimer(plugin, 0L, 40L); // Every 2 seconds - optimized for performance
     }
 
     /**
@@ -132,17 +132,27 @@ public class PassiveEffectManager implements Listener {
 
         switch (type) {
             case HOLY_MOONLIGHT_SWORD:
-                // Lunar Blessing - Strength III only during full moon at NIGHT
+                // Lunar Blessing - Effects based on moon phase at NIGHT
                 long fullTime = player.getWorld().getFullTime();
                 int moonPhase = (int) ((fullTime / 24000) % 8);
                 long timeOfDay = player.getWorld().getTime(); // 0-24000, night is 13000-23000
                 boolean isNight = timeOfDay >= 13000 && timeOfDay <= 23000;
 
-                if (moonPhase == 0 && isNight) {
-                    // Full Moon at night - Strength III
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 50, 2, true, false));
+                if (isNight) {
+                    // Moon phases: 0=full, 1=waning gibbous, 2=third quarter, 3=waning crescent,
+                    //              4=new, 5=waxing crescent, 6=first quarter, 7=waxing gibbous
+                    if (moonPhase == 0) {
+                        // Full Moon - Strength III
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 60, 2, true, false));
+                    } else if (moonPhase == 1 || moonPhase == 7) {
+                        // Gibbous moons (waning gibbous, waxing gibbous) - Speed I
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 0, true, false));
+                    } else if (moonPhase == 2 || moonPhase == 6) {
+                        // Quarter moons (third quarter, first quarter) - Strength I
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 60, 0, true, false));
+                    }
                 }
-                // No buffs during day or other moon phases
+                // No buffs during day
                 break;
 
             case TEMPESTBREAKER_SPEAR:
@@ -152,7 +162,7 @@ public class PassiveEffectManager implements Listener {
             case THOUSAND_DEMON_DAGGERS:
                 // Shadow Presence - Speed III while sneaking
                 if (player.isSneaking()) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 50, 2, true, false));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 2, true, false));
                 }
                 break;
 
@@ -162,7 +172,7 @@ public class PassiveEffectManager implements Listener {
                 Material belowType = below.getType();
                 if (belowType == Material.GRASS_BLOCK || belowType.name().contains("LOG") ||
                     belowType.name().contains("LEAVES")) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 50, 2, true, false));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 60, 2, true, false));
                 }
                 break;
 
@@ -172,26 +182,27 @@ public class PassiveEffectManager implements Listener {
 
             case DRAGONBORN_BLADE:
                 // Dragon's Gaze - Nearby enemies glow (30 block radius)
-                for (Entity entity : player.getNearbyEntities(30, 30, 30)) {
-                    if (entity instanceof Player) {
-                        Player target = (Player) entity;
-                        // Trust check
-                        if (plugin.getTrustManager().isTrusted(player, target)) {
-                            continue;
-                        }
-                        target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 50, 0, true, false));
+                // Optimized: only check online players instead of all entities
+                for (Player target : Bukkit.getOnlinePlayers()) {
+                    if (target.equals(player)) continue;
+                    if (target.getWorld() != player.getWorld()) continue;
+                    if (target.getLocation().distanceSquared(player.getLocation()) > 900) continue; // 30^2 = 900
+                    // Trust check
+                    if (plugin.getTrustManager().isTrusted(player, target)) {
+                        continue;
                     }
+                    target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 60, 0, true, false));
                 }
                 break;
 
             case PHEONIX_GRACE:
                 // Heat Shield - Permanent Fire Resistance
-                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 50, 0, true, false));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 60, 0, true, false));
                 break;
 
             case CHAINS_OF_ETERNITY:
                 // Eternal Resilience - Resistance I while holding
-                player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 60, 0, true, false));
                 break;
         }
     }
@@ -203,7 +214,7 @@ public class PassiveEffectManager implements Listener {
         if (type == LegendaryType.FORGE_BOOTS) {
             // Featherfall - No fall damage (handled in event listener)
             // Permanent Speed II
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 50, 1, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 1, true, false));
         }
     }
 
@@ -213,8 +224,8 @@ public class PassiveEffectManager implements Listener {
 
         if (type == LegendaryType.FORGE_HELMET) {
             // Water Mobility - Dolphin's Grace + Conduit Power
-            player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 50, 0, true, false));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 50, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 60, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 60, 0, true, false));
         }
     }
 
@@ -225,24 +236,24 @@ public class PassiveEffectManager implements Listener {
         if (type == LegendaryType.CELESTIAL_AEGIS_SHIELD) {
             // Aura of Protection - Self and trusted allies gain Resistance I
             // Apply to self first
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 60, 0, true, false));
 
-            // Apply to nearby trusted players
-            for (Entity entity : player.getNearbyEntities(5, 5, 5)) {
-                if (entity instanceof Player) {
-                    Player ally = (Player) entity;
-                    // Trust check - only help trusted allies
-                    if (!plugin.getTrustManager().isTrusted(player, ally)) {
-                        continue;
-                    }
-                    ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
+            // Apply to nearby trusted players (optimized - only check online players)
+            for (Player ally : Bukkit.getOnlinePlayers()) {
+                if (ally.equals(player)) continue;
+                if (ally.getWorld() != player.getWorld()) continue;
+                if (ally.getLocation().distanceSquared(player.getLocation()) > 25) continue; // 5^2 = 25
+                // Trust check - only help trusted allies
+                if (!plugin.getTrustManager().isTrusted(player, ally)) {
+                    continue;
                 }
+                ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 60, 0, true, false));
             }
         }
 
         if (type == LegendaryType.CHAINS_OF_ETERNITY) {
             // Eternal Resilience - Resistance I while holding in offhand
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 50, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 60, 0, true, false));
         }
     }
 

@@ -292,9 +292,9 @@ public class ArmorPassivesListener implements Listener {
         }
 
         // Haste II always
-        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 50, 1, true, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 60, 1, true, false));
         // Fire Resistance always
-        player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 50, 0, true, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 60, 0, true, false));
     }
 
     /**
