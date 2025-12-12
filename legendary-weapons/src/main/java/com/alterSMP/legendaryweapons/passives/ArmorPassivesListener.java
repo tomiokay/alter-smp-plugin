@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -382,6 +383,23 @@ public class ArmorPassivesListener implements Listener {
                 // Particles
                 player.getWorld().spawnParticle(Particle.CRIT, event.getEntity().getLocation(), 20, 0.3, 0.5, 0.3, 0);
             }
+        }
+    }
+
+    // ========== BLOOD HARVEST DEATH HANDLER ==========
+
+    @EventHandler
+    public void onPlayerDeathBloodHarvest(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        UUID playerId = player.getUniqueId();
+
+        // Check if player has Blood Harvest active (extra HP)
+        if (originalMaxHealth.containsKey(playerId)) {
+            double originalMax = originalMaxHealth.get(playerId);
+
+            // Restore original max health on death
+            player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(originalMax);
+            originalMaxHealth.remove(playerId);
         }
     }
 

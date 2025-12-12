@@ -296,8 +296,8 @@ public class LegendaryItemFactory {
                 lore.add(ChatColor.GRAY + "  Wind vortex pulls enemies in");
                 lore.add(ChatColor.GRAY + "  ~5 hearts damage, levitation");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Stormcall (50s)");
-                lore.add(ChatColor.GRAY + "  8-block cone lightning strike");
-                lore.add(ChatColor.GRAY + "  ~6 hearts, slowness");
+                lore.add(ChatColor.GRAY + "  8-block lightning storm for 2s");
+                lore.add(ChatColor.GRAY + "  ~3 hearts per strike, slowness");
                 break;
 
             case THOUSAND_DEMON_DAGGERS:
@@ -393,7 +393,7 @@ public class LegendaryItemFactory {
                 lore.add("");
                 lore.add(ChatColor.GREEN + "Ability 1: " + ChatColor.WHITE + "End Sever (30s)");
                 lore.add(ChatColor.GRAY + "  12-block purple blade arc");
-                lore.add(ChatColor.GRAY + "  ~2.5 hearts + Weakness + Levitation");
+                lore.add(ChatColor.GRAY + "  ~3 hearts + Weakness + Levitation");
                 lore.add(ChatColor.GREEN + "Ability 2: " + ChatColor.WHITE + "Dragon Dash (120s)");
                 lore.add(ChatColor.GRAY + "  15-block dash through enemies");
                 lore.add(ChatColor.GRAY + "  ~4 hearts damage + 0.5s stun");

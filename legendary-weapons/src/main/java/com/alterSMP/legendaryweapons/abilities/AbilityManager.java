@@ -428,8 +428,8 @@ public class AbilityManager implements Listener {
                         }
                         LivingEntity living = (LivingEntity) entity;
 
-                        // Deal high damage (~6 hearts through prot 4 = ~30 raw damage per strike)
-                        dealAbilityDamage(living, 30.0, player);
+                        // Deal damage (~3 hearts through prot 4 = ~15 raw damage per strike)
+                        dealAbilityDamage(living, 15.0, player);
                         living.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
 
                         // Notify victim once
@@ -1615,8 +1615,8 @@ public class AbilityManager implements Listener {
                     LivingEntity living = (LivingEntity) entity;
                     hitEntities.add(entity.getUniqueId());
 
-                    // 2.5 hearts damage through full Prot 4 diamond (~12.5 raw damage)
-                    dealAbilityDamage(living, 12.5, player);
+                    // 3 hearts damage through full Prot 4 diamond (~15 raw damage)
+                    dealAbilityDamage(living, 15.0, player);
                     living.setNoDamageTicks(0);
 
                     // Weakness for 4 seconds
@@ -1643,9 +1643,9 @@ public class AbilityManager implements Listener {
     }
 
     private boolean cataclysmPulse(Player player) {
-        // Dragon Dash - Smooth velocity-based dash in the direction player is facing (including up/down)
+        // Dragon Dash - Teleport-based dash that works on ground
         Location startLoc = player.getLocation();
-        Vector direction = startLoc.getDirection().normalize(); // Full 3D direction - can dash up/down!
+        Vector direction = startLoc.getDirection().setY(0).normalize(); // Horizontal dash only
         World world = startLoc.getWorld();
 
         Set<UUID> hitEntities = new HashSet<>();
@@ -1660,43 +1660,48 @@ public class AbilityManager implements Listener {
 
         player.sendMessage(ChatColor.DARK_PURPLE + "Dragon Dash!");
 
-        // Use velocity for smooth movement - 15 blocks over ~0.3 seconds (6 ticks)
-        // Velocity = distance / time in ticks * 20 (ticks per second)
-        // 15 blocks in 6 ticks = 15 / 6 * 20 = 50 blocks/second velocity
-        final double dashVelocity = 3.5; // Strong forward push
-        final int dashDuration = 6; // ticks
-
-        // Apply initial velocity boost (full 3D direction)
-        player.setVelocity(direction.clone().multiply(dashVelocity));
+        // Teleport-based dash - 15 blocks over 8 ticks
+        final int dashDuration = 8; // ticks
+        final double blocksPerTick = 15.0 / dashDuration;
 
         new BukkitRunnable() {
             int tick = 0;
-            Location lastLoc = startLoc.clone();
 
             @Override
             public void run() {
                 if (tick >= dashDuration || !player.isOnline()) {
                     // Final dragon roar at end
                     world.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 1.0f);
-                    // Stop momentum at end
-                    player.setVelocity(player.getVelocity().multiply(0.3));
                     cancel();
                     return;
                 }
 
-                // Keep pushing player in dash direction (full 3D - can go up/down)
-                Vector targetVel = direction.clone().multiply(dashVelocity);
-                // Apply full 3D velocity for directional dashing
-                player.setVelocity(targetVel);
+                // Calculate next position
+                Location currentLoc = player.getLocation();
+                Location nextLoc = currentLoc.clone().add(direction.clone().multiply(blocksPerTick));
 
-                // Check if we hit a wall (check in dash direction at feet and head level)
-                Location checkLoc = player.getLocation().add(direction.clone().multiply(0.5));
-                Location checkLocHead = checkLoc.clone().add(0, 1.8, 0);
-                if (!checkLoc.getBlock().isPassable() || !checkLocHead.getBlock().isPassable()) {
-                    player.setVelocity(new Vector(0, 0, 0));
+                // Keep the player's yaw and pitch
+                nextLoc.setYaw(currentLoc.getYaw());
+                nextLoc.setPitch(currentLoc.getPitch());
+
+                // Check if we hit a wall
+                if (!nextLoc.getBlock().isPassable() || !nextLoc.clone().add(0, 1, 0).getBlock().isPassable()) {
                     cancel();
                     return;
                 }
+
+                // Find safe ground (don't fall into void)
+                Location safeLoc = nextLoc.clone();
+                // Check if there's ground below (up to 3 blocks down)
+                for (int i = 0; i < 3; i++) {
+                    if (!safeLoc.clone().subtract(0, 1, 0).getBlock().isPassable()) {
+                        break; // Found ground
+                    }
+                    safeLoc.subtract(0, 1, 0);
+                }
+
+                // Teleport player
+                player.teleport(safeLoc);
 
                 // Purple witch trail behind player
                 Location trailLoc = player.getLocation().add(0, 1, 0);
@@ -1715,7 +1720,7 @@ public class AbilityManager implements Listener {
                     world.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 0.8f, 1.5f);
                 }
 
-                // Check for entities we pass through (wider hitbox for smooth dash)
+                // Check for entities we pass through
                 for (Entity entity : world.getNearbyEntities(player.getLocation(), 2.5, 2.5, 2.5)) {
                     if (entity instanceof LivingEntity && entity != player && !hitEntities.contains(entity.getUniqueId())) {
                         // Trust check
