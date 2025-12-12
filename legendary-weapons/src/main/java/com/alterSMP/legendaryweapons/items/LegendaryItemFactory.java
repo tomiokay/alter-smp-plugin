@@ -415,8 +415,6 @@ public class LegendaryItemFactory {
             case FORGE_LEGGINGS:
                 lore.add(ChatColor.AQUA + "Passive: " + ChatColor.WHITE + "Flamebound");
                 lore.add(ChatColor.GRAY + "  Fire Resistance + Haste II");
-                lore.add(ChatColor.GRAY + "  Flame trail when walking");
-                lore.add(ChatColor.GRAY + "  Super speed in lava");
                 break;
 
             case FORGE_HELMET:
