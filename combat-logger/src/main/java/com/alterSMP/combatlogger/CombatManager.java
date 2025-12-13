@@ -52,12 +52,22 @@ public class CombatManager implements Listener {
 
     /**
      * Start the action bar display task
-     * NOTE: Combat timer is now displayed by LegendaryWeapons plugin in its action bar
-     * This task is disabled for performance - combat display is handled there
      */
     private void startActionBarTask() {
-        // Disabled - LegendaryWeapons plugin handles combat timer display in its action bar
-        // This prevents duplicate action bar updates and improves performance
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (!isCombatTimerEnabled(player.getUniqueId())) continue;
+
+                    if (isInCombat(player.getUniqueId())) {
+                        int remaining = getRemainingCombatTime(player.getUniqueId());
+                        String message = ChatColor.RED + "⚔ Combat: " + ChatColor.WHITE + remaining + "s";
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 20L); // Every second
     }
 
     /**
