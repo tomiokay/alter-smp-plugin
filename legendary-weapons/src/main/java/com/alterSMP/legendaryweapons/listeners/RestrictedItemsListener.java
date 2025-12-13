@@ -16,9 +16,11 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareSmithingEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.SmithingInventory;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.EnumSet;
@@ -327,6 +329,26 @@ public class RestrictedItemsListener implements Listener {
         if (isRestrictedNetherite(mainHand) && NETHERITE_TOOLS.contains(mainHand.getType())) {
             event.setCancelled(true);
             player.sendMessage(ChatColor.RED + "Netherite tools cannot mine blocks!");
+        }
+    }
+
+    /**
+     * Block copper trim from being applied in smithing table
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onSmithingPrepare(PrepareSmithingEvent event) {
+        SmithingInventory inv = event.getInventory();
+
+        // Check if copper ingot is being used as trim material
+        ItemStack addition = inv.getItem(2); // Addition slot (trim material)
+        if (addition != null && addition.getType() == Material.COPPER_INGOT) {
+            event.setResult(null);
+
+            // Send message to player
+            if (event.getView().getPlayer() instanceof Player) {
+                Player player = (Player) event.getView().getPlayer();
+                player.sendMessage(ChatColor.RED + "Copper trim is disabled!");
+            }
         }
     }
 

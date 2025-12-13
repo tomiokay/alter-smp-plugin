@@ -10,8 +10,12 @@ import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ArmorMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.trim.ArmorTrim;
+import org.bukkit.inventory.meta.trim.TrimMaterial;
+import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.persistence.PersistentDataType;
 
 
@@ -57,6 +61,12 @@ public class LegendaryItemFactory {
             }
 
             item.setItemMeta(meta);
+
+            // Apply Silence Copper trim to Forge armor pieces
+            if (type == LegendaryType.FORGE_HELMET || type == LegendaryType.FORGE_CHESTPLATE ||
+                type == LegendaryType.FORGE_LEGGINGS || type == LegendaryType.FORGE_BOOTS) {
+                applyForgeArmorTrim(item);
+            }
 
             // Apply yellow cross banner pattern to Celestial Aegis Shield
             if (type == LegendaryType.CELESTIAL_AEGIS_SHIELD) {
@@ -187,6 +197,21 @@ public class LegendaryItemFactory {
         banner.update();
         blockStateMeta.setBlockState(banner);
         shield.setItemMeta(blockStateMeta);
+    }
+
+    /**
+     * Apply Silence trim with Copper material to Forge armor pieces.
+     */
+    private void applyForgeArmorTrim(ItemStack armor) {
+        if (armor == null) return;
+
+        ItemMeta meta = armor.getItemMeta();
+        if (!(meta instanceof ArmorMeta)) return;
+
+        ArmorMeta armorMeta = (ArmorMeta) meta;
+        ArmorTrim trim = new ArmorTrim(TrimMaterial.COPPER, TrimPattern.SILENCE);
+        armorMeta.setTrim(trim);
+        armor.setItemMeta(armorMeta);
     }
 
     private void addMaxEnchantments(ItemMeta meta, LegendaryType type) {
