@@ -8,10 +8,12 @@ import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataType;
 
 
@@ -54,6 +56,37 @@ public class LegendaryItemFactory {
             if (type == LegendaryType.SOUL_DEVOURER) {
                 NamespacedKey soulKey = new NamespacedKey("legendaryweapons", SOUL_COUNT_KEY);
                 meta.getPersistentDataContainer().set(soulKey, PersistentDataType.INTEGER, 0);
+            }
+            
+            // Set equippable component for copper/forge armor to enable rendering when worn
+            if (type == LegendaryType.FORGE_HELMET) {
+                EquippableComponent equippable = meta.getEquippable();
+                if (equippable != null) {
+                    equippable.setAssetId(NamespacedKey.minecraft("copper"));
+                    equippable.setSlot(EquipmentSlot.HEAD);
+                    meta.setEquippable(equippable);
+                }
+            } else if (type == LegendaryType.FORGE_CHESTPLATE) {
+                EquippableComponent equippable = meta.getEquippable();
+                if (equippable != null) {
+                    equippable.setAssetId(NamespacedKey.minecraft("copper"));
+                    equippable.setSlot(EquipmentSlot.CHEST);
+                    meta.setEquippable(equippable);
+                }
+            } else if (type == LegendaryType.FORGE_LEGGINGS) {
+                EquippableComponent equippable = meta.getEquippable();
+                if (equippable != null) {
+                    equippable.setAssetId(NamespacedKey.minecraft("copper_leggings"));
+                    equippable.setSlot(EquipmentSlot.LEGS);
+                    meta.setEquippable(equippable);
+                }
+            } else if (type == LegendaryType.FORGE_BOOTS) {
+                EquippableComponent equippable = meta.getEquippable();
+                if (equippable != null) {
+                    equippable.setAssetId(NamespacedKey.minecraft("copper"));
+                    equippable.setSlot(EquipmentSlot.FEET);
+                    meta.setEquippable(equippable);
+                }
             }
 
             item.setItemMeta(meta);
